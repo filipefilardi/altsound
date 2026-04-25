@@ -52,14 +52,55 @@ class JellyfinRepository {
         'IncludeItemTypes': 'MusicAlbum',
         'SortBy': 'DatePlayed',
         'SortOrder': 'Descending',
-        'Filters': 'IsPlayed',
         'Recursive': true,
         'Limit': limit,
+        'EnableUserData': true,
       },
     );
-    final items = (res.data?['Items'] as List?) ?? const [];
-    return items
+    final items = ((res.data?['Items'] as List?) ?? const [])
         .cast<Map<String, dynamic>>()
+        .where((json) => (json['UserData']?['PlayCount'] as int? ?? 0) > 0)
+        .toList();
+    if (items.isNotEmpty) {
+      return items.map(BrowseItem.fromJson).toList();
+    }
+
+    // Fallback: some Jellyfin servers don't return played albums reliably when
+    // sorting MusicAlbum by DatePlayed. Build recent albums from played tracks.
+    final tracksRes = await _api.dio.get<Map<String, dynamic>>(
+      '/Users/${s.userId}/Items',
+      queryParameters: {
+        'IncludeItemTypes': 'Audio',
+        'SortBy': 'DatePlayed',
+        'SortOrder': 'Descending',
+        'Recursive': true,
+        'Limit': limit * 10,
+        'Fields': 'AlbumId,UserData',
+      },
+    );
+    final trackItems = ((tracksRes.data?['Items'] as List?) ?? const [])
+        .cast<Map<String, dynamic>>();
+    final albumIds = <String>{};
+    final orderedAlbumIds = <String>[];
+    for (final t in trackItems) {
+      final playCount = (t['UserData']?['PlayCount'] as int? ?? 0);
+      final albumId = t['AlbumId'] as String?;
+      if (playCount <= 0 || albumId == null || albumId.isEmpty) continue;
+      if (albumIds.add(albumId)) {
+        orderedAlbumIds.add(albumId);
+        if (orderedAlbumIds.length >= limit) break;
+      }
+    }
+    if (orderedAlbumIds.isEmpty) return const [];
+
+    final albumFutures = orderedAlbumIds.map((id) async {
+      final albumRes = await _api.dio.get<Map<String, dynamic>>(
+        '/Users/${s.userId}/Items/$id',
+      );
+      return albumRes.data;
+    });
+    final albumJson = (await Future.wait(albumFutures)).whereType<Map<String, dynamic>>();
+    return albumJson
         .map(BrowseItem.fromJson)
         .toList();
   }
