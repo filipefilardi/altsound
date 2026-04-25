@@ -1,4 +1,4 @@
-# jellymusic
+# AltSound
 
 A new Flutter project.
 
