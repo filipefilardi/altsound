@@ -82,7 +82,7 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: 24),
           const Center(
             child: Text(
-              'Jellymusic 0.1.0',
+              'AltSound 0.1.0',
               style: TextStyle(color: AppColors.textTertiary, fontSize: 12),
             ),
           ),

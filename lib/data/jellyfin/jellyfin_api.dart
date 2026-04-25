@@ -6,7 +6,7 @@ import 'package:uuid/uuid.dart';
 
 import 'models/jellyfin_session.dart';
 
-const _appName = 'Jellymusic';
+const _appName = 'AltSound';
 const _appVersion = '0.1.0';
 
 class JellyfinApi {

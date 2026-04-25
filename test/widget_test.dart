@@ -13,7 +13,7 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('Jellymusic'), findsOneWidget);
+    expect(find.text('AltSound'), findsOneWidget);
     expect(find.text('Server URL'), findsOneWidget);
     expect(find.text('Username'), findsOneWidget);
     expect(find.text('Password'), findsOneWidget);

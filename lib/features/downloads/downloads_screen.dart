@@ -24,7 +24,7 @@ class DownloadsScreen extends ConsumerWidget {
         body: const EmptyState(
           icon: Icons.cloud_off,
           title: "Downloads aren't available on web",
-          message: 'Open Jellymusic on iOS or Android to download for offline.',
+          message: 'Open AltSound on iOS or Android to download for offline.',
         ),
       );
     }

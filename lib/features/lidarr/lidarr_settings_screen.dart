@@ -234,7 +234,7 @@ class _Header extends StatelessWidget {
             style: Theme.of(context).textTheme.headlineMedium),
         const SizedBox(height: 8),
         const Text(
-          'Search for new artists and albums. Jellymusic will ask Lidarr to download them, then they\'ll appear in your library after Lidarr imports them.',
+          'Search for new artists and albums. AltSound will ask Lidarr to download them, then they\'ll appear in your library after Lidarr imports them.',
           style: TextStyle(color: AppColors.textSecondary),
         ),
       ],
