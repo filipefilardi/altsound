@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/empty_state.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
 import '../../data/jellyfin/models/media_item.dart';
 import '../player/player_providers.dart';
@@ -101,7 +102,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                         );
                       }
                       return ListView.separated(
-                        padding: const EdgeInsets.only(bottom: 96),
+                        padding: const EdgeInsets.only(bottom: 24),
                         itemCount: results.length,
                         separatorBuilder: (_, __) =>
                             const Divider(height: 1, indent: 80),
@@ -219,27 +220,14 @@ class _IdleHint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.search,
-                size: 72, color: AppColors.textSecondary),
-            const SizedBox(height: 16),
-            const Text(
-              'Search your Jellyfin library.',
-              style: TextStyle(color: AppColors.textSecondary),
-            ),
-            const SizedBox(height: 24),
-            TextButton.icon(
-              onPressed: onDiscover,
-              icon: const Icon(Icons.travel_explore),
-              label: const Text('Discover via Lidarr'),
-            ),
-          ],
-        ),
+    return EmptyState(
+      icon: Icons.search,
+      title: 'Search your Jellyfin library',
+      message: 'Find songs, albums, and artists you already have.',
+      action: TextButton.icon(
+        onPressed: onDiscover,
+        icon: const Icon(Icons.travel_explore),
+        label: const Text('Discover via Lidarr'),
       ),
     );
   }
@@ -252,25 +240,15 @@ class _NoResults extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.search_off,
-                size: 64, color: AppColors.textSecondary),
-            const SizedBox(height: 16),
-            Text('Nothing in your library matches "$term".',
-                textAlign: TextAlign.center),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: onDiscover,
-              icon: const Icon(Icons.travel_explore, color: Colors.black),
-              label: Text('REQUEST "$term" VIA LIDARR'),
-            ),
-          ],
-        ),
+    return EmptyState(
+      icon: Icons.search_off,
+      title: 'No matches in your library',
+      message: 'Nothing matched "$term". Try a different spelling, or request '
+          'it through Lidarr.',
+      action: ElevatedButton.icon(
+        onPressed: onDiscover,
+        icon: const Icon(Icons.travel_explore, color: Color(0xFF1A0F05)),
+        label: Text('REQUEST "$term" VIA LIDARR'),
       ),
     );
   }
@@ -285,9 +263,11 @@ class _MessageState extends StatelessWidget {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
-        child: Text(message,
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.textSecondary)),
+        child: Text(
+          message,
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: AppColors.textSecondary),
+        ),
       ),
     );
   }

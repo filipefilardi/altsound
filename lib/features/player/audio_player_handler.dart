@@ -1,9 +1,19 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:rxdart/rxdart.dart';
+
+class PlayerError {
+  PlayerError({required this.title, required this.message});
+  final String title;
+  final String message;
+}
 
 class JellymusicAudioHandler extends BaseAudioHandler with SeekHandler {
   JellymusicAudioHandler() {
-    _player.playbackEventStream.listen((_) => _syncPlaybackState(), onError: (_) {});
+    _player.playbackEventStream.listen(
+      (_) => _syncPlaybackState(),
+      onError: (Object e, StackTrace st) => _emitError(e),
+    );
     _player.currentIndexStream.listen((index) {
       final q = queue.value;
       if (index != null && index >= 0 && index < q.length) {
@@ -16,31 +26,39 @@ class JellymusicAudioHandler extends BaseAudioHandler with SeekHandler {
   }
 
   final AudioPlayer _player = AudioPlayer();
+  final _errors = PublishSubject<PlayerError>();
 
-  /// Volume to restore on unmute (last non-zero before mute).
+  /// Stream of playback errors. Listeners typically show a snackbar / banner.
+  Stream<PlayerError> get errorStream => _errors.stream;
+
+  /// Volume to restore on unmute. Never 0; never decreases below current
+  /// non-muted level after explicit user volume changes.
   double _volumeBeforeMute = 1.0;
 
   AudioPlayer get player => _player;
 
-  /// Effective mute: player volume is ~0 and we are not in a drag state that sets 0.
+  /// Effective mute: player volume is essentially 0.
   bool get isEffectivelyMuted => _player.volume < 0.001;
 
   Future<void> setAppVolume(double volume) async {
     final v = volume.clamp(0.0, 1.0);
+    if (v > 0.001) {
+      _volumeBeforeMute = v;
+    }
     await _player.setVolume(v);
   }
 
-  /// Mute / unmute app output (independent of system volume on mobile).
   Future<void> toggleAppMute() async {
-    if (_player.volume < 0.001) {
-      await _player.setVolume(_volumeBeforeMute.clamp(0.0, 1.0));
+    if (isEffectivelyMuted) {
+      final restore = _volumeBeforeMute < 0.05 ? 1.0 : _volumeBeforeMute;
+      await _player.setVolume(restore);
     } else {
       _volumeBeforeMute = _player.volume;
       await _player.setVolume(0);
     }
   }
 
-  /// UI: cycle none → all → one → off.
+  /// UI: cycle off → all → one → off.
   Future<void> cycleLoopMode() async {
     final next = switch (_player.loopMode) {
       LoopMode.off => LoopMode.all,
@@ -67,12 +85,32 @@ class JellymusicAudioHandler extends BaseAudioHandler with SeekHandler {
               tag: m,
             ))
         .toList();
-    await _player.setAudioSources(
-      sources,
-      initialIndex: initialIndex,
-      initialPosition: Duration.zero,
-    );
-    await _player.play();
+    try {
+      await _player.setAudioSources(
+        sources,
+        initialIndex: initialIndex,
+        initialPosition: Duration.zero,
+      );
+      await _player.play();
+    } catch (e) {
+      _emitError(e, title: items[initialIndex].title);
+    }
+  }
+
+  /// Reorder a single item in the queue. Keeps `audio_service`'s mirror in sync.
+  Future<void> reorderQueue(int oldIndex, int newIndex) async {
+    final q = List<MediaItem>.from(queue.value);
+    if (oldIndex < 0 ||
+        oldIndex >= q.length ||
+        newIndex < 0 ||
+        newIndex > q.length) {
+      return;
+    }
+    final adjusted = newIndex > oldIndex ? newIndex - 1 : newIndex;
+    final item = q.removeAt(oldIndex);
+    q.insert(adjusted, item);
+    queue.add(q);
+    await _player.moveAudioSource(oldIndex, adjusted);
   }
 
   @override
@@ -119,6 +157,14 @@ class JellymusicAudioHandler extends BaseAudioHandler with SeekHandler {
   Future<void> stop() async {
     await _player.stop();
     await super.stop();
+  }
+
+  void _emitError(Object e, {String? title}) {
+    final current = title ?? mediaItem.value?.title ?? 'this track';
+    _errors.add(PlayerError(
+      title: "Couldn't play “$current”",
+      message: e.toString(),
+    ));
   }
 
   void _syncPlaybackState() {

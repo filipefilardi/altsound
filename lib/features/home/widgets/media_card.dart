@@ -8,7 +8,7 @@ import '../../../data/jellyfin/jellyfin_repository.dart';
 import '../../../data/jellyfin/models/media_item.dart';
 
 class MediaCard extends ConsumerWidget {
-  const MediaCard({required this.item, this.width = 152, super.key});
+  const MediaCard({required this.item, this.width = 156, super.key});
 
   final BrowseItem item;
   final double width;
@@ -19,7 +19,9 @@ class MediaCard extends ConsumerWidget {
     final imageUrl = repo.imageUrl(item.id, imageTag: item.imageTag);
 
     return InkWell(
-      borderRadius: BorderRadius.circular(6),
+      borderRadius: BorderRadius.circular(12),
+      splashColor: AppColors.primary.withValues(alpha: 0.06),
+      highlightColor: AppColors.primary.withValues(alpha: 0.03),
       onTap: () {
         if (item.kind == MediaKind.album) {
           context.push('/album/${item.id}');
@@ -35,16 +37,28 @@ class MediaCard extends ConsumerWidget {
               AspectRatio(
                 aspectRatio: 1,
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(6),
-                  child: CachedNetworkImage(
-                    imageUrl: imageUrl,
-                    fit: BoxFit.cover,
-                    placeholder: (_, __) => const _Fallback(),
-                    errorWidget: (_, __, ___) => const _Fallback(),
+                  borderRadius: BorderRadius.circular(10),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.4),
+                          blurRadius: 14,
+                          offset: const Offset(0, 6),
+                          spreadRadius: -4,
+                        ),
+                      ],
+                    ),
+                    child: CachedNetworkImage(
+                      imageUrl: imageUrl,
+                      fit: BoxFit.cover,
+                      placeholder: (_, __) => const _Fallback(),
+                      errorWidget: (_, __, ___) => const _Fallback(),
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               Text(
                 item.name,
                 maxLines: 1,
@@ -77,6 +91,7 @@ class MediaCard extends ConsumerWidget {
 
 class _Fallback extends StatelessWidget {
   const _Fallback();
+
   @override
   Widget build(BuildContext context) {
     return Container(

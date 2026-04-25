@@ -1,4 +1,7 @@
+import 'dart:ui';
+
 import 'package:audio_service/audio_service.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,17 +9,44 @@ import 'package:go_router/go_router.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_gradients.dart';
 import '../../core/utils/format.dart';
+import 'audio_player_handler.dart';
 import 'now_playing_favorite.dart';
 import 'player_providers.dart';
 import 'widgets/player_hero_art.dart';
 import 'widgets/queue_bottom_sheet.dart';
 
-class NowPlayingScreen extends ConsumerWidget {
+class NowPlayingScreen extends ConsumerStatefulWidget {
   const NowPlayingScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<NowPlayingScreen> createState() => _NowPlayingScreenState();
+}
+
+class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
+  PlayerError? _error;
+  ProviderSubscription<AsyncValue<PlayerError>>? _errorSub;
+
+  @override
+  void initState() {
+    super.initState();
+    _errorSub = ref.listenManual(playerErrorProvider, (_, next) {
+      next.whenData((err) {
+        if (!mounted) return;
+        setState(() => _error = err);
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _errorSub?.close();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final mediaItem = ref.watch(currentMediaItemProvider).value;
     final state = ref.watch(playbackStateProvider).value;
 
@@ -34,108 +64,252 @@ class NowPlayingScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _DraggableTopStrip(
-              child: _TopBar(
-                album: mediaItem.album ?? '',
-                onQueue: () => showQueueBottomSheet(
-                  context,
-                  ref,
-                ),
-              ),
-            ),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                children: [
-                  const SizedBox(height: 8),
-                  Center(
-                    child: Builder(
-                      builder: (c) {
-                        final w = MediaQuery.sizeOf(c).width;
-                        final side = (w - 40).clamp(0.0, 520.0);
-                        return PlayerHeroArt(
-                          size: side,
-                          mediaItem: mediaItem,
-                          hero: true,
-                        );
-                      },
+      body: Stack(
+        children: [
+          _BlurredBackdrop(artUri: mediaItem.artUri),
+          SafeArea(
+            child: _DismissibleSurface(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 22),
+                child: Column(
+                  children: [
+                    const _DragHandle(),
+                    const SizedBox(height: 4),
+                    _TopBar(
+                      album: mediaItem.album ?? '',
+                      onQueue: () => showQueueBottomSheet(context, ref),
                     ),
-                  ),
-                  const SizedBox(height: 32),
-                    Text(
-                      mediaItem.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w800,
-                            height: 1.15,
-                          ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      mediaItem.artist ?? '',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 16,
+                    Expanded(
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final maxArt = constraints.maxWidth.clamp(0, 360.0);
+                          return Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Flexible(
+                                child: Center(
+                                  child: PlayerHeroArt(
+                                    size: maxArt.toDouble(),
+                                    mediaItem: mediaItem,
+                                    hero: true,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 28),
+                              Text(
+                                mediaItem.title,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .headlineMedium,
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                mediaItem.artist ?? '',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(fontSize: 14),
+                              ),
+                            ],
+                          );
+                        },
                       ),
                     ),
-                    const SizedBox(height: 28),
-                    _SecondaryControlsRow(mediaItem: mediaItem),
-                    const SizedBox(height: 20),
-                    const _VolumeRow(),
-                    const SizedBox(height: 8),
+                    if (_error != null) ...[
+                      _ErrorBanner(
+                        error: _error!,
+                        onSkip: () {
+                          ref.read(playerControllerProvider).next();
+                          setState(() => _error = null);
+                        },
+                        onDismiss: () => setState(() => _error = null),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                    _SecondaryControls(mediaItem: mediaItem),
+                    const SizedBox(height: 12),
                     const _Scrubber(),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
                     _MainControls(playing: state?.playing ?? false),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 24),
                   ],
                 ),
               ),
-            ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Wraps the now-playing surface with a vertical-drag-to-dismiss gesture.
+///
+/// The whole surface is draggable: drag down, the screen translates with the
+/// finger, and on release we either pop (past threshold or fast flick) or
+/// snap back. Doesn't fight any inner scrollables because the now-playing
+/// layout is a non-scrolling [Column].
+class _DismissibleSurface extends StatefulWidget {
+  const _DismissibleSurface({required this.child});
+  final Widget child;
+
+  @override
+  State<_DismissibleSurface> createState() => _DismissibleSurfaceState();
+}
+
+class _DismissibleSurfaceState extends State<_DismissibleSurface>
+    with SingleTickerProviderStateMixin {
+  double _dy = 0;
+  late final AnimationController _settle = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 180),
+  )..addListener(_onSettleTick);
+  Animation<double>? _settleAnim;
+
+  @override
+  void dispose() {
+    _settle.dispose();
+    super.dispose();
+  }
+
+  void _onSettleTick() {
+    if (_settleAnim != null) {
+      setState(() => _dy = _settleAnim!.value);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final screenH = MediaQuery.sizeOf(context).height;
+    final dismissThreshold = screenH * 0.18;
+    final progress = (_dy / (screenH * 0.6)).clamp(0.0, 1.0);
+
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onVerticalDragStart: (_) {
+        _settle.stop();
+      },
+      onVerticalDragUpdate: (d) {
+        final delta = d.primaryDelta ?? 0;
+        if (delta == 0) return;
+        setState(() {
+          _dy = (_dy + delta).clamp(0.0, screenH);
+        });
+      },
+      onVerticalDragEnd: (d) {
+        final v = d.primaryVelocity ?? 0;
+        if (_dy > dismissThreshold || v > 700) {
+          HapticFeedback.lightImpact();
+          context.pop();
+        } else {
+          _settleAnim = Tween<double>(begin: _dy, end: 0).animate(
+            CurvedAnimation(parent: _settle, curve: Curves.easeOutCubic),
+          );
+          _settle.forward(from: 0);
+        }
+      },
+      child: Opacity(
+        opacity: 1 - progress * 0.6,
+        child: Transform.translate(
+          offset: Offset(0, _dy),
+          child: widget.child,
         ),
       ),
     );
   }
 }
 
-class _TopBar extends ConsumerWidget {
-  const _TopBar({
-    required this.album,
-    required this.onQueue,
-  });
+class _DragHandle extends StatelessWidget {
+  const _DragHandle();
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Container(
+        width: 36,
+        height: 4,
+        decoration: BoxDecoration(
+          color: AppColors.textTertiary.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(2),
+        ),
+      ),
+    );
+  }
+}
 
+class _BlurredBackdrop extends StatelessWidget {
+  const _BlurredBackdrop({required this.artUri});
+  final Uri? artUri;
+
+  @override
+  Widget build(BuildContext context) {
+    if (artUri == null) {
+      return const ColoredBox(color: AppColors.background);
+    }
+    return Positioned.fill(
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          CachedNetworkImage(
+            imageUrl: artUri!.toString(),
+            fit: BoxFit.cover,
+            errorWidget: (_, __, ___) =>
+                const ColoredBox(color: AppColors.background),
+          ),
+          BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
+            child: const ColoredBox(color: Color(0x33000000)),
+          ),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  AppColors.background.withValues(alpha: 0.55),
+                  AppColors.background.withValues(alpha: 0.92),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TopBar extends StatelessWidget {
+  const _TopBar({required this.album, required this.onQueue});
   final String album;
   final VoidCallback onQueue;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.keyboard_arrow_down, size: 32),
+            icon: const Icon(Icons.keyboard_arrow_down, size: 30),
             onPressed: () => context.pop(),
           ),
           Expanded(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  'PLAYING FROM',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 10,
-                    letterSpacing: 1.4,
-                  ),
+                Text(
+                  'PLAYING FROM ALBUM',
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        fontSize: 10,
+                        letterSpacing: 1.6,
+                        color: AppColors.textSecondary,
+                      ),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -156,82 +330,14 @@ class _TopBar extends ConsumerWidget {
             onPressed: onQueue,
             tooltip: 'Up next',
           ),
-          const SizedBox(width: 4),
         ],
       ),
     );
   }
 }
 
-/// Draggable strip so vertical scroll in the list still works.
-class _DraggableTopStrip extends StatefulWidget {
-  const _DraggableTopStrip({required this.child});
-  final Widget child;
-
-  @override
-  State<_DraggableTopStrip> createState() => _DraggableTopStripState();
-}
-
-class _DraggableTopStripState extends State<_DraggableTopStrip> {
-  double _dy = 0;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const SizedBox(height: 4),
-        Center(
-          child: Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: AppColors.textTertiary,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-        ),
-        const SizedBox(height: 2),
-        GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onVerticalDragUpdate: (d) {
-            if (d.primaryDelta == null) return;
-            if (d.primaryDelta! > 0) {
-              setState(() {
-                _dy += d.primaryDelta!;
-                _dy = _dy.clamp(0, 400);
-              });
-            } else {
-              if (_dy > 0) {
-                setState(() {
-                  _dy = (_dy + d.primaryDelta!).clamp(0, 400);
-                });
-              }
-            }
-          },
-          onVerticalDragEnd: (d) {
-            final v = d.primaryVelocity ?? 0;
-            if (_dy > 88 || v > 700) {
-              if (context.mounted) {
-                HapticFeedback.lightImpact();
-                context.pop();
-              }
-            } else {
-              setState(() => _dy = 0);
-            }
-          },
-          child: Transform.translate(
-            offset: Offset(0, _dy),
-            child: widget.child,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _SecondaryControlsRow extends ConsumerWidget {
-  const _SecondaryControlsRow({required this.mediaItem});
+class _SecondaryControls extends ConsumerWidget {
+  const _SecondaryControls({required this.mediaItem});
   final MediaItem mediaItem;
 
   @override
@@ -251,33 +357,33 @@ class _SecondaryControlsRow extends ConsumerWidget {
     final offline = mediaItem.extras?['isOffline'] == true;
 
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         IconButton(
           onPressed: () => controller.toggleShuffle(),
           icon: Icon(
             Icons.shuffle,
             color: shuffled ? AppColors.primary : AppColors.textSecondary,
-            size: 24,
+            size: 22,
           ),
+          tooltip: 'Shuffle',
         ),
-        const SizedBox(width: 4),
         IconButton(
           onPressed: () => controller.cycleRepeatMode(),
           icon: Icon(
             loop == LoopMode.one ? Icons.repeat_one : Icons.repeat,
-            color: loop == LoopMode.off
-                ? AppColors.textSecondary
-                : AppColors.primary,
-            size: 26,
+            color:
+                loop == LoopMode.off ? AppColors.textSecondary : AppColors.primary,
+            size: 22,
           ),
+          tooltip: 'Repeat',
         ),
-        const SizedBox(width: 4),
         IconButton(
           onPressed: offline
               ? null
               : () => ref.read(nowPlayingFavoriteProvider.notifier).toggle(),
           icon: _FavoriteHeartIcon(value: fav),
+          tooltip: 'Favorite',
         ),
       ],
     );
@@ -293,74 +399,25 @@ class _FavoriteHeartIcon extends StatelessWidget {
     return value.when(
       data: (v) {
         if (v == null) {
-          return const Icon(Icons.favorite_border, color: AppColors.textTertiary, size: 28);
+          return const Icon(Icons.favorite_border,
+              color: AppColors.textTertiary, size: 24);
         }
         return Icon(
           v ? Icons.favorite : Icons.favorite_border,
-          color: v ? const Color(0xFFE85D75) : AppColors.textSecondary,
-          size: 28,
+          color: v ? AppColors.accent : AppColors.textSecondary,
+          size: 24,
         );
       },
-      error: (_, __) => const Icon(Icons.heart_broken, color: AppColors.textTertiary, size: 28),
+      error: (_, __) => const Icon(Icons.heart_broken,
+          color: AppColors.textTertiary, size: 24),
       loading: () => const SizedBox(
-        width: 28,
-        height: 28,
+        width: 22,
+        height: 22,
         child: CircularProgressIndicator(
           strokeWidth: 2,
           color: AppColors.textSecondary,
         ),
       ),
-    );
-  }
-}
-
-class _VolumeRow extends ConsumerWidget {
-  const _VolumeRow();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final v = ref.watch(playerVolumeProvider).when(
-          data: (v) => v.clamp(0.0, 1.0),
-          error: (_, __) => 1.0,
-          loading: () => 1.0,
-        );
-    final muted = ref.watch(audioHandlerProvider).isEffectivelyMuted;
-    final controller = ref.read(playerControllerProvider);
-    return Row(
-      children: [
-        IconButton(
-          icon: Icon(
-            muted ? Icons.volume_off : (v < 0.2 ? Icons.volume_mute : Icons.volume_up),
-            color: AppColors.textSecondary,
-            size: 22,
-          ),
-          onPressed: () => controller.toggleMute(),
-        ),
-        Expanded(
-          child: SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              trackHeight: 3,
-              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-              overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
-              activeTrackColor: AppColors.textPrimary,
-              inactiveTrackColor: AppColors.divider,
-              thumbColor: AppColors.textPrimary,
-            ),
-            child: Slider(
-              value: v,
-              min: 0,
-              max: 1,
-              onChanged: (x) {
-                if (muted && x > 0) {
-                  // setVolume in handler also unmutes
-                }
-                controller.setVolume(x);
-              },
-            ),
-          ),
-        ),
-        const SizedBox(width: 4),
-      ],
     );
   }
 }
@@ -375,7 +432,8 @@ class _Scrubber extends ConsumerWidget {
         ref.watch(currentMediaItemProvider).value?.duration ?? Duration.zero;
 
     final clamped = position > duration ? duration : position;
-    final max = duration.inMilliseconds.toDouble().clamp(1.0, double.infinity);
+    final maxMs = duration.inMilliseconds.toDouble().clamp(1.0, double.infinity);
+    final value = clamped.inMilliseconds.toDouble().clamp(0.0, maxMs);
 
     return Column(
       children: [
@@ -384,33 +442,32 @@ class _Scrubber extends ConsumerWidget {
             trackHeight: 3,
             thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
             overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
-            activeTrackColor: AppColors.textPrimary,
-            inactiveTrackColor: AppColors.divider,
-            thumbColor: AppColors.textPrimary,
           ),
           child: Slider(
-            value: clamped.inMilliseconds.toDouble().clamp(0, max),
+            value: value,
             min: 0,
-            max: max,
+            max: maxMs,
             onChanged: (x) => ref
                 .read(playerControllerProvider)
                 .seek(Duration(milliseconds: x.toInt())),
           ),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 2),
+          padding: const EdgeInsets.symmetric(horizontal: 6),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 formatDuration(clamped),
-                style: const TextStyle(
-                    color: AppColors.textSecondary, fontSize: 12),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
               ),
               Text(
                 formatDuration(duration),
-                style: const TextStyle(
-                    color: AppColors.textSecondary, fontSize: 12),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
               ),
             ],
           ),
@@ -435,36 +492,112 @@ class _MainControls extends ConsumerWidget {
           icon: const Icon(Icons.skip_previous, color: AppColors.textPrimary),
           onPressed: controller.previous,
         ),
-        const SizedBox(width: 20),
-        DecoratedBox(
-          decoration: const BoxDecoration(
-            color: AppColors.textPrimary,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Color(0x33333333),
-                blurRadius: 24,
-                offset: Offset(0, 8),
-              ),
-            ],
-          ),
-          child: IconButton(
-            iconSize: 40,
-            padding: const EdgeInsets.all(12),
-            icon: Icon(
-              playing ? Icons.pause : Icons.play_arrow,
-              color: AppColors.background,
-            ),
-            onPressed: controller.togglePlay,
-          ),
-        ),
-        const SizedBox(width: 20),
+        const SizedBox(width: 24),
+        _PlayPauseButton(playing: playing, onTap: controller.togglePlay),
+        const SizedBox(width: 24),
         IconButton(
           iconSize: 32,
           icon: const Icon(Icons.skip_next, color: AppColors.textPrimary),
           onPressed: controller.next,
         ),
       ],
+    );
+  }
+}
+
+class _PlayPauseButton extends StatelessWidget {
+  const _PlayPauseButton({required this.playing, required this.onTap});
+  final bool playing;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 72,
+      height: 72,
+      decoration: BoxDecoration(
+        gradient: AppGradients.accent,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.35),
+            blurRadius: 28,
+            offset: const Offset(0, 10),
+            spreadRadius: -4,
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        shape: const CircleBorder(),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Center(
+            child: Icon(
+              playing ? Icons.pause : Icons.play_arrow,
+              color: const Color(0xFF1A0F05),
+              size: 36,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ErrorBanner extends StatelessWidget {
+  const _ErrorBanner({
+    required this.error,
+    required this.onSkip,
+    required this.onDismiss,
+  });
+  final PlayerError error;
+  final VoidCallback onSkip;
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 10, 8, 10),
+      decoration: BoxDecoration(
+        color: AppColors.error.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.error_outline, color: AppColors.error, size: 18),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              error.title,
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          TextButton(
+            onPressed: onSkip,
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.textPrimary,
+              minimumSize: const Size(0, 32),
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+            ),
+            child: const Text('Skip'),
+          ),
+          IconButton(
+            onPressed: onDismiss,
+            icon: const Icon(Icons.close, size: 18),
+            color: AppColors.textSecondary,
+            visualDensity: VisualDensity.compact,
+          ),
+        ],
+      ),
     );
   }
 }

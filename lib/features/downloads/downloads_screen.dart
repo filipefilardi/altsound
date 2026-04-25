@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/format.dart';
+import '../../core/widgets/empty_state.dart';
 import '../../data/downloads/download_manager.dart';
 import '../../data/downloads/downloaded_track.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
@@ -20,10 +21,10 @@ class DownloadsScreen extends ConsumerWidget {
     if (!manager.supported) {
       return Scaffold(
         appBar: AppBar(title: const Text('Downloads')),
-        body: const _EmptyState(
+        body: const EmptyState(
           icon: Icons.cloud_off,
-          title: 'Downloads aren\'t available on web',
-          subtitle: 'Open Jellymusic on iOS or Android to download for offline.',
+          title: "Downloads aren't available on web",
+          message: 'Open Jellymusic on iOS or Android to download for offline.',
         ),
       );
     }
@@ -75,10 +76,10 @@ class DownloadsScreen extends ConsumerWidget {
         ),
       ),
       body: albumIds.isEmpty
-          ? const _EmptyState(
+          ? const EmptyState(
               icon: Icons.download_outlined,
               title: 'No downloads yet',
-              subtitle:
+              message:
                   'Tap the download icon on any album to keep it offline.',
             )
           : ListView.separated(
@@ -166,41 +167,6 @@ class _DownloadedAlbumTile extends ConsumerWidget {
         icon: const Icon(Icons.delete_outline,
             color: AppColors.textSecondary),
         onPressed: () => manager.deleteAlbum(albumId),
-      ),
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-  });
-  final IconData icon;
-  final String title;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 64, color: AppColors.textSecondary),
-            const SizedBox(height: 16),
-            Text(title,
-                style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.textSecondary),
-            ),
-          ],
-        ),
       ),
     );
   }

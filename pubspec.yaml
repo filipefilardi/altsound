@@ -45,6 +45,7 @@ dependencies:
   palette_generator: ^0.3.3+7
   rxdart: ^0.28.0
   path_provider: ^2.1.5
+  google_fonts: ^6.2.1
 
 dev_dependencies:
   flutter_test:

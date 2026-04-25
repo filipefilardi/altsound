@@ -2,52 +2,95 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/theme/app_colors.dart';
 import '../player/mini_player.dart';
 import '../player/player_providers.dart';
 
-class AppShell extends ConsumerWidget {
+class AppShell extends ConsumerStatefulWidget {
   const AppShell({required this.navigationShell, super.key});
 
   final StatefulNavigationShell navigationShell;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AppShell> createState() => _AppShellState();
+}
+
+class _AppShellState extends ConsumerState<AppShell> {
+  ProviderSubscription<AsyncValue>? _errorSub;
+
+  @override
+  void initState() {
+    super.initState();
+    _errorSub = ref.listenManual(playerErrorProvider, (_, next) {
+      next.whenData((err) {
+        if (!mounted) return;
+        final messenger = ScaffoldMessenger.maybeOf(context);
+        messenger?.hideCurrentSnackBar();
+        messenger?.showSnackBar(
+          SnackBar(
+            duration: const Duration(seconds: 5),
+            content: Text(err.title),
+            action: SnackBarAction(
+              label: 'Skip',
+              onPressed: () =>
+                  ref.read(playerControllerProvider).next(),
+            ),
+          ),
+        );
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _errorSub?.close();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final hasMedia = ref.watch(currentMediaItemProvider).value != null;
 
     return Scaffold(
-      body: Stack(
+      body: widget.navigationShell,
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Positioned.fill(child: navigationShell),
           if (hasMedia)
-            const Positioned(
-              left: 0,
-              right: 0,
-              bottom: 10,
+            const Padding(
+              padding: EdgeInsets.only(bottom: 6),
               child: MiniPlayer(),
             ),
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: navigationShell.currentIndex,
-        onTap: (i) => navigationShell.goBranch(
-          i,
-          initialLocation: i == navigationShell.currentIndex,
-        ),
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search_outlined),
-            activeIcon: Icon(Icons.search),
-            label: 'Search',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.library_music_outlined),
-            activeIcon: Icon(Icons.library_music),
-            label: 'Library',
+          DecoratedBox(
+            decoration: const BoxDecoration(
+              border: Border(
+                top: BorderSide(color: AppColors.divider, width: 0.5),
+              ),
+            ),
+            child: BottomNavigationBar(
+              currentIndex: widget.navigationShell.currentIndex,
+              onTap: (i) => widget.navigationShell.goBranch(
+                i,
+                initialLocation: i == widget.navigationShell.currentIndex,
+              ),
+              items: const [
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.home_outlined),
+                  activeIcon: Icon(Icons.home),
+                  label: 'Home',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.search_outlined),
+                  activeIcon: Icon(Icons.search),
+                  label: 'Search',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.library_music_outlined),
+                  activeIcon: Icon(Icons.library_music),
+                  label: 'Library',
+                ),
+              ],
+            ),
           ),
         ],
       ),
