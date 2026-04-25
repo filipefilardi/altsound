@@ -13,6 +13,7 @@ import '../../data/jellyfin/jellyfin_repository.dart';
 import '../../data/jellyfin/models/media_item.dart';
 import '../downloads/widgets/album_download_button.dart';
 import '../player/player_providers.dart';
+import '../player/widgets/mini_player_slot.dart';
 import '../player/widgets/playing_track_leading.dart';
 import 'album_controller.dart';
 
@@ -26,6 +27,7 @@ class AlbumScreen extends ConsumerWidget {
     final async = ref.watch(albumProvider(albumId));
 
     return Scaffold(
+      bottomNavigationBar: const MiniPlayerSlot(withTopDivider: true),
       body: async.when(
         loading: () => const _AlbumLoading(),
         error: (e, _) => SafeArea(
@@ -209,14 +211,37 @@ class _AlbumViewState extends ConsumerState<_AlbumView> {
                         style: Theme.of(context).textTheme.headlineMedium,
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        [
-                          album.artistName,
-                          if (album.year != null) '${album.year}',
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 4,
+                        children: [
+                          InkWell(
+                            onTap: album.artistId == null || album.artistId!.isEmpty
+                                ? null
+                                : () => context.push('/artist/${album.artistId}'),
+                            child: Text(
+                              album.artistName,
+                              style:
+                                  Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                        color: album.artistId == null ||
+                                                album.artistId!.isEmpty
+                                            ? AppColors.textSecondary
+                                            : AppColors.primary,
+                                      ),
+                            ),
+                          ),
+                          if (album.year != null)
+                            Text(
+                              '• ${album.year}',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
                           if (album.tracks.isNotEmpty)
-                            '${album.tracks.length} tracks',
-                        ].join(' • '),
-                        style: Theme.of(context).textTheme.bodyMedium,
+                            Text(
+                              '• ${album.tracks.length} tracks',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                        ],
                       ),
                     ],
                   ),

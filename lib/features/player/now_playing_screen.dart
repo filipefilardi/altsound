@@ -49,6 +49,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
   Widget build(BuildContext context) {
     final mediaItem = ref.watch(currentMediaItemProvider).value;
     final state = ref.watch(playbackStateProvider).value;
+    final artistId = mediaItem?.extras?['artistId'] as String?;
 
     if (mediaItem == null) {
       return Scaffold(
@@ -106,15 +107,25 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                                     .headlineMedium,
                               ),
                               const SizedBox(height: 6),
-                              Text(
-                                mediaItem.artist ?? '',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                textAlign: TextAlign.center,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
-                                    ?.copyWith(fontSize: 14),
+                              InkWell(
+                                onTap: artistId == null || artistId.isEmpty
+                                    ? null
+                                    : () => context.push('/artist/$artistId'),
+                                child: Text(
+                                  mediaItem.artist ?? '',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        fontSize: 14,
+                                        color: artistId == null || artistId.isEmpty
+                                            ? AppColors.textSecondary
+                                            : AppColors.primary,
+                                      ),
+                                ),
                               ),
                             ],
                           );
