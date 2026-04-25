@@ -11,6 +11,7 @@ import '../../data/jellyfin/models/media_item.dart';
 import '../player/widgets/mini_player_slot.dart';
 import '../player/player_providers.dart';
 import '../player/widgets/playing_track_leading.dart';
+import '../player/widgets/track_more_menu_button.dart';
 
 final artistProvider = FutureProvider.family<Artist, String>((ref, artistId) {
   return ref.read(jellyfinRepositoryProvider).artist(artistId);
@@ -239,9 +240,15 @@ class _PopularTrackTile extends ConsumerWidget {
         overflow: TextOverflow.ellipsis,
         style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
       ),
-      trailing: PlayingTrackDuration(
-        jellyfinTrackId: track.id,
-        trackDuration: track.duration,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          PlayingTrackDuration(
+            jellyfinTrackId: track.id,
+            trackDuration: track.duration,
+          ),
+          TrackMoreMenuButton(track: track),
+        ],
       ),
       onTap: () => ref.read(playerControllerProvider).playTracks([track]),
     );

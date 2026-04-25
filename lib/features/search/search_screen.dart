@@ -175,10 +175,17 @@ class _ResultTile extends ConsumerWidget {
         overflow: TextOverflow.ellipsis,
         style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
       ),
-      trailing: isTrack && item.runTime != null
-          ? PlayingTrackDuration(
-              jellyfinTrackId: item.id,
-              trackDuration: item.runTime!,
+      trailing: isTrack
+          ? Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (item.runTime != null)
+                  PlayingTrackDuration(
+                    jellyfinTrackId: item.id,
+                    trackDuration: item.runTime!,
+                  ),
+                _SearchTrackMenuButton(trackId: item.id),
+              ],
             )
           : null,
       onTap: () => _onTap(context, ref),
@@ -195,8 +202,7 @@ class _ResultTile extends ConsumerWidget {
       case MediaKind.artist:
         context.push('/artist/${item.id}');
       case MediaKind.playlist:
-        // Future: artist + playlist detail screens
-        break;
+        context.push('/playlist/${item.id}');
     }
   }
 
@@ -213,6 +219,159 @@ class _ResultTile extends ConsumerWidget {
         MediaKind.track => 'Song',
         MediaKind.playlist => 'Playlist',
       };
+}
+
+class _SearchTrackMenuButton extends ConsumerWidget {
+  const _SearchTrackMenuButton({required this.trackId});
+
+  final String trackId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return IconButton(
+      icon: const Icon(Icons.more_vert, color: AppColors.textSecondary),
+      onPressed: () async {
+        final track = await ref.read(jellyfinRepositoryProvider).track(trackId);
+        if (!context.mounted) return;
+        await showModalBottomSheet<void>(
+          context: context,
+          showDragHandle: true,
+          builder: (_) => SafeArea(
+            child: Wrap(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.playlist_add),
+                  title: const Text('Add to playlist'),
+                  onTap: () async {
+                    Navigator.of(context).pop();
+                    if (!context.mounted) return;
+                    final repo = ref.read(jellyfinRepositoryProvider);
+                    final playlists = await repo.playlists();
+                    if (!context.mounted) return;
+                    BrowseItem? picked;
+                    if (playlists.isNotEmpty) {
+                      picked = await showModalBottomSheet<BrowseItem>(
+                        context: context,
+                        isScrollControlled: true,
+                        showDragHandle: true,
+                        builder: (sheetContext) => FractionallySizedBox(
+                          heightFactor: 0.9,
+                          child: SafeArea(
+                            child: ListView(
+                              children: [
+                                const ListTile(title: Text('Add to playlist')),
+                                ...playlists.map(
+                                  (playlist) => ListTile(
+                                    title: Text(playlist.name),
+                                    onTap: () =>
+                                        Navigator.of(sheetContext).pop(playlist),
+                                  ),
+                                ),
+                                const Divider(height: 1),
+                                ListTile(
+                                  onTap: () => Navigator.of(sheetContext)
+                                      .pop(const BrowseItem(
+                                    id: '__create__',
+                                    name: 'Create new playlist',
+                                    kind: MediaKind.playlist,
+                                  )),
+                                  title: const Text('Create new playlist'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+                    if (!context.mounted) return;
+                    if (picked?.id == '__create__') {
+                      final ctrl = TextEditingController();
+                      final name = await showDialog<String>(
+                        context: context,
+                        builder: (dialogContext) => AlertDialog(
+                          title: const Text('Create playlist'),
+                          content: TextField(
+                            controller: ctrl,
+                            autofocus: true,
+                            decoration:
+                                const InputDecoration(hintText: 'Playlist name'),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(dialogContext).pop(),
+                              child: const Text('Cancel'),
+                            ),
+                            FilledButton(
+                              onPressed: () =>
+                                  Navigator.of(dialogContext).pop(ctrl.text.trim()),
+                              child: const Text('Create'),
+                            ),
+                          ],
+                        ),
+                      );
+                      final playlistName = name?.trim() ?? '';
+                      if (playlistName.isNotEmpty) {
+                        final playlist = await repo.createPlaylist(playlistName);
+                        await repo.addTrackToPlaylist(
+                          trackId: track.id,
+                          playlistId: playlist.id,
+                        );
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Added to ${playlist.name}')),
+                        );
+                      }
+                      return;
+                    }
+                    if (picked != null) {
+                      await repo.addTrackToPlaylist(
+                        trackId: track.id,
+                        playlistId: picked.id,
+                      );
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Added to ${picked.name}')),
+                      );
+                    }
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.queue_music),
+                  title: const Text('Add to queue'),
+                  onTap: () async {
+                    Navigator.of(context).pop();
+                    await ref
+                        .read(playerControllerProvider)
+                        .addTrackToQueue(track);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.album_outlined),
+                  title: const Text('Go to album'),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    if (track.albumId != null && track.albumId!.isNotEmpty) {
+                      context.push('/album/${track.albumId}');
+                    }
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.person_outline),
+                  title: const Text('Go to artist'),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    if (track.artistId != null && track.artistId!.isNotEmpty) {
+                      context.push('/artist/${track.artistId}');
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
 
 class _IdleHint extends StatelessWidget {

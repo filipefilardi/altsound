@@ -14,6 +14,7 @@ import '../features/library/library_screen.dart';
 import '../features/lidarr/discover_screen.dart';
 import '../features/lidarr/lidarr_settings_screen.dart';
 import '../features/player/now_playing_screen.dart';
+import '../features/playlist/playlist_screen.dart';
 import '../features/search/search_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/shell/app_shell.dart';
@@ -87,6 +88,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/album/:id',
         builder: (_, st) => AlbumScreen(albumId: st.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/playlist/:id',
+        builder: (_, st) =>
+            PlaylistScreen(playlistId: st.pathParameters['id']!),
       ),
       GoRoute(
         path: '/now-playing',

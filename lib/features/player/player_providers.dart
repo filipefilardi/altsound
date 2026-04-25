@@ -116,6 +116,19 @@ class PlayerController {
 
   Future<void> toggleShuffle() => handler.toggleShuffle();
 
+  Future<void> addTrackToQueue(jf.Track track) async {
+    final item = _toMediaItem(track);
+    final currentQueue = handler.queue.value;
+    if (currentQueue.isEmpty) {
+      await handler.loadQueue([item], initialIndex: 0);
+      return;
+    }
+    final exists = currentQueue
+        .any((q) => q.extras?['jellyfinId'] == item.extras?['jellyfinId']);
+    if (exists) return;
+    await handler.appendToQueue(item);
+  }
+
   MediaItem _toMediaItem(jf.Track t) {
     final art = repo.imageUrl(t.imageItemId, imageTag: t.imageTag, size: 600);
     final localPath = downloads.localPath(t.id);
