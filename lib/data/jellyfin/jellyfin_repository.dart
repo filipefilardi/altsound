@@ -182,16 +182,14 @@ class JellyfinRepository {
       'api_key': s.accessToken,
       'DeviceId': 'jellymusic-${s.userId}',
       'MaxStreamingBitrate': '320000',
-      'Container':
-          'opus,webm|opus,mp3,aac,m4a|aac,m4a|alac,m4b|aac,flac,webma,webm|webma,wav,ogg',
-      'TranscodingContainer': 'mp4',
-      'TranscodingProtocol': 'hls',
-      'AudioCodec': 'aac',
+      // Keep stream progressive (non-HLS) so ExoPlayer/just_audio can parse it
+      // through AudioSource.uri without playlist-specific handling.
+      'Static': 'true',
     };
     final query = params.entries
         .map((e) =>
             '${Uri.encodeQueryComponent(e.key)}=${Uri.encodeQueryComponent(e.value)}')
         .join('&');
-    return '${s.serverUrl}/Audio/$trackId/universal?$query';
+    return '${s.serverUrl}/Audio/$trackId/stream?$query';
   }
 }
