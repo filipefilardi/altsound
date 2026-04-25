@@ -54,7 +54,8 @@ class LidarrRepository {
       queryParameters: {'term': term},
     );
     return (res.data ?? const [])
-        .cast<Map<String, dynamic>>()
+        .whereType<Map>()
+        .map((row) => row.map((k, v) => MapEntry('$k', v)))
         .map(LidarrArtistResult.fromJson)
         .toList();
   }
