@@ -52,10 +52,6 @@ final routerProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
-      GoRoute(
-        path: '/album/:id',
-        builder: (_, st) => AlbumScreen(albumId: st.pathParameters['id']!),
-      ),
       GoRoute(path: '/downloads', builder: (_, __) => const DownloadsScreen()),
       GoRoute(path: '/discover', builder: (_, __) => const DiscoverScreen()),
       GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
@@ -89,7 +85,17 @@ final routerProvider = Provider<GoRouter>((ref) {
         branches: [
           StatefulShellBranch(
             routes: [
-              GoRoute(path: '/', builder: (_, __) => const HomeScreen()),
+              GoRoute(
+                path: '/',
+                builder: (_, __) => const HomeScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'album/:id',
+                    builder: (_, st) =>
+                        AlbumScreen(albumId: st.pathParameters['id']!),
+                  ),
+                ],
+              ),
             ],
           ),
           StatefulShellBranch(
