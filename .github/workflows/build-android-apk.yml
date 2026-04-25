@@ -46,7 +46,7 @@ jobs:
           sed -i.bak -E "s/^version: .*/version: ${TAG_VERSION}+${BUILD_NUMBER}/" pubspec.yaml
           rm pubspec.yaml.bak
           echo "Using pubspec version:"
-          rg "^version:" pubspec.yaml
+          grep "^version:" pubspec.yaml
 
       - name: Build release APK
         if: startsWith(github.ref, 'refs/tags/v')
@@ -55,7 +55,7 @@ jobs:
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: jellymusic-debug-apk
+          name: altsound-debug-apk
           path: build/app/outputs/flutter-apk/app-debug.apk
           if-no-files-found: error
 
@@ -63,7 +63,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         uses: actions/upload-artifact@v4
         with:
-          name: jellymusic-release-apk
+          name: altsound-release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
 
