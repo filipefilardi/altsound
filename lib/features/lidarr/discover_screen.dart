@@ -190,6 +190,7 @@ class _ArtistTileState extends ConsumerState<_ArtistTile> {
 
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      onTap: () => context.push('/discover/artist', extra: a),
       leading: ClipRRect(
         borderRadius: BorderRadius.circular(28),
         child: SizedBox(

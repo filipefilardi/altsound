@@ -100,3 +100,26 @@ class LidarrDefaults {
   final int metadataProfileId;
   final String rootFolderPath;
 }
+
+class LidarrAlbumResult {
+  const LidarrAlbumResult({
+    required this.title,
+    required this.artistName,
+    required this.releaseDate,
+    required this.albumType,
+  });
+
+  final String title;
+  final String artistName;
+  final String? releaseDate;
+  final String? albumType;
+
+  factory LidarrAlbumResult.fromJson(Map<String, dynamic> json) {
+    return LidarrAlbumResult(
+      title: json['title'] as String? ?? 'Untitled album',
+      artistName: json['artistName'] as String? ?? 'Unknown artist',
+      releaseDate: json['releaseDate'] as String?,
+      albumType: json['albumType'] as String?,
+    );
+  }
+}
