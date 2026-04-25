@@ -162,22 +162,26 @@ class Artist {
     required this.id,
     required this.name,
     required this.imageTag,
+    required this.popularTracks,
     required this.albums,
   });
 
   final String id;
   final String name;
   final String? imageTag;
+  final List<Track> popularTracks;
   final List<BrowseItem> albums;
 
   factory Artist.fromJson(
     Map<String, dynamic> json, {
+    List<Track> popularTracks = const [],
     List<BrowseItem> albums = const [],
   }) {
     return Artist(
       id: json['Id'] as String,
       name: json['Name'] as String? ?? 'Unknown Artist',
       imageTag: _primaryImageTag(json),
+      popularTracks: popularTracks,
       albums: albums,
     );
   }
