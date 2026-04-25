@@ -360,6 +360,65 @@ class JellyfinRepository {
     );
   }
 
+  /// Jellyfin playlist entry id for [trackId] inside [playlistId], or null.
+  Future<String?> playlistEntryIdForTrack({
+    required String playlistId,
+    required String trackId,
+  }) async {
+    final s = _session;
+    final res = await _api.dio.get<Map<String, dynamic>>(
+      '/Playlists/$playlistId/Items',
+      queryParameters: {
+        'UserId': s.userId,
+        'IncludeItemTypes': 'Audio',
+        'Fields': 'Id',
+      },
+    );
+    for (final raw in (res.data?['Items'] as List?) ?? const []) {
+      final item = raw as Map<String, dynamic>;
+      if (item['Id'] != trackId) continue;
+      final pid = item['PlaylistItemId'];
+      if (pid is String && pid.isNotEmpty) return pid;
+    }
+    return null;
+  }
+
+  /// Playlists that contain this audio track (parallel checks).
+  Future<List<PlaylistMembership>> playlistsContainingTrack(
+    String trackId, {
+    List<BrowseItem>? playlistsCache,
+  }) async {
+    final list = playlistsCache ?? await playlists();
+    final futures = list.map((p) async {
+      final entryId =
+          await playlistEntryIdForTrack(playlistId: p.id, trackId: trackId);
+      if (entryId == null) return null;
+      return PlaylistMembership(
+        playlistId: p.id,
+        playlistName: p.name,
+        playlistItemEntryId: entryId,
+      );
+    });
+    final results = await Future.wait(futures);
+    return results.whereType<PlaylistMembership>().toList();
+  }
+
+  /// Removes one entry from a playlist ([playlistItemEntryId] is the
+  /// `PlaylistItemId` from `GET /Playlists/{id}/Items`, not the track id).
+  Future<void> removeTrackFromPlaylistByEntry({
+    required String playlistId,
+    required String playlistItemEntryId,
+  }) async {
+    final s = _session;
+    await _api.dio.delete<void>(
+      '/Playlists/$playlistId/Items',
+      queryParameters: {
+        'entryIds': playlistItemEntryId,
+        'UserId': s.userId,
+      },
+    );
+  }
+
   Future<void> deletePlaylist(String playlistId) async {
     final s = _session;
     await _api.dio.delete<void>(

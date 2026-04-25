@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../data/jellyfin/jellyfin_repository.dart';
 import '../../../data/jellyfin/models/media_item.dart';
 import '../player_providers.dart';
+import 'add_track_to_playlist_sheet.dart';
 
 class TrackMoreMenuButton extends ConsumerWidget {
   const TrackMoreMenuButton({
@@ -85,102 +85,8 @@ class TrackMoreMenuButton extends ConsumerWidget {
           context.push('/artist/${track.artistId}');
         }
       case _TrackAction.addToPlaylist:
-        await _showAddToPlaylistDialog(context, ref);
+        await openAddTrackToPlaylistFlow(context, ref, trackId: track.id);
     }
-  }
-
-  Future<void> _showAddToPlaylistDialog(BuildContext context, WidgetRef ref) async {
-    final repo = ref.read(jellyfinRepositoryProvider);
-    final playlists = await repo.playlists();
-    if (!context.mounted) return;
-    if (playlists.isEmpty) {
-      await _showCreatePlaylistDialog(context, ref, autoAddTrack: true);
-      return;
-    }
-    final selectedId = await showModalBottomSheet<String>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (sheetContext) => FractionallySizedBox(
-        heightFactor: 0.9,
-        child: SafeArea(
-          child: ListView(
-            children: [
-              const ListTile(
-                title: Text('Add to playlist'),
-              ),
-              ...playlists.map(
-                (playlist) => ListTile(
-                  title: Text(playlist.name),
-                  onTap: () => Navigator.of(sheetContext).pop(playlist.id),
-                ),
-              ),
-              const Divider(height: 1),
-              ListTile(
-                leading: const Icon(Icons.playlist_add_circle_outlined),
-                title: const Text('Create new playlist'),
-                onTap: () => Navigator.of(sheetContext).pop('__create__'),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-    if (!context.mounted) return;
-    if (selectedId == null) return;
-    if (selectedId == '__create__') {
-      await _showCreatePlaylistDialog(context, ref, autoAddTrack: true);
-      return;
-    }
-    final selected = playlists.firstWhere((playlist) => playlist.id == selectedId);
-    await repo.addTrackToPlaylist(trackId: track.id, playlistId: selectedId);
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Added to ${selected.name}')),
-    );
-  }
-
-  Future<void> _showCreatePlaylistDialog(
-    BuildContext context,
-    WidgetRef ref, {
-    required bool autoAddTrack,
-  }) async {
-    final ctrl = TextEditingController();
-    final name = await showDialog<String>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Create playlist'),
-        content: TextField(
-          controller: ctrl,
-          autofocus: true,
-          textInputAction: TextInputAction.done,
-          decoration: const InputDecoration(hintText: 'Playlist name'),
-          onSubmitted: (v) => Navigator.of(context).pop(v.trim()),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(ctrl.text.trim()),
-            child: const Text('Create'),
-          ),
-        ],
-      ),
-    );
-    final playlistName = name?.trim() ?? '';
-    if (playlistName.isEmpty) return;
-
-    final repo = ref.read(jellyfinRepositoryProvider);
-    final created = await repo.createPlaylist(playlistName);
-    if (autoAddTrack) {
-      await repo.addTrackToPlaylist(trackId: track.id, playlistId: created.id);
-    }
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Playlist "${created.name}" created')),
-    );
   }
 }
 
