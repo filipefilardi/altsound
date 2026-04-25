@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -7,7 +8,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_gradients.dart';
+import 'current_track_playlist_presence.dart';
 import 'player_providers.dart';
+import 'widgets/add_track_to_playlist_sheet.dart';
 import 'widgets/player_hero_art.dart';
 
 class MiniPlayer extends ConsumerWidget {
@@ -27,6 +30,12 @@ class MiniPlayer extends ConsumerWidget {
         : (position.inMilliseconds / duration.inMilliseconds).clamp(0.0, 1.0);
     final controller = ref.read(playerControllerProvider);
     final artistId = mediaItem.extras?['artistId'] as String?;
+    final offline = mediaItem.extras?['isOffline'] == true;
+    final presenceAsync = ref.watch(currentTrackPlaylistPresenceProvider);
+    final saved = switch (presenceAsync) {
+      AsyncData(:final value) => value.isSaved,
+      _ => false,
+    };
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -120,13 +129,24 @@ class MiniPlayer extends ConsumerWidget {
                                 ],
                               ),
                             ),
+                            if (!offline)
+                              _RoundIcon(
+                                icon: saved
+                                    ? Icons.playlist_add_check
+                                    : Icons.playlist_add,
+                                iconColor: saved ? AppColors.primary : null,
+                                onTap: () => unawaited(
+                                  _onMiniPlayerPlaylistTap(
+                                    context,
+                                    ref,
+                                    trackId: mediaItem.id,
+                                    saved: saved,
+                                  ),
+                                ),
+                              ),
                             _RoundIcon(
                               icon: playing ? Icons.pause : Icons.play_arrow,
                               onTap: controller.togglePlay,
-                            ),
-                            _RoundIcon(
-                              icon: Icons.skip_next,
-                              onTap: controller.next,
                             ),
                           ],
                         ),
@@ -144,10 +164,50 @@ class MiniPlayer extends ConsumerWidget {
   }
 }
 
+Future<void> _onMiniPlayerPlaylistTap(
+  BuildContext context,
+  WidgetRef ref, {
+  required String trackId,
+  required bool saved,
+}) async {
+  if (!context.mounted) return;
+  if (!saved) {
+    await openAddTrackToPlaylistFlow(
+      context,
+      ref,
+      trackId: trackId,
+      includeLikedSongsShortcut: true,
+    );
+    return;
+  }
+  final presence = await ref.read(currentTrackPlaylistPresenceProvider.future);
+  if (!context.mounted) return;
+  if (!presence.isSaved) {
+    await openAddTrackToPlaylistFlow(
+      context,
+      ref,
+      trackId: trackId,
+      includeLikedSongsShortcut: true,
+    );
+    return;
+  }
+  await openManageTrackPlaylistsSheet(
+    context,
+    ref,
+    trackId: trackId,
+    presence: presence,
+  );
+}
+
 class _RoundIcon extends StatelessWidget {
-  const _RoundIcon({required this.icon, required this.onTap});
+  const _RoundIcon({
+    required this.icon,
+    required this.onTap,
+    this.iconColor,
+  });
   final IconData icon;
   final VoidCallback onTap;
+  final Color? iconColor;
 
   @override
   Widget build(BuildContext context) {
@@ -160,7 +220,11 @@ class _RoundIcon extends StatelessWidget {
         child: SizedBox(
           width: 40,
           height: 40,
-          child: Icon(icon, color: AppColors.textPrimary, size: 22),
+          child: Icon(
+            icon,
+            color: iconColor ?? AppColors.textPrimary,
+            size: 22,
+          ),
         ),
       ),
     );

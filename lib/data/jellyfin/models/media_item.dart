@@ -225,6 +225,20 @@ class PlaylistDetail {
   }
 }
 
+/// A playlist that currently contains a given track, plus the Jellyfin playlist
+/// entry id required to remove it (`DELETE /Playlists/.../Items`).
+class PlaylistMembership {
+  const PlaylistMembership({
+    required this.playlistId,
+    required this.playlistName,
+    required this.playlistItemEntryId,
+  });
+
+  final String playlistId;
+  final String playlistName;
+  final String playlistItemEntryId;
+}
+
 String? _primaryImageTag(Map<String, dynamic> json) {
   final tags = json['ImageTags'];
   if (tags is Map && tags['Primary'] is String) {

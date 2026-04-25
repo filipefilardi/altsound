@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/jellyfin/jellyfin_repository.dart';
+import 'current_track_playlist_presence.dart';
 import 'player_providers.dart';
 
 final nowPlayingFavoriteProvider =
@@ -26,6 +27,7 @@ class NowPlayingFavorite extends AsyncNotifier<bool?> {
       if (!was) {
         await repo.addTrackToLikedSongs(item.id);
       }
+      ref.invalidate(currentTrackPlaylistPresenceProvider);
       state = AsyncData(!was);
     } catch (e, st) {
       state = AsyncError(e, st);
