@@ -175,6 +175,28 @@ class JellyfinRepository {
     return Album.fromJson(detail.data ?? {}, tracks: tracks);
   }
 
+  Future<Artist> artist(String artistId) async {
+    final s = _session;
+    final detail = await _api.dio.get<Map<String, dynamic>>(
+      '/Users/${s.userId}/Items/$artistId',
+    );
+    final albumsRes = await _api.dio.get<Map<String, dynamic>>(
+      '/Users/${s.userId}/Items',
+      queryParameters: {
+        'IncludeItemTypes': 'MusicAlbum',
+        'Recursive': true,
+        'ArtistIds': artistId,
+        'SortBy': 'ProductionYear,SortName',
+        'SortOrder': 'Ascending',
+      },
+    );
+    final albums = ((albumsRes.data?['Items'] as List?) ?? const [])
+        .cast<Map<String, dynamic>>()
+        .map(BrowseItem.fromJson)
+        .toList();
+    return Artist.fromJson(detail.data ?? {}, albums: albums);
+  }
+
   String imageUrl(
     String itemId, {
     String? imageTag,

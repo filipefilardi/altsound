@@ -193,6 +193,7 @@ class _ResultTile extends ConsumerWidget {
         final track = await ref.read(jellyfinRepositoryProvider).track(item.id);
         await ref.read(playerControllerProvider).playTracks([track]);
       case MediaKind.artist:
+        context.push('/artist/${item.id}');
       case MediaKind.playlist:
         // Future: artist + playlist detail screens
         break;

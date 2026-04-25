@@ -68,6 +68,26 @@ class LidarrRepository {
         .toList();
   }
 
+  Future<List<LidarrAlbumResult>> artistAlbums({
+    required String artistName,
+    String? foreignArtistId,
+  }) async {
+    if (artistName.trim().isEmpty) return const [];
+    final res = await _dio.get<List<dynamic>>(
+      '/api/v1/album/lookup',
+      queryParameters: {'term': artistName.trim()},
+    );
+    final all = (res.data ?? const [])
+        .whereType<Map>()
+        .map((row) => row.map((k, v) => MapEntry('$k', v)))
+        .map(LidarrAlbumResult.fromJson)
+        .toList();
+    if (foreignArtistId == null || foreignArtistId.isEmpty) return all;
+    return all
+        .where((a) => a.artistName.toLowerCase() == artistName.toLowerCase())
+        .toList();
+  }
+
   Future<LidarrDefaults> defaults() async {
     final results = await Future.wait([
       _dio.get<List<dynamic>>('/api/v1/qualityprofile'),
