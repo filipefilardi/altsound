@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/album/album_screen.dart';
+import '../features/home/recently_added_screen.dart';
 import '../features/artist/artist_discography_screen.dart';
 import '../features/artist/artist_screen.dart';
 import '../features/auth/auth_controller.dart';
@@ -71,6 +72,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
+      GoRoute(path: '/recently-added', builder: (_, __) => const RecentlyAddedScreen()),
       GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
       GoRoute(
         path: '/settings/lidarr',

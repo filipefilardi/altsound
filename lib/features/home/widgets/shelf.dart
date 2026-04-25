@@ -9,11 +9,13 @@ class Shelf extends ConsumerWidget {
   const Shelf({
     required this.title,
     required this.items,
+    this.onSeeAll,
     super.key,
   });
 
   final String title;
   final AsyncValue<List<BrowseItem>> items;
+  final VoidCallback? onSeeAll;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -21,10 +23,21 @@ class Shelf extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 14),
-          child: Text(
-            title,
-            style: Theme.of(context).textTheme.headlineSmall,
+          padding: const EdgeInsets.fromLTRB(20, 24, 4, 14),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+              ),
+              if (onSeeAll != null)
+                TextButton(
+                  onPressed: onSeeAll,
+                  child: const Text('See all'),
+                ),
+            ],
           ),
         ),
         SizedBox(

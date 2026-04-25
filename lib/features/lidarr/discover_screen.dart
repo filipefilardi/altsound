@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/empty_state.dart';
 import '../../data/lidarr/lidarr_repository.dart';
 import '../../data/lidarr/models/lidarr_models.dart';
 
@@ -111,8 +112,11 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
           ),
           Expanded(
             child: _term.isEmpty
-                ? const _Empty(
-                    message: 'Search for an artist to request from Lidarr.')
+                ? const EmptyState(
+                    icon: Icons.travel_explore,
+                    title: 'Find new artists',
+                    message: 'Search to request artists to your Lidarr library.',
+                  )
                 : FutureBuilder<List<LidarrArtistResult>>(
                     future: _resultsFuture,
                     builder: (context, snapshot) {
@@ -122,12 +126,19 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
                             child: CircularProgressIndicator());
                       }
                       if (snapshot.hasError) {
-                        return _Empty(
-                            message: 'Search failed: ${snapshot.error}');
+                        return EmptyState(
+                          icon: Icons.error_outline,
+                          title: 'Search failed',
+                          message: '${snapshot.error}',
+                        );
                       }
                       final results = snapshot.data ?? const [];
                       if (results.isEmpty) {
-                        return const _Empty(message: 'No matches.');
+                        return const EmptyState(
+                          icon: Icons.search_off,
+                          title: 'No matches',
+                          message: 'Try a different artist name.',
+                        );
                       }
                       return ListView.separated(
                         padding: const EdgeInsets.only(bottom: 96),
@@ -240,18 +251,3 @@ class _ArtistTileState extends ConsumerState<_ArtistTile> {
   }
 }
 
-class _Empty extends StatelessWidget {
-  const _Empty({required this.message});
-  final String message;
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Text(message,
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.textSecondary)),
-      ),
-    );
-  }
-}

@@ -1,8 +1,10 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_gradients.dart';
 import '../../core/utils/format.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/skeleton.dart';
@@ -95,26 +97,10 @@ class _PlaylistView extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       children: [
-        Text(
-          playlist.name,
-          style: Theme.of(context).textTheme.headlineSmall,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          '${playlist.tracks.length} songs • ${formatLongDuration(playlist.totalDuration)}',
-          style: const TextStyle(color: AppColors.textSecondary),
-        ),
-        const SizedBox(height: 12),
-        if (playlist.tracks.isNotEmpty)
-          FilledButton.icon(
-            onPressed: () =>
-                ref.read(playerControllerProvider).playTracks(playlist.tracks),
-            icon: const Icon(Icons.play_arrow),
-            label: const Text('Play'),
-          ),
-        const SizedBox(height: 12),
+        _PlaylistHeader(playlist: playlist),
+        const SizedBox(height: 16),
+        _ActionRow(playlist: playlist),
+        const SizedBox(height: 8),
         if (playlist.tracks.isEmpty)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 24),
@@ -132,6 +118,150 @@ class _PlaylistView extends ConsumerWidget {
                 ),
               ),
       ],
+    );
+  }
+}
+
+class _PlaylistHeader extends ConsumerWidget {
+  const _PlaylistHeader({required this.playlist});
+  final PlaylistDetail playlist;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final repo = ref.read(jellyfinRepositoryProvider);
+    final firstTrack = playlist.tracks.firstOrNull;
+
+    // Use playlist image tag if available, else fall back to first track's art
+    final String? artId = playlist.imageTag != null
+        ? playlist.id
+        : firstTrack?.albumImageItemId ?? firstTrack?.id;
+    final String? artTag = playlist.imageTag ?? firstTrack?.imageTag;
+    final imageUrl =
+        artId != null ? repo.imageUrl(artId, imageTag: artTag, size: 300) : null;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: SizedBox(
+            width: 120,
+            height: 120,
+            child: imageUrl != null
+                ? CachedNetworkImage(
+                    imageUrl: imageUrl,
+                    fit: BoxFit.cover,
+                    placeholder: (_, __) =>
+                        const ColoredBox(color: AppColors.surfaceElevated),
+                    errorWidget: (_, __, ___) => const _ArtFallback(),
+                  )
+                : const _ArtFallback(),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                playlist.name,
+                style: Theme.of(context).textTheme.headlineSmall,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 6),
+              Text(
+                '${playlist.tracks.length} songs · ${formatLongDuration(playlist.totalDuration)}',
+                style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ActionRow extends ConsumerWidget {
+  const _ActionRow({required this.playlist});
+  final PlaylistDetail playlist;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final controller = ref.read(playerControllerProvider);
+    final enabled = playlist.tracks.isNotEmpty;
+
+    return Row(
+      children: [
+        _PlayPill(
+          onTap: enabled ? () => controller.playTracks(playlist.tracks) : null,
+        ),
+        const SizedBox(width: 12),
+        IconButton(
+          tooltip: 'Shuffle',
+          icon: const Icon(Icons.shuffle, color: AppColors.textPrimary),
+          onPressed: enabled
+              ? () async {
+                  await controller.toggleShuffle();
+                  if (!context.mounted) return;
+                  controller.playTracks(playlist.tracks);
+                }
+              : null,
+        ),
+      ],
+    );
+  }
+}
+
+class _PlayPill extends StatelessWidget {
+  const _PlayPill({required this.onTap});
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onTap != null;
+    return Opacity(
+      opacity: enabled ? 1 : 0.5,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: AppGradients.accent,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.3),
+              blurRadius: 18,
+              offset: const Offset(0, 6),
+              spreadRadius: -3,
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          shape: const CircleBorder(),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: const SizedBox(
+              width: 56,
+              height: 56,
+              child: Icon(Icons.play_arrow, color: Color(0xFF1A0F05), size: 30),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ArtFallback extends StatelessWidget {
+  const _ArtFallback();
+  @override
+  Widget build(BuildContext context) {
+    return const ColoredBox(
+      color: AppColors.surfaceElevated,
+      child: Center(
+        child: Icon(Icons.queue_music, color: AppColors.textTertiary, size: 40),
+      ),
     );
   }
 }
@@ -211,11 +341,25 @@ class _PlaylistLoading extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         children: [
-          Skeleton.line(width: 160, height: 24),
-          const SizedBox(height: 8),
-          Skeleton.line(width: 130, height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Skeleton.box(width: 120, height: 120, radius: 12),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Skeleton.line(width: 160, height: 20),
+                    const SizedBox(height: 8),
+                    Skeleton.line(width: 120, height: 13),
+                  ],
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 16),
-          Skeleton.box(width: 92, height: 40, radius: 20),
+          Skeleton.box(width: 56, height: 56, radius: 28),
           const SizedBox(height: 16),
           for (int i = 0; i < 8; i++) ...[
             Skeleton.line(height: 14),

@@ -101,14 +101,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                           onDiscover: () => context.push('/discover'),
                         );
                       }
-                      return ListView.separated(
-                        padding: const EdgeInsets.only(bottom: 24),
-                        itemCount: results.length,
-                        separatorBuilder: (_, __) =>
-                            const Divider(height: 1, indent: 80),
-                        itemBuilder: (_, i) =>
-                            _ResultTile(item: results[i]),
-                      );
+                      return _GroupedResults(results: results);
                     },
                   ),
           ),
@@ -370,6 +363,73 @@ class _SearchTrackMenuButton extends ConsumerWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _GroupedResults extends StatelessWidget {
+  const _GroupedResults({required this.results});
+  final List<BrowseItem> results;
+
+  @override
+  Widget build(BuildContext context) {
+    final tracks = results.where((r) => r.kind == MediaKind.track).toList();
+    final albums = results.where((r) => r.kind == MediaKind.album).toList();
+    final artists = results.where((r) => r.kind == MediaKind.artist).toList();
+    final playlists = results.where((r) => r.kind == MediaKind.playlist).toList();
+
+    final sections = <(String, List<BrowseItem>)>[
+      if (tracks.isNotEmpty) ('Songs', tracks),
+      if (albums.isNotEmpty) ('Albums', albums),
+      if (artists.isNotEmpty) ('Artists', artists),
+      if (playlists.isNotEmpty) ('Playlists', playlists),
+    ];
+
+    return ListView.builder(
+      padding: const EdgeInsets.only(bottom: 24),
+      itemCount: sections.fold<int>(
+        0,
+        (count, section) => count + 1 + section.$2.length,
+      ),
+      itemBuilder: (context, index) {
+        int cursor = 0;
+        for (final (label, items) in sections) {
+          if (index == cursor) {
+            return _SectionHeader(label: label);
+          }
+          cursor++;
+          final itemIndex = index - cursor;
+          if (itemIndex < items.length) {
+            final item = items[itemIndex];
+            final isLast = itemIndex == items.length - 1;
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _ResultTile(item: item),
+                if (!isLast) const Divider(height: 1, indent: 80),
+              ],
+            );
+          }
+          cursor += items.length;
+        }
+        return const SizedBox.shrink();
+      },
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 4),
+      child: Text(
+        label.toUpperCase(),
+        style: Theme.of(context).textTheme.labelLarge,
+      ),
     );
   }
 }
