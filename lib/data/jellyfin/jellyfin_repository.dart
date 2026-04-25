@@ -26,7 +26,7 @@ class JellyfinRepository {
   }
 
   static const _trackFields =
-      'AlbumArtist,Artists,AlbumId,ParentIndexNumber,ProductionYear,MediaSources';
+      'AlbumArtist,Artists,ArtistItems,AlbumId,ParentIndexNumber,ProductionYear,MediaSources';
 
   Future<List<BrowseItem>> recentlyAddedAlbums({int limit = 20}) async {
     final s = _session;
@@ -135,7 +135,7 @@ class JellyfinRepository {
         'IncludeItemTypes': 'MusicAlbum,MusicArtist,Audio',
         'Recursive': true,
         'Limit': 50,
-        'Fields': 'AlbumArtist,Artists,AlbumId,RunTimeTicks',
+        'Fields': 'AlbumArtist,Artists,ArtistItems,AlbumId,RunTimeTicks',
       },
     );
     final rawItems = ((res.data?['Items'] as List?) ?? const [])
@@ -162,7 +162,7 @@ class JellyfinRepository {
         'ArtistIds': artistIds.join(','),
         'Limit': 100,
         'SortBy': 'SortName',
-        'Fields': 'AlbumArtist,Artists,AlbumId,RunTimeTicks',
+        'Fields': 'AlbumArtist,Artists,ArtistItems,AlbumId,RunTimeTicks',
       },
     );
     final extraTracks = (((tracksForArtists.data?['Items'] as List?) ?? const [])
@@ -239,7 +239,7 @@ class JellyfinRepository {
         'SortOrder': 'Descending',
         'Limit': 5,
         'EnableUserData': true,
-        'Fields': 'AlbumArtist,Artists,AlbumId,RunTimeTicks,UserData',
+        'Fields': 'AlbumArtist,Artists,ArtistItems,AlbumId,RunTimeTicks,UserData',
       },
     );
     final popularTracks = ((topTracksRes.data?['Items'] as List?) ?? const [])

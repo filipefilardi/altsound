@@ -131,6 +131,7 @@ class PlayerController {
       extras: {
         'streamUrl': streamUrl,
         'jellyfinId': t.id,
+        'artistId': t.artistId,
         'isOffline': localPath != null,
       },
     );

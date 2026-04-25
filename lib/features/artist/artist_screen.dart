@@ -8,6 +8,7 @@ import '../../core/widgets/error_state.dart';
 import '../../core/widgets/skeleton.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
 import '../../data/jellyfin/models/media_item.dart';
+import '../player/widgets/mini_player_slot.dart';
 import '../player/player_providers.dart';
 import '../player/widgets/playing_track_leading.dart';
 
@@ -25,6 +26,7 @@ class ArtistScreen extends ConsumerWidget {
     final async = ref.watch(artistProvider(artistId));
     return Scaffold(
       appBar: AppBar(title: const Text('Artist')),
+      bottomNavigationBar: const MiniPlayerSlot(withTopDivider: true),
       body: async.when(
         loading: () => const _ArtistLoading(),
         error: (e, _) => ErrorStateView(

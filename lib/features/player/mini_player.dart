@@ -26,6 +26,7 @@ class MiniPlayer extends ConsumerWidget {
         ? 0.0
         : (position.inMilliseconds / duration.inMilliseconds).clamp(0.0, 1.0);
     final controller = ref.read(playerControllerProvider);
+    final artistId = mediaItem.extras?['artistId'] as String?;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -100,13 +101,20 @@ class MiniPlayer extends ConsumerWidget {
                                     ),
                                   ),
                                   if (mediaItem.artist != null)
-                                    Text(
-                                      mediaItem.artist!,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        color: AppColors.textSecondary,
-                                        fontSize: 12,
+                                    InkWell(
+                                      onTap: artistId == null || artistId.isEmpty
+                                          ? null
+                                          : () => context.push('/artist/$artistId'),
+                                      child: Text(
+                                        mediaItem.artist!,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          color: artistId == null || artistId.isEmpty
+                                              ? AppColors.textSecondary
+                                              : AppColors.primary,
+                                          fontSize: 12,
+                                        ),
                                       ),
                                     ),
                                 ],

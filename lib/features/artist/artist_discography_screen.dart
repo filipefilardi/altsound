@@ -7,6 +7,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/skeleton.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
+import '../player/widgets/mini_player_slot.dart';
 import 'artist_screen.dart';
 
 class ArtistDiscographyScreen extends ConsumerWidget {
@@ -19,6 +20,7 @@ class ArtistDiscographyScreen extends ConsumerWidget {
     final async = ref.watch(artistProvider(artistId));
     return Scaffold(
       appBar: AppBar(title: const Text('Discography')),
+      bottomNavigationBar: const MiniPlayerSlot(withTopDivider: true),
       body: async.when(
         loading: () => const _DiscographyLoading(),
         error: (e, _) => ErrorStateView(

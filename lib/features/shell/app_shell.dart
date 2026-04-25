@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../player/mini_player.dart';
+import '../player/widgets/mini_player_slot.dart';
 import '../player/player_providers.dart';
 
 class AppShell extends ConsumerStatefulWidget {
@@ -49,18 +49,12 @@ class _AppShellState extends ConsumerState<AppShell> {
 
   @override
   Widget build(BuildContext context) {
-    final hasMedia = ref.watch(currentMediaItemProvider).value != null;
-
     return Scaffold(
       body: widget.navigationShell,
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (hasMedia)
-            const Padding(
-              padding: EdgeInsets.only(bottom: 6),
-              child: MiniPlayer(),
-            ),
+          const MiniPlayerSlot(),
           DecoratedBox(
             decoration: const BoxDecoration(
               border: Border(

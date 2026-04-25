@@ -118,6 +118,7 @@ class Track {
     required this.albumId,
     required this.albumName,
     required this.artistName,
+    required this.artistId,
     required this.duration,
     required this.trackNumber,
     required this.discNumber,
@@ -130,6 +131,7 @@ class Track {
   final String? albumId;
   final String? albumName;
   final String artistName;
+  final String? artistId;
   final Duration duration;
   final int? trackNumber;
   final int? discNumber;
@@ -138,6 +140,9 @@ class Track {
 
   factory Track.fromJson(Map<String, dynamic> json) {
     final artists = (json['Artists'] as List?)?.cast<String>();
+    final artistId = (json['ArtistItems'] as List?)
+        ?.cast<Map<String, dynamic>>()
+        .firstOrNull?['Id'] as String?;
     return Track(
       id: json['Id'] as String,
       name: json['Name'] as String? ?? 'Untitled',
@@ -146,6 +151,7 @@ class Track {
       artistName: artists?.join(', ') ??
           json['AlbumArtist'] as String? ??
           'Unknown Artist',
+      artistId: artistId,
       duration: _durationFromTicks(json['RunTimeTicks'] as int?),
       trackNumber: json['IndexNumber'] as int?,
       discNumber: json['ParentIndexNumber'] as int?,
