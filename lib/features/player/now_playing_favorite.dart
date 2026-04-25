@@ -23,6 +23,9 @@ class NowPlayingFavorite extends AsyncNotifier<bool?> {
     final repo = ref.read(jellyfinRepositoryProvider);
     try {
       await repo.setFavorite(item.id, favorite: !was);
+      if (!was) {
+        await repo.addTrackToLikedSongs(item.id);
+      }
       state = AsyncData(!was);
     } catch (e, st) {
       state = AsyncError(e, st);

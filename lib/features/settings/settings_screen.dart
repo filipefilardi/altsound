@@ -46,6 +46,17 @@ class SettingsScreen extends ConsumerWidget {
                 const Icon(Icons.chevron_right, color: AppColors.textSecondary),
             onTap: () => context.push('/settings/lidarr'),
           ),
+          ListTile(
+            leading: const Icon(Icons.queue_music_outlined),
+            title: const Text('Lidarr requests'),
+            subtitle: const Text(
+              'Discover and request music via Lidarr',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+            trailing:
+                const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+            onTap: () => context.push('/discover'),
+          ),
           const _SectionLabel('Storage'),
           ListTile(
             leading: const Icon(Icons.download_outlined),

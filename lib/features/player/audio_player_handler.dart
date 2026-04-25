@@ -113,6 +113,17 @@ class JellymusicAudioHandler extends BaseAudioHandler with SeekHandler {
     await _player.moveAudioSource(oldIndex, adjusted);
   }
 
+  Future<void> appendToQueue(MediaItem item) async {
+    final q = List<MediaItem>.from(queue.value)..add(item);
+    queue.add(q);
+    await _player.addAudioSource(
+      AudioSource.uri(
+        Uri.parse(item.extras!['streamUrl'] as String),
+        tag: item,
+      ),
+    );
+  }
+
   @override
   Future<void> play() => _player.play();
 

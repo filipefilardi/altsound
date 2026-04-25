@@ -18,6 +18,7 @@ class JellyfinRepository {
   JellyfinRepository(this._api);
 
   final JellyfinApi _api;
+  String? _likedSongsPlaylistId;
 
   JellyfinSession get _session {
     final s = _api.session;
@@ -252,6 +253,152 @@ class JellyfinRepository {
       popularTracks: popularTracks,
       albums: albums,
     );
+  }
+
+  Future<PlaylistDetail> playlist(String playlistId) async {
+    final s = _session;
+    final detail = await _api.dio.get<Map<String, dynamic>>(
+      '/Users/${s.userId}/Items/$playlistId',
+    );
+    final tracksRes = await _api.dio.get<Map<String, dynamic>>(
+      '/Users/${s.userId}/Items',
+      queryParameters: {
+        'ParentId': playlistId,
+        'IncludeItemTypes': 'Audio',
+        'Recursive': true,
+        'SortBy': 'PlaylistItemId,SortName',
+        'Fields': _trackFields,
+      },
+    );
+    final tracks = ((tracksRes.data?['Items'] as List?) ?? const [])
+        .cast<Map<String, dynamic>>()
+        .map(Track.fromJson)
+        .toList();
+    return PlaylistDetail.fromJson(detail.data ?? {}, tracks: tracks);
+  }
+
+  Future<BrowseItem?> likedSongsPlaylist() async {
+    final s = _session;
+    if (_likedSongsPlaylistId != null && _likedSongsPlaylistId!.isNotEmpty) {
+      final detail = await _api.dio.get<Map<String, dynamic>>(
+        '/Users/${s.userId}/Items/${_likedSongsPlaylistId!}',
+      );
+      return BrowseItem.fromJson(detail.data ?? {});
+    }
+    final res = await _api.dio.get<Map<String, dynamic>>(
+      '/Users/${s.userId}/Items',
+      queryParameters: {
+        'IncludeItemTypes': 'Playlist',
+        'Recursive': true,
+        'searchTerm': 'Liked Songs',
+        'Limit': 25,
+      },
+    );
+    final items = ((res.data?['Items'] as List?) ?? const [])
+        .cast<Map<String, dynamic>>();
+    final liked = items.firstWhere(
+      (item) =>
+          (item['Name'] as String?)?.toLowerCase().trim() == 'liked songs',
+      orElse: () => const <String, dynamic>{},
+    );
+    if (liked.isEmpty) return null;
+    _likedSongsPlaylistId = liked['Id'] as String?;
+    return BrowseItem.fromJson(liked);
+  }
+
+  Future<List<BrowseItem>> playlists({int limit = 100}) async {
+    final s = _session;
+    final res = await _api.dio.get<Map<String, dynamic>>(
+      '/Users/${s.userId}/Items',
+      queryParameters: {
+        'IncludeItemTypes': 'Playlist',
+        'Recursive': true,
+        'Limit': limit,
+        'SortBy': 'SortName',
+      },
+    );
+    final items = ((res.data?['Items'] as List?) ?? const [])
+        .cast<Map<String, dynamic>>();
+    return items.map(BrowseItem.fromJson).toList();
+  }
+
+  Future<BrowseItem> createPlaylist(String name) async {
+    final s = _session;
+    final created = await _api.dio.post<Map<String, dynamic>>(
+      '/Playlists',
+      queryParameters: {
+        'Name': name.trim(),
+        'UserId': s.userId,
+      },
+    );
+    return BrowseItem.fromJson(created.data ?? {});
+  }
+
+  Future<void> addTrackToPlaylist({
+    required String trackId,
+    required String playlistId,
+  }) async {
+    final s = _session;
+    final existing = await _api.dio.get<Map<String, dynamic>>(
+      '/Playlists/$playlistId/Items',
+      queryParameters: {
+        'UserId': s.userId,
+        'IncludeItemTypes': 'Audio',
+        'Fields': 'Id',
+      },
+    );
+    final alreadyInPlaylist = (((existing.data?['Items'] as List?) ?? const [])
+            .cast<Map<String, dynamic>>())
+        .any((item) => item['Id'] == trackId);
+    if (alreadyInPlaylist) return;
+    await _api.dio.post<void>(
+      '/Playlists/$playlistId/Items',
+      queryParameters: {
+        'Ids': trackId,
+        'UserId': s.userId,
+      },
+    );
+  }
+
+  Future<void> deletePlaylist(String playlistId) async {
+    final s = _session;
+    await _api.dio.delete<void>(
+      '/Items/$playlistId',
+      queryParameters: {'UserId': s.userId},
+    );
+    if (_likedSongsPlaylistId == playlistId) {
+      _likedSongsPlaylistId = null;
+    }
+  }
+
+  Future<void> addTrackToLikedSongs(String trackId) async {
+    final playlistId = await _ensureLikedSongsPlaylistId();
+    await addTrackToPlaylist(trackId: trackId, playlistId: playlistId);
+  }
+
+  Future<String> _ensureLikedSongsPlaylistId() async {
+    if (_likedSongsPlaylistId != null && _likedSongsPlaylistId!.isNotEmpty) {
+      return _likedSongsPlaylistId!;
+    }
+    final existing = await likedSongsPlaylist();
+    if (existing != null) {
+      _likedSongsPlaylistId = existing.id;
+      return existing.id;
+    }
+    final s = _session;
+    final created = await _api.dio.post<Map<String, dynamic>>(
+      '/Playlists',
+      queryParameters: {
+        'Name': 'Liked Songs',
+        'UserId': s.userId,
+      },
+    );
+    final id = created.data?['Id'] as String?;
+    if (id == null || id.isEmpty) {
+      throw StateError('Failed to create "Liked Songs" playlist');
+    }
+    _likedSongsPlaylistId = id;
+    return id;
   }
 
   String imageUrl(

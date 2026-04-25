@@ -193,6 +193,35 @@ class Artist {
   }
 }
 
+class PlaylistDetail {
+  const PlaylistDetail({
+    required this.id,
+    required this.name,
+    required this.imageTag,
+    required this.tracks,
+  });
+
+  final String id;
+  final String name;
+  final String? imageTag;
+  final List<Track> tracks;
+
+  Duration get totalDuration =>
+      tracks.fold(Duration.zero, (sum, track) => sum + track.duration);
+
+  factory PlaylistDetail.fromJson(
+    Map<String, dynamic> json, {
+    List<Track> tracks = const [],
+  }) {
+    return PlaylistDetail(
+      id: json['Id'] as String,
+      name: json['Name'] as String? ?? 'Untitled Playlist',
+      imageTag: _primaryImageTag(json),
+      tracks: tracks,
+    );
+  }
+}
+
 String? _primaryImageTag(Map<String, dynamic> json) {
   final tags = json['ImageTags'];
   if (tags is Map && tags['Primary'] is String) {
