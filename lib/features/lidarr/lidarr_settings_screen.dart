@@ -18,8 +18,10 @@ class _LidarrSettingsScreenState extends ConsumerState<LidarrSettingsScreen> {
   late final TextEditingController _urlCtrl;
   late final TextEditingController _keyCtrl;
   bool _saving = false;
+  bool _testing = false;
   String? _error;
   bool? _testResult;
+  String? _lastSuccessfulTestSignature;
 
   @override
   void initState() {
@@ -27,19 +29,38 @@ class _LidarrSettingsScreenState extends ConsumerState<LidarrSettingsScreen> {
     final existing = ref.read(lidarrConfigProvider);
     _urlCtrl = TextEditingController(text: existing?.url ?? '');
     _keyCtrl = TextEditingController(text: existing?.apiKey ?? '');
+    _urlCtrl.addListener(_onConnectionInputChanged);
+    _keyCtrl.addListener(_onConnectionInputChanged);
   }
 
   @override
   void dispose() {
+    _urlCtrl.removeListener(_onConnectionInputChanged);
+    _keyCtrl.removeListener(_onConnectionInputChanged);
     _urlCtrl.dispose();
     _keyCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _save() async {
-    if (!_formKey.currentState!.validate()) return;
+  String _connectionSignature() {
+    return '${_urlCtrl.text.trim()}|${_keyCtrl.text.trim()}';
+  }
+
+  void _onConnectionInputChanged() {
+    final current = _connectionSignature();
+    if (_lastSuccessfulTestSignature == current && _testResult == true) return;
+    if (_testResult != null || _error != null) {
+      setState(() {
+        _testResult = null;
+        _error = null;
+      });
+    }
+  }
+
+  Future<bool> _testConnection() async {
+    if (!_formKey.currentState!.validate()) return false;
     setState(() {
-      _saving = true;
+      _testing = true;
       _error = null;
       _testResult = null;
     });
@@ -49,21 +70,47 @@ class _LidarrSettingsScreenState extends ConsumerState<LidarrSettingsScreen> {
     );
     final repo = LidarrRepository(config);
     final ok = await repo.ping();
-    if (!mounted) return;
+    if (!mounted) return false;
     if (!ok) {
       setState(() {
-        _saving = false;
+        _testing = false;
         _testResult = false;
+        _lastSuccessfulTestSignature = null;
         _error = 'Could not reach Lidarr at that URL with this API key.';
       });
+      return false;
+    }
+    setState(() {
+      _testing = false;
+      _testResult = true;
+      _lastSuccessfulTestSignature = _connectionSignature();
+    });
+    return true;
+  }
+
+  Future<void> _save() async {
+    if (!_formKey.currentState!.validate()) return;
+    final testedCurrentValues =
+        _testResult == true && _lastSuccessfulTestSignature == _connectionSignature();
+    if (!testedCurrentValues) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Test the connection first before saving.'),
+        ),
+      );
       return;
     }
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    final config = LidarrConfig(
+      url: _urlCtrl.text.trim(),
+      apiKey: _keyCtrl.text.trim(),
+    );
     await ref.read(lidarrConfigProvider.notifier).save(config);
     if (!mounted) return;
-    setState(() {
-      _saving = false;
-      _testResult = true;
-    });
+    setState(() => _saving = false);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Lidarr connected.')),
     );
@@ -134,8 +181,20 @@ class _LidarrSettingsScreenState extends ConsumerState<LidarrSettingsScreen> {
                   ),
                 ],
                 const SizedBox(height: 32),
+                OutlinedButton.icon(
+                  onPressed: (_saving || _testing) ? null : _testConnection,
+                  icon: _testing
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.wifi_tethering),
+                  label: Text(_testing ? 'TESTING...' : 'TEST CONNECTION'),
+                ),
+                const SizedBox(height: 12),
                 ElevatedButton(
-                  onPressed: _saving ? null : _save,
+                  onPressed: (_saving || _testing) ? null : _save,
                   child: _saving
                       ? const SizedBox(
                           width: 20,
@@ -150,7 +209,7 @@ class _LidarrSettingsScreenState extends ConsumerState<LidarrSettingsScreen> {
                 if (config != null) ...[
                   const SizedBox(height: 8),
                   TextButton(
-                    onPressed: _saving ? null : _disconnect,
+                    onPressed: (_saving || _testing) ? null : _disconnect,
                     child: const Text('Disconnect Lidarr',
                         style: TextStyle(color: AppColors.error)),
                   ),
