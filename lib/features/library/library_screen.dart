@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/skeleton.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
 import '../../data/jellyfin/models/media_item.dart';
 
@@ -25,8 +26,13 @@ class LibraryScreen extends ConsumerWidget {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _createPlaylist(context, ref),
+        tooltip: 'New playlist',
+        child: const Icon(Icons.add),
+      ),
       body: playlistsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const _LibraryLoading(),
         error: (e, _) => Center(
           child: Text(
             'Could not load playlists: $e',
@@ -43,7 +49,7 @@ class LibraryScreen extends ConsumerWidget {
                   p.name.toLowerCase().trim() != 'liked songs')
               .toList();
           return ListView(
-            padding: const EdgeInsets.only(top: 8, bottom: 24),
+            padding: const EdgeInsets.only(top: 8, bottom: 96),
             children: [
               _SectionTile(
                 icon: Icons.favorite_outline,
@@ -73,7 +79,9 @@ class LibraryScreen extends ConsumerWidget {
                 (playlist) => _SectionTile(
                   icon: Icons.queue_music_outlined,
                   title: playlist.name,
-                  subtitle: 'Playlist',
+                  subtitle: playlist.childCount != null
+                      ? 'Playlist · ${playlist.childCount} songs'
+                      : 'Playlist',
                   onTap: () => context.push('/playlist/${playlist.id}'),
                 ),
               ),
@@ -81,7 +89,7 @@ class LibraryScreen extends ConsumerWidget {
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Text(
-                    'No playlists yet. Use the 3-dot menu on a song to add it to a playlist.',
+                    'No playlists yet. Tap + to create one.',
                     style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
                   ),
                 ),
@@ -89,6 +97,41 @@ class LibraryScreen extends ConsumerWidget {
           );
         },
       ),
+    );
+  }
+
+  Future<void> _createPlaylist(BuildContext context, WidgetRef ref) async {
+    final ctrl = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('New playlist'),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          decoration: const InputDecoration(hintText: 'Playlist name'),
+          textInputAction: TextInputAction.done,
+          onSubmitted: (v) => Navigator.of(dialogContext).pop(v.trim()),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(ctrl.text.trim()),
+            child: const Text('Create'),
+          ),
+        ],
+      ),
+    );
+    final playlistName = name?.trim() ?? '';
+    if (playlistName.isEmpty) return;
+    await ref.read(jellyfinRepositoryProvider).createPlaylist(playlistName);
+    ref.invalidate(_playlistsProvider);
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('"$playlistName" created')),
     );
   }
 }
@@ -100,6 +143,41 @@ final _likedSongsPlaylistProvider = FutureProvider.autoDispose((ref) {
 final _playlistsProvider = FutureProvider.autoDispose((ref) {
   return ref.read(jellyfinRepositoryProvider).playlists();
 });
+
+class _LibraryLoading extends StatelessWidget {
+  const _LibraryLoading();
+
+  @override
+  Widget build(BuildContext context) {
+    return Skeleton.group(
+      child: ListView(
+        padding: const EdgeInsets.only(top: 8),
+        children: [
+          for (int i = 0; i < 6; i++)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  Skeleton.box(width: 52, height: 52, radius: 12),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Skeleton.line(width: 160, height: 14),
+                        const SizedBox(height: 6),
+                        Skeleton.line(width: 100, height: 11),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
 
 class _SectionTile extends StatelessWidget {
   const _SectionTile({

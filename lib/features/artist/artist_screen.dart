@@ -26,14 +26,27 @@ class ArtistScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(artistProvider(artistId));
     return Scaffold(
-      appBar: AppBar(title: const Text('Artist')),
       bottomNavigationBar: const MiniPlayerSlot(withTopDivider: true),
       body: async.when(
         loading: () => const _ArtistLoading(),
-        error: (e, _) => ErrorStateView(
-          title: "Couldn't load this artist",
-          message: e.toString(),
-          onRetry: () => ref.invalidate(artistProvider(artistId)),
+        error: (e, _) => SafeArea(
+          child: Stack(
+            children: [
+              Positioned(
+                top: 8,
+                left: 8,
+                child: IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () => context.pop(),
+                ),
+              ),
+              ErrorStateView(
+                title: "Couldn't load this artist",
+                message: e.toString(),
+                onRetry: () => ref.invalidate(artistProvider(artistId)),
+              ),
+            ],
+          ),
         ),
         data: (artist) => _ArtistView(artist: artist),
       ),
@@ -49,100 +62,136 @@ class _ArtistView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final repo = ref.read(jellyfinRepositoryProvider);
-    final imageUrl = repo.imageUrl(artist.id, imageTag: artist.imageTag, size: 320);
+    final imageUrl = repo.imageUrl(artist.id, imageTag: artist.imageTag, size: 600);
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-      children: [
-        Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(40),
-              child: SizedBox(
-                width: 80,
-                height: 80,
-                child: CachedNetworkImage(
+    return CustomScrollView(
+      slivers: [
+        SliverAppBar(
+          expandedHeight: 300,
+          pinned: true,
+          stretch: true,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.pop(),
+          ),
+          title: Text(artist.name),
+          flexibleSpace: FlexibleSpaceBar(
+            stretchModes: const [StretchMode.zoomBackground],
+            background: Stack(
+              fit: StackFit.expand,
+              children: [
+                CachedNetworkImage(
                   imageUrl: imageUrl,
                   fit: BoxFit.cover,
                   placeholder: (_, __) =>
-                      Container(color: AppColors.surfaceElevated),
-                  errorWidget: (_, __, ___) => Container(
-                    color: AppColors.surfaceElevated,
-                    child: const Icon(Icons.person, color: AppColors.textTertiary),
+                      const ColoredBox(color: AppColors.surfaceElevated),
+                  errorWidget: (_, __, ___) =>
+                      const ColoredBox(color: AppColors.surfaceElevated),
+                ),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.black.withValues(alpha: 0.15),
+                        AppColors.background.withValues(alpha: 0.6),
+                        AppColors.background,
+                      ],
+                      stops: const [0.3, 0.7, 1.0],
+                    ),
                   ),
                 ),
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    artist.name,
-                    style: Theme.of(context).textTheme.headlineSmall,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                Positioned(
+                  bottom: 16,
+                  left: 16,
+                  right: 16,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        artist.name,
+                        style: Theme.of(context).textTheme.headlineLarge,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${artist.albums.length} albums',
+                        style: const TextStyle(color: AppColors.textSecondary),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${artist.albums.length} albums',
-                    style: const TextStyle(color: AppColors.textSecondary),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 18),
-        if (artist.popularTracks.isNotEmpty) ...[
-          Text('Popular', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
-          ...artist.popularTracks.asMap().entries.map(
-            (entry) => _PopularTrackTile(
-              index: entry.key + 1,
-              track: entry.value,
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 18),
-        ],
-        Row(
-          children: [
-            Expanded(
+        ),
+        if (artist.popularTracks.isNotEmpty) ...[
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
               child: Text(
-                'Discography',
+                'Popular',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
             ),
-            TextButton(
-              onPressed: artist.albums.isEmpty
-                  ? null
-                  : () => context.push('/artist/${artist.id}/discography'),
-              child: const Text('See all'),
+          ),
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (_, i) => _PopularTrackTile(
+                index: i + 1,
+                track: artist.popularTracks[i],
+              ),
+              childCount: artist.popularTracks.length,
             ),
-          ],
+          ),
+        ],
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 20, 4, 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Discography',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+                TextButton(
+                  onPressed: artist.albums.isEmpty
+                      ? null
+                      : () => context.push('/artist/${artist.id}/discography'),
+                  child: const Text('See all'),
+                ),
+              ],
+            ),
+          ),
         ),
-        const SizedBox(height: 8),
         if (artist.albums.isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 24),
-            child: Text(
-              'No albums found in your Jellyfin library.',
-              style: TextStyle(color: AppColors.textSecondary),
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(16, 0, 16, 24),
+              child: Text(
+                'No albums found in your Jellyfin library.',
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
             ),
           )
         else
-          SizedBox(
-            height: 220,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: artist.albums.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 12),
-              itemBuilder: (_, i) => _AlbumCarouselTile(
-                album: artist.albums[i],
+          SliverToBoxAdapter(
+            child: SizedBox(
+              height: 220,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: artist.albums.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 12),
+                itemBuilder: (_, i) => _AlbumCarouselTile(album: artist.albums[i]),
               ),
             ),
           ),
+        const SliverToBoxAdapter(child: SizedBox(height: 32)),
       ],
     );
   }
@@ -201,10 +250,7 @@ class _AlbumCarouselTile extends ConsumerWidget {
 }
 
 class _PopularTrackTile extends ConsumerWidget {
-  const _PopularTrackTile({
-    required this.index,
-    required this.track,
-  });
+  const _PopularTrackTile({required this.index, required this.track});
 
   final int index;
   final Track track;
@@ -261,32 +307,33 @@ class _ArtistLoading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Skeleton.group(
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-        children: [
-          Row(
-            children: [
-              Skeleton.box(width: 80, height: 80, radius: 40),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Skeleton.line(width: 180, height: 20),
-                    SizedBox(height: 8),
-                    Skeleton.line(width: 90, height: 12),
-                  ],
-                ),
+      child: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 300,
+            pinned: true,
+            leading: const BackButton(),
+            flexibleSpace: FlexibleSpaceBar(
+              background: Skeleton.box(
+                width: double.infinity,
+                height: double.infinity,
+                radius: 0,
               ),
-            ],
+            ),
           ),
-          const SizedBox(height: 20),
-          Skeleton.line(width: 120, height: 16),
-          const SizedBox(height: 12),
-          for (int i = 0; i < 8; i++) ...[
-            Skeleton.line(height: 14),
-            const SizedBox(height: 10),
-          ],
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                Skeleton.line(width: 120, height: 16),
+                const SizedBox(height: 12),
+                for (int i = 0; i < 5; i++) ...[
+                  Skeleton.line(height: 14),
+                  const SizedBox(height: 10),
+                ],
+              ]),
+            ),
+          ),
         ],
       ),
     );

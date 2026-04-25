@@ -28,6 +28,7 @@ class BrowseItem {
     this.subtitle,
     this.imageTag,
     this.runTime,
+    this.childCount,
   });
 
   final String id;
@@ -36,6 +37,7 @@ class BrowseItem {
   final String? imageTag;
   final MediaKind kind;
   final Duration? runTime;
+  final int? childCount;
 
   factory BrowseItem.fromJson(Map<String, dynamic> json) {
     final type = json['Type'] as String?;
@@ -65,6 +67,7 @@ class BrowseItem {
       runTime: json['RunTimeTicks'] != null
           ? _durationFromTicks(json['RunTimeTicks'] as int?)
           : null,
+      childCount: json['ChildCount'] as int?,
     );
   }
 }

@@ -51,6 +51,7 @@ class HomeScreen extends ConsumerWidget {
               Shelf(
                 title: 'Recently added',
                 items: ref.watch(recentlyAddedProvider),
+                onSeeAll: () => context.push('/recently-added'),
               ),
               Shelf(
                 title: 'Most played',

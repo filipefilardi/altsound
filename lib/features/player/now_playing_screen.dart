@@ -177,11 +177,19 @@ class _DismissibleSurface extends StatefulWidget {
 class _DismissibleSurfaceState extends State<_DismissibleSurface>
     with SingleTickerProviderStateMixin {
   double _dy = 0;
-  late final AnimationController _settle = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 180),
-  )..addListener(_onSettleTick);
+  late final AnimationController _settle;
   Animation<double>? _settleAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    // Eager init: a lazy field initializer would run on first read; if that
+    // first read is dispose(), vsync looks up TickerMode on a deactivated element.
+    _settle = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 180),
+    )..addListener(_onSettleTick);
+  }
 
   @override
   void dispose() {
@@ -451,6 +459,9 @@ class _Scrubber extends ConsumerWidget {
         SliderTheme(
           data: SliderTheme.of(context).copyWith(
             trackHeight: 3,
+            activeTrackColor: AppColors.primary,
+            thumbColor: AppColors.primary,
+            overlayColor: AppColors.primary.withValues(alpha: 0.16),
             thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
             overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
           ),
