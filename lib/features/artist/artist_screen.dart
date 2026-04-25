@@ -8,6 +8,8 @@ import '../../core/widgets/error_state.dart';
 import '../../core/widgets/skeleton.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
 import '../../data/jellyfin/models/media_item.dart';
+import '../player/player_providers.dart';
+import '../player/widgets/playing_track_leading.dart';
 
 final artistProvider = FutureProvider.family<Artist, String>((ref, artistId) {
   return ref.read(jellyfinRepositoryProvider).artist(artistId);
@@ -90,7 +92,33 @@ class _ArtistView extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 18),
-        Text('Discography', style: Theme.of(context).textTheme.titleMedium),
+        if (artist.popularTracks.isNotEmpty) ...[
+          Text('Popular', style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 8),
+          ...artist.popularTracks.asMap().entries.map(
+            (entry) => _PopularTrackTile(
+              index: entry.key + 1,
+              track: entry.value,
+            ),
+          ),
+          const SizedBox(height: 18),
+        ],
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Discography',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+            TextButton(
+              onPressed: artist.albums.isEmpty
+                  ? null
+                  : () => context.push('/artist/${artist.id}/discography'),
+              child: const Text('See all'),
+            ),
+          ],
+        ),
         const SizedBox(height: 8),
         if (artist.albums.isEmpty)
           const Padding(
@@ -101,27 +129,119 @@ class _ArtistView extends ConsumerWidget {
             ),
           )
         else
-          ...artist.albums.map(
-            (album) => ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(
-                album.name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+          SizedBox(
+            height: 220,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: artist.albums.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              itemBuilder: (_, i) => _AlbumCarouselTile(
+                album: artist.albums[i],
               ),
-              subtitle: Text(
-                album.subtitle ?? 'Album',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style:
-                    const TextStyle(color: AppColors.textSecondary, fontSize: 12),
-              ),
-              trailing:
-                  const Icon(Icons.chevron_right, color: AppColors.textSecondary),
-              onTap: () => context.push('/album/${album.id}'),
             ),
           ),
       ],
+    );
+  }
+}
+
+class _AlbumCarouselTile extends ConsumerWidget {
+  const _AlbumCarouselTile({required this.album});
+
+  final BrowseItem album;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final repo = ref.watch(jellyfinRepositoryProvider);
+    final imageUrl = repo.imageUrl(album.id, imageTag: album.imageTag, size: 400);
+    return SizedBox(
+      width: 150,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => context.push('/album/${album.id}'),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: CachedNetworkImage(
+                  imageUrl: imageUrl,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  placeholder: (_, __) =>
+                      Container(color: AppColors.surfaceElevated),
+                  errorWidget: (_, __, ___) => Container(
+                    color: AppColors.surfaceElevated,
+                    child: const Icon(Icons.album, color: AppColors.textTertiary),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              album.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            Text(
+              album.subtitle ?? 'Album',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PopularTrackTile extends ConsumerWidget {
+  const _PopularTrackTile({
+    required this.index,
+    required this.track,
+  });
+
+  final int index;
+  final Track track;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final current = ref.watch(currentMediaItemProvider).value;
+    final isCurrentTrack =
+        current != null && current.extras?['jellyfinId'] == track.id;
+    final repo = ref.watch(jellyfinRepositoryProvider);
+    final imageUrl =
+        repo.imageUrl(track.imageItemId, imageTag: track.imageTag, size: 200);
+
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: SearchTrackArtwork(
+        imageUrl: imageUrl,
+        jellyfinTrackId: track.id,
+        isArtistShape: false,
+      ),
+      title: Text(
+        '$index. ${track.name}',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          color: isCurrentTrack ? AppColors.primary : null,
+          fontWeight: isCurrentTrack ? FontWeight.w600 : FontWeight.w400,
+        ),
+      ),
+      subtitle: Text(
+        track.albumName ?? 'Single',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+      ),
+      trailing: PlayingTrackDuration(
+        jellyfinTrackId: track.id,
+        trackDuration: track.duration,
+      ),
+      onTap: () => ref.read(playerControllerProvider).playTracks([track]),
     );
   }
 }

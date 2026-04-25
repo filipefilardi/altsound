@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/album/album_screen.dart';
+import '../features/artist/artist_discography_screen.dart';
 import '../features/artist/artist_screen.dart';
 import '../features/auth/auth_controller.dart';
 import '../features/auth/login_screen.dart';
@@ -79,6 +80,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, st) => ArtistScreen(artistId: st.pathParameters['id']!),
       ),
       GoRoute(
+        path: '/artist/:id/discography',
+        builder: (_, st) =>
+            ArtistDiscographyScreen(artistId: st.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/album/:id',
+        builder: (_, st) => AlbumScreen(albumId: st.pathParameters['id']!),
+      ),
+      GoRoute(
         path: '/now-playing',
         pageBuilder: (_, st) => CustomTransitionPage(
           key: st.pageKey,
@@ -104,17 +114,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         branches: [
           StatefulShellBranch(
             routes: [
-              GoRoute(
-                path: '/',
-                builder: (_, __) => const HomeScreen(),
-                routes: [
-                  GoRoute(
-                    path: 'album/:id',
-                    builder: (_, st) =>
-                        AlbumScreen(albumId: st.pathParameters['id']!),
-                  ),
-                ],
-              ),
+              GoRoute(path: '/', builder: (_, __) => const HomeScreen()),
             ],
           ),
           StatefulShellBranch(

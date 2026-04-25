@@ -229,7 +229,29 @@ class JellyfinRepository {
         .cast<Map<String, dynamic>>()
         .map(BrowseItem.fromJson)
         .toList();
-    return Artist.fromJson(detail.data ?? {}, albums: albums);
+    final topTracksRes = await _api.dio.get<Map<String, dynamic>>(
+      '/Users/${s.userId}/Items',
+      queryParameters: {
+        'IncludeItemTypes': 'Audio',
+        'Recursive': true,
+        'ArtistIds': artistId,
+        'SortBy': 'PlayCount',
+        'SortOrder': 'Descending',
+        'Limit': 5,
+        'EnableUserData': true,
+        'Fields': 'AlbumArtist,Artists,AlbumId,RunTimeTicks,UserData',
+      },
+    );
+    final popularTracks = ((topTracksRes.data?['Items'] as List?) ?? const [])
+        .cast<Map<String, dynamic>>()
+        .where((json) => (json['UserData']?['PlayCount'] as int? ?? 0) > 0)
+        .map(Track.fromJson)
+        .toList();
+    return Artist.fromJson(
+      detail.data ?? {},
+      popularTracks: popularTracks,
+      albums: albums,
+    );
   }
 
   String imageUrl(
