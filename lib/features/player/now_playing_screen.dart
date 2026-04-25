@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:audio_service/audio_service.dart';
@@ -12,8 +13,9 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_gradients.dart';
 import '../../core/utils/format.dart';
 import 'audio_player_handler.dart';
-import 'now_playing_favorite.dart';
+import 'current_track_playlist_presence.dart';
 import 'player_providers.dart';
+import 'widgets/add_track_to_playlist_sheet.dart';
 import 'widgets/player_hero_art.dart';
 import 'widgets/queue_bottom_sheet.dart';
 
@@ -371,9 +373,13 @@ class _SecondaryControls extends ConsumerWidget {
           error: (_, __) => false,
           loading: () => false,
         );
-    final fav = ref.watch(nowPlayingFavoriteProvider);
     final controller = ref.read(playerControllerProvider);
     final offline = mediaItem.extras?['isOffline'] == true;
+    final presenceAsync = ref.watch(currentTrackPlaylistPresenceProvider);
+    final saved = switch (presenceAsync) {
+      AsyncData(:final value) => value.isSaved,
+      _ => false,
+    };
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -400,45 +406,58 @@ class _SecondaryControls extends ConsumerWidget {
         IconButton(
           onPressed: offline
               ? null
-              : () => ref.read(nowPlayingFavoriteProvider.notifier).toggle(),
-          icon: _FavoriteHeartIcon(value: fav),
-          tooltip: 'Favorite',
+              : () => unawaited(
+                    _onPlaylistTap(
+                      context,
+                      ref,
+                      trackId: mediaItem.id,
+                      saved: saved,
+                    ),
+                  ),
+          icon: Icon(
+            saved ? Icons.playlist_add_check : Icons.playlist_add,
+            color: saved ? AppColors.primary : AppColors.textSecondary,
+            size: 24,
+          ),
+          tooltip: 'Add to playlist',
         ),
       ],
     );
   }
 }
 
-class _FavoriteHeartIcon extends StatelessWidget {
-  const _FavoriteHeartIcon({required this.value});
-  final AsyncValue<bool?> value;
-
-  @override
-  Widget build(BuildContext context) {
-    return value.when(
-      data: (v) {
-        if (v == null) {
-          return const Icon(Icons.favorite_border,
-              color: AppColors.textTertiary, size: 24);
-        }
-        return Icon(
-          v ? Icons.favorite : Icons.favorite_border,
-          color: v ? AppColors.accent : AppColors.textSecondary,
-          size: 24,
-        );
-      },
-      error: (_, __) => const Icon(Icons.heart_broken,
-          color: AppColors.textTertiary, size: 24),
-      loading: () => const SizedBox(
-        width: 22,
-        height: 22,
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-          color: AppColors.textSecondary,
-        ),
-      ),
+Future<void> _onPlaylistTap(
+  BuildContext context,
+  WidgetRef ref, {
+  required String trackId,
+  required bool saved,
+}) async {
+  if (!saved) {
+    await openAddTrackToPlaylistFlow(
+      context,
+      ref,
+      trackId: trackId,
+      includeLikedSongsShortcut: true,
     );
+    return;
   }
+  final presence = await ref.read(currentTrackPlaylistPresenceProvider.future);
+  if (!context.mounted) return;
+  if (!presence.isSaved) {
+    await openAddTrackToPlaylistFlow(
+      context,
+      ref,
+      trackId: trackId,
+      includeLikedSongsShortcut: true,
+    );
+    return;
+  }
+  await openManageTrackPlaylistsSheet(
+    context,
+    ref,
+    trackId: trackId,
+    presence: presence,
+  );
 }
 
 class _Scrubber extends ConsumerWidget {
