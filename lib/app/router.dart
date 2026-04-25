@@ -51,27 +51,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      GoRoute(
-        path: '/login',
-        builder: (_, __) => const LoginScreen(),
-      ),
+      GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
       GoRoute(
         path: '/album/:id',
-        builder: (_, st) =>
-            AlbumScreen(albumId: st.pathParameters['id']!),
+        builder: (_, st) => AlbumScreen(albumId: st.pathParameters['id']!),
       ),
-      GoRoute(
-        path: '/downloads',
-        builder: (_, __) => const DownloadsScreen(),
-      ),
-      GoRoute(
-        path: '/discover',
-        builder: (_, __) => const DiscoverScreen(),
-      ),
-      GoRoute(
-        path: '/settings',
-        builder: (_, __) => const SettingsScreen(),
-      ),
+      GoRoute(path: '/downloads', builder: (_, __) => const DownloadsScreen()),
+      GoRoute(path: '/discover', builder: (_, __) => const DiscoverScreen()),
+      GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
       GoRoute(
         path: '/settings/lidarr',
         builder: (_, __) => const LidarrSettingsScreen(),
@@ -83,8 +70,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           fullscreenDialog: true,
           opaque: true,
           transitionsBuilder: (_, animation, __, child) {
-            final tween = Tween(begin: const Offset(0, 1), end: Offset.zero)
-                .chain(CurveTween(curve: Curves.easeOutCubic));
+            final tween = Tween(
+              begin: const Offset(0, 1),
+              end: Offset.zero,
+            ).chain(CurveTween(curve: Curves.easeOutCubic));
             return SlideTransition(
               position: animation.drive(tween),
               child: child,
@@ -96,29 +85,31 @@ final routerProvider = Provider<GoRouter>((ref) {
       StatefulShellRoute.indexedStack(
         builder: (_, __, shell) => AppShell(navigationShell: shell),
         branches: [
-          StatefulShellBranch(routes: [
-            GoRoute(
-              path: '/',
-              builder: (_, __) => const HomeScreen(),
-            ),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(
-              path: '/search',
-              builder: (_, __) => const SearchScreen(),
-            ),
-          ]),
-          StatefulShellBranch(routes: [
-            GoRoute(
-              path: '/library',
-              builder: (_, __) => const LibraryScreen(),
-            ),
-          ]),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(path: '/', builder: (_, __) => const HomeScreen()),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/search',
+                builder: (_, __) => const SearchScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/library',
+                builder: (_, __) => const LibraryScreen(),
+              ),
+            ],
+          ),
         ],
       ),
     ],
-    errorBuilder: (_, state) => Scaffold(
-      body: Center(child: Text('Route not found: ${state.uri}')),
-    ),
+    errorBuilder: (_, state) =>
+        Scaffold(body: Center(child: Text('Route not found: ${state.uri}'))),
   );
 });

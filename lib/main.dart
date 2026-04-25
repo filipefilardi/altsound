@@ -12,7 +12,7 @@ Future<void> main() async {
   final handler = await AudioService.init(
     builder: JellymusicAudioHandler.new,
     config: const AudioServiceConfig(
-      androidNotificationChannelId: 'com.jellymusic.audio',
+      androidNotificationChannelId: 'com.silent_summit.jellymusic.audio',
       androidNotificationChannelName: 'Jellymusic playback',
       androidNotificationOngoing: true,
       androidStopForegroundOnPause: true,

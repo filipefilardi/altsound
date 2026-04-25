@@ -38,9 +38,7 @@ class MiniPlayer extends ConsumerWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
                 color: AppColors.surfaceHighlight.withValues(alpha: 0.52),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.08),
-                ),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.28),
@@ -54,8 +52,10 @@ class MiniPlayer extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 10,
+                    ),
                     child: Row(
                       children: [
                         PlayerHeroArt(
@@ -116,7 +116,9 @@ class MiniPlayer extends ConsumerWidget {
                     child: LinearProgressIndicator(
                       value: progress,
                       backgroundColor: AppColors.divider.withValues(alpha: 0.4),
-                      valueColor: const AlwaysStoppedAnimation(AppColors.primary),
+                      valueColor: const AlwaysStoppedAnimation(
+                        AppColors.primary,
+                      ),
                     ),
                   ),
                 ],
