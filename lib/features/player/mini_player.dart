@@ -237,16 +237,35 @@ class _GradientProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 2,
-      color: AppColors.divider.withValues(alpha: 0.35),
-      child: FractionallySizedBox(
-        alignment: Alignment.centerLeft,
-        widthFactor: progress,
-        child: const DecoratedBox(
-          decoration: BoxDecoration(gradient: AppGradients.accentHorizontal),
-        ),
-      ),
+    return LayoutBuilder(
+      builder: (_, constraints) {
+        final fillWidth = constraints.maxWidth * progress.clamp(0.0, 1.0);
+        return SizedBox(
+          height: 2,
+          width: constraints.maxWidth,
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: ColoredBox(
+                  color: AppColors.divider.withValues(alpha: 0.35),
+                ),
+              ),
+              if (fillWidth > 0)
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: fillWidth,
+                  child: const DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: AppGradients.accentHorizontal,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

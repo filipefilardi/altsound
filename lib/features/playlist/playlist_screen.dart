@@ -291,7 +291,6 @@ class _PlaylistTrackTile extends ConsumerWidget {
       leading: PlayingTrackLeading(
         jellyfinTrackId: track.id,
         indexLabel: '${index + 1}',
-        trackDuration: track.duration,
       ),
       title: Text(
         track.name,
