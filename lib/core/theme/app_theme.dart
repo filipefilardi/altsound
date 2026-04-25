@@ -84,7 +84,7 @@ class AppTheme {
         secondary: AppColors.accent,
         error: AppColors.error,
         onSurface: AppColors.textPrimary,
-        onPrimary: Color(0xFF1A0F05),
+        onPrimary: Color(0xFF0E0820),
       ),
       textTheme: textTheme,
       appBarTheme: AppBarTheme(
@@ -106,7 +106,7 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
-          foregroundColor: const Color(0xFF1A0F05),
+          foregroundColor: const Color(0xFF0E0820),
           minimumSize: const Size(double.infinity, 52),
           shape: const StadiumBorder(),
           elevation: 0,
