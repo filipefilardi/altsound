@@ -30,15 +30,17 @@ class Shelf extends ConsumerWidget {
         SizedBox(
           height: 220,
           child: items.when(
-            loading: () => Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+            loading: () => SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Skeleton.group(
                 child: Row(
                   children: const [
                     _ShelfSkeleton(),
-                    SizedBox(width: 12),
+                    SizedBox(width: 6),
                     _ShelfSkeleton(),
-                    SizedBox(width: 12),
+                    SizedBox(width: 6),
                     _ShelfSkeleton(),
                   ],
                 ),
