@@ -69,13 +69,15 @@ final routerProvider = Provider<GoRouter>((ref) {
           key: st.pageKey,
           fullscreenDialog: true,
           opaque: true,
+          transitionDuration: const Duration(milliseconds: 220),
+          reverseTransitionDuration: const Duration(milliseconds: 180),
           transitionsBuilder: (_, animation, __, child) {
-            final tween = Tween(
-              begin: const Offset(0, 1),
-              end: Offset.zero,
-            ).chain(CurveTween(curve: Curves.easeOutCubic));
-            return SlideTransition(
-              position: animation.drive(tween),
+            return FadeTransition(
+              opacity: CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOut,
+                reverseCurve: Curves.easeIn,
+              ),
               child: child,
             );
           },

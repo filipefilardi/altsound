@@ -3,18 +3,19 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  static const background = Color(0xFF0A0A0A);
-  static const surface = Color(0xFF121212);
-  static const surfaceElevated = Color(0xFF1A1A1A);
-  static const surfaceHighlight = Color(0xFF242424);
+  static const background = Color(0xFF0E0B14);
+  static const surface = Color(0xFF16121E);
+  static const surfaceElevated = Color(0xFF1E1A28);
+  static const surfaceHighlight = Color(0xFF2A2438);
 
-  static const primary = Color(0xFF1DB954);
-  static const primaryDark = Color(0xFF169C46);
+  static const primary = Color(0xFFF4A261);
+  static const primaryDark = Color(0xFFD88A45);
+  static const accent = Color(0xFFC25E83);
 
-  static const textPrimary = Color(0xFFFFFFFF);
-  static const textSecondary = Color(0xFFB3B3B3);
-  static const textTertiary = Color(0xFF6A6A6A);
+  static const textPrimary = Color(0xFFF5F1EA);
+  static const textSecondary = Color(0xFFA39EB0);
+  static const textTertiary = Color(0xFF6A6378);
 
-  static const divider = Color(0xFF2A2A2A);
-  static const error = Color(0xFFE22134);
+  static const divider = Color(0xFF2A2438);
+  static const error = Color(0xFFE5635A);
 }

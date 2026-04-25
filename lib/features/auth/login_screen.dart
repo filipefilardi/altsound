@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_gradients.dart';
 import 'auth_controller.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -42,106 +43,121 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final errorMessage = state is AuthUnauthenticated ? state.error : null;
 
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Form(
-                key: _formKey,
-                autovalidateMode: AutovalidateMode.onUserInteraction,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: 24),
-                    Container(
-                      width: 72,
-                      height: 72,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.primary,
+      body: DecoratedBox(
+        decoration: const BoxDecoration(gradient: AppGradients.loginBackdrop),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: Form(
+                  key: _formKey,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 24),
+                      Container(
+                        width: 76,
+                        height: 76,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: AppGradients.accent,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withValues(alpha: 0.4),
+                              blurRadius: 28,
+                              offset: const Offset(0, 10),
+                              spreadRadius: -4,
+                            ),
+                          ],
+                        ),
+                        alignment: Alignment.center,
+                        child: const Icon(Icons.graphic_eq,
+                            size: 40, color: Color(0xFF1A0F05)),
                       ),
-                      alignment: Alignment.center,
-                      child: const Icon(Icons.music_note,
-                          size: 40, color: Colors.black),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'Jellymusic',
-                      style: Theme.of(context).textTheme.headlineLarge,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Connect to your Jellyfin server',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 40),
-                    TextFormField(
-                      controller: _serverCtrl,
-                      keyboardType: TextInputType.url,
-                      autocorrect: false,
-                      enableSuggestions: false,
-                      textInputAction: TextInputAction.next,
-                      decoration: const InputDecoration(
-                        labelText: 'Server URL',
-                        hintText: 'https://jellyfin.example.com',
-                        prefixIcon: Icon(Icons.dns_outlined),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Jellymusic',
+                        style: Theme.of(context).textTheme.displayMedium,
+                        textAlign: TextAlign.center,
                       ),
-                      validator: (v) =>
-                          (v == null || v.trim().isEmpty) ? 'Required' : null,
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _userCtrl,
-                      autocorrect: false,
-                      enableSuggestions: false,
-                      textInputAction: TextInputAction.next,
-                      decoration: const InputDecoration(
-                        labelText: 'Username',
-                        prefixIcon: Icon(Icons.person_outline),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Connect to your Jellyfin server',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                        textAlign: TextAlign.center,
                       ),
-                      validator: (v) =>
-                          (v == null || v.trim().isEmpty) ? 'Required' : null,
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      controller: _passCtrl,
-                      obscureText: _obscure,
-                      textInputAction: TextInputAction.done,
-                      onFieldSubmitted: (_) => _submit(),
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        prefixIcon: const Icon(Icons.lock_outline),
-                        suffixIcon: IconButton(
-                          icon: Icon(_obscure
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined),
-                          onPressed: () => setState(() => _obscure = !_obscure),
+                      const SizedBox(height: 40),
+                      TextFormField(
+                        controller: _serverCtrl,
+                        keyboardType: TextInputType.url,
+                        autocorrect: false,
+                        enableSuggestions: false,
+                        textInputAction: TextInputAction.next,
+                        decoration: const InputDecoration(
+                          labelText: 'Server URL',
+                          hintText: 'https://jellyfin.example.com',
+                          prefixIcon: Icon(Icons.dns_outlined),
+                        ),
+                        validator: (v) => (v == null || v.trim().isEmpty)
+                            ? 'Required'
+                            : null,
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _userCtrl,
+                        autocorrect: false,
+                        enableSuggestions: false,
+                        textInputAction: TextInputAction.next,
+                        decoration: const InputDecoration(
+                          labelText: 'Username',
+                          prefixIcon: Icon(Icons.person_outline),
+                        ),
+                        validator: (v) => (v == null || v.trim().isEmpty)
+                            ? 'Required'
+                            : null,
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _passCtrl,
+                        obscureText: _obscure,
+                        textInputAction: TextInputAction.done,
+                        onFieldSubmitted: (_) => _submit(),
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          prefixIcon: const Icon(Icons.lock_outline),
+                          suffixIcon: IconButton(
+                            icon: Icon(_obscure
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined),
+                            onPressed: () =>
+                                setState(() => _obscure = !_obscure),
+                          ),
                         ),
                       ),
-                    ),
-                    if (errorMessage != null) ...[
-                      const SizedBox(height: 16),
-                      _ErrorBanner(message: errorMessage),
+                      if (errorMessage != null) ...[
+                        const SizedBox(height: 16),
+                        _LoginErrorBanner(message: errorMessage),
+                      ],
+                      const SizedBox(height: 32),
+                      ElevatedButton(
+                        onPressed: loading ? null : _submit,
+                        child: loading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  color: Color(0xFF1A0F05),
+                                ),
+                              )
+                            : const Text('SIGN IN'),
+                      ),
                     ],
-                    const SizedBox(height: 32),
-                    ElevatedButton(
-                      onPressed: loading ? null : _submit,
-                      child: loading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.5,
-                                color: Colors.black,
-                              ),
-                            )
-                          : const Text('SIGN IN'),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -152,8 +168,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 }
 
-class _ErrorBanner extends StatelessWidget {
-  const _ErrorBanner({required this.message});
+class _LoginErrorBanner extends StatelessWidget {
+  const _LoginErrorBanner({required this.message});
   final String message;
 
   @override
@@ -162,7 +178,7 @@ class _ErrorBanner extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: AppColors.error.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.error.withValues(alpha: 0.4)),
       ),
       child: Row(

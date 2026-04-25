@@ -43,6 +43,11 @@ final playerShuffleEnabledProvider = StreamProvider<bool>((ref) {
   return ref.watch(audioHandlerProvider).player.shuffleModeEnabledStream;
 });
 
+/// Surfaces playback errors so UI can react (e.g. snackbar).
+final playerErrorProvider = StreamProvider<PlayerError>((ref) {
+  return ref.watch(audioHandlerProvider).errorStream;
+});
+
 final playerControllerProvider = Provider<PlayerController>((ref) {
   return PlayerController(
     handler: ref.watch(audioHandlerProvider),
@@ -62,13 +67,27 @@ class PlayerController {
   final JellyfinRepository repo;
   final DownloadManager downloads;
 
+  /// If [tracks] match the currently loaded queue (by Jellyfin id), just
+  /// jump to [startIndex] — avoids reloading audio sources and the brief
+  /// playback gap / loading flash that comes with it.
   Future<void> playTracks(
     List<jf.Track> tracks, {
     int startIndex = 0,
   }) async {
     if (tracks.isEmpty) return;
     final mediaItems = tracks.map(_toMediaItem).toList();
-    await handler.loadQueue(mediaItems, initialIndex: startIndex);
+    final currentQueue = handler.queue.value;
+    final sameQueue = currentQueue.length == mediaItems.length &&
+        List<int>.generate(mediaItems.length, (i) => i).every(
+          (i) =>
+              currentQueue[i].extras?['jellyfinId'] ==
+              mediaItems[i].extras?['jellyfinId'],
+        );
+    if (sameQueue) {
+      await handler.skipToQueueItem(startIndex);
+    } else {
+      await handler.loadQueue(mediaItems, initialIndex: startIndex);
+    }
   }
 
   Future<void> togglePlay() async {
@@ -84,6 +103,8 @@ class PlayerController {
   Future<void> previous() => handler.skipToPrevious();
   Future<void> seek(Duration p) => handler.seek(p);
   Future<void> skipToIndex(int i) => handler.skipToQueueItem(i);
+  Future<void> reorderQueue(int oldIndex, int newIndex) =>
+      handler.reorderQueue(oldIndex, newIndex);
 
   Future<void> setVolume(double v) => handler.setAppVolume(v);
 

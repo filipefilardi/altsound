@@ -27,7 +27,7 @@ class LibraryScreen extends ConsumerWidget {
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.only(bottom: 96),
+        padding: const EdgeInsets.only(top: 8, bottom: 24),
         children: [
           _SectionTile(
             icon: Icons.download_outlined,
@@ -70,13 +70,13 @@ class _SectionTile extends StatelessWidget {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       leading: Container(
-        width: 48,
-        height: 48,
+        width: 52,
+        height: 52,
         decoration: BoxDecoration(
           color: AppColors.surfaceElevated,
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(icon, color: AppColors.textPrimary),
+        child: Icon(icon, color: AppColors.textPrimary, size: 22),
       ),
       title: Text(title,
           style: const TextStyle(
