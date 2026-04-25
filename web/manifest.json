@@ -1,6 +1,6 @@
 {
-    "name": "jellymusic",
-    "short_name": "jellymusic",
+    "name": "AltSound",
+    "short_name": "AltSound",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

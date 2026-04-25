@@ -80,7 +80,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                       const SizedBox(height: 24),
                       Text(
-                        'Jellymusic',
+                        'AltSound',
                         style: Theme.of(context).textTheme.displayMedium,
                         textAlign: TextAlign.center,
                       ),

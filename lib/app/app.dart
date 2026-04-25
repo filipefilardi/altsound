@@ -41,7 +41,7 @@ class _JellymusicAppState extends ConsumerState<JellymusicApp> {
     }
 
     return MaterialApp.router(
-      title: 'Jellymusic',
+      title: 'AltSound',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.dark(),
       routerConfig: router,
