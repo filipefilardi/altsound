@@ -138,11 +138,46 @@ class JellyfinRepository {
         'Fields': 'AlbumArtist,Artists,AlbumId,RunTimeTicks',
       },
     );
-    final items = (res.data?['Items'] as List?) ?? const [];
-    return items
+    final rawItems = ((res.data?['Items'] as List?) ?? const [])
+        .cast<Map<String, dynamic>>();
+    final results = rawItems
         .cast<Map<String, dynamic>>()
         .map(BrowseItem.fromJson)
         .toList();
+
+    final artistIds = rawItems
+        .where((item) => item['Type'] == 'MusicArtist')
+        .map((item) => item['Id'] as String?)
+        .whereType<String>()
+        .where((id) => id.isNotEmpty)
+        .toSet()
+        .toList();
+    if (artistIds.isEmpty) return results;
+
+    final tracksForArtists = await _api.dio.get<Map<String, dynamic>>(
+      '/Users/${s.userId}/Items',
+      queryParameters: {
+        'IncludeItemTypes': 'Audio',
+        'Recursive': true,
+        'ArtistIds': artistIds.join(','),
+        'Limit': 100,
+        'SortBy': 'SortName',
+        'Fields': 'AlbumArtist,Artists,AlbumId,RunTimeTicks',
+      },
+    );
+    final extraTracks = (((tracksForArtists.data?['Items'] as List?) ?? const [])
+            .cast<Map<String, dynamic>>())
+        .map(BrowseItem.fromJson)
+        .where((item) => item.kind == MediaKind.track)
+        .toList();
+
+    final existingIds = results.map((item) => item.id).toSet();
+    for (final track in extraTracks) {
+      if (existingIds.add(track.id)) {
+        results.add(track);
+      }
+    }
+    return results;
   }
 
   Future<Track> track(String trackId) async {
