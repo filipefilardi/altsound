@@ -20,21 +20,32 @@ class LidarrArtistResult {
   final Map<String, dynamic> raw;
 
   factory LidarrArtistResult.fromJson(Map<String, dynamic> json) {
-    final images = (json['images'] as List?)?.cast<Map<String, dynamic>>();
-    final remoteCover = images
-        ?.firstWhere(
-          (img) => img['coverType'] == 'poster',
-          orElse: () => images.first,
-        )['remoteUrl'] as String?;
+    final rawImages = json['images'] as List?;
+    final images = rawImages
+            ?.whereType<Map>()
+            .map((img) => img.map((k, v) => MapEntry('$k', v)))
+            .toList() ??
+        const <Map<String, dynamic>>[];
+    final coverImage = images.cast<Map<String, dynamic>?>().firstWhere(
+          (img) => img?['coverType'] == 'poster',
+          orElse: () => images.isEmpty ? null : images.first,
+        );
+    final remoteCover = coverImage?['remoteUrl'] as String?;
 
-    final stats = json['statistics'] as Map<String, dynamic>?;
+    final rawStats = json['statistics'];
+    final stats = rawStats is Map
+        ? rawStats.map((k, v) => MapEntry('$k', v))
+        : <String, dynamic>{};
 
     return LidarrArtistResult(
       foreignArtistId: json['foreignArtistId'] as String? ?? '',
-      name: json['artistName'] as String? ?? 'Unknown artist',
+      name: json['artistName'] as String? ??
+          json['artist'] as String? ??
+          json['name'] as String? ??
+          'Unknown artist',
       overview: json['overview'] as String?,
       imageUrl: remoteCover,
-      albumCount: stats?['albumCount'] as int?,
+      albumCount: (stats['albumCount'] as num?)?.toInt(),
       alreadyMonitored: (json['id'] as int?) != null,
       id: json['id'] as int?,
       raw: json,
