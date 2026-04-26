@@ -64,6 +64,7 @@ class DownloadManager extends Notifier<DownloadsState> {
   Directory? _dir;
   File? _manifestFile;
   File? _playlistsFile;
+  CancelToken? _activeCancelToken;
   final List<Track> _queue = [];
   bool _running = false;
 
@@ -216,10 +217,13 @@ class DownloadManager extends Notifier<DownloadsState> {
     progress[track.id] = 0;
     state = state.copyWith(progress: progress);
 
+    final cancelToken = CancelToken();
     try {
+      _activeCancelToken = cancelToken;
       await _dio.download(
         url,
         dest.path,
+        cancelToken: cancelToken,
         onReceiveProgress: (received, total) {
           if (total <= 0) return;
           final next = Map<String, double>.from(state.progress);
@@ -258,6 +262,10 @@ class DownloadManager extends Notifier<DownloadsState> {
       final clearedProgress = Map<String, double>.from(state.progress)
         ..remove(track.id);
       state = state.copyWith(progress: clearedProgress);
+    } finally {
+      if (identical(_activeCancelToken, cancelToken)) {
+        _activeCancelToken = null;
+      }
     }
   }
 
@@ -288,6 +296,35 @@ class DownloadManager extends Notifier<DownloadsState> {
     for (final id in ids) {
       await deleteTrack(id);
     }
+  }
+
+  Future<void> clearAllDownloads() async {
+    _activeCancelToken?.cancel('User requested delete all downloads');
+    _activeCancelToken = null;
+    _queue.clear();
+
+    final dir = _dir;
+    if (dir != null && dir.existsSync()) {
+      try {
+        for (final entity in dir.listSync(recursive: false)) {
+          try {
+            entity.deleteSync(recursive: true);
+          } catch (_) {}
+        }
+      } catch (_) {}
+    }
+
+    state = state.copyWith(
+      tracks: const {},
+      progress: const {},
+      queueLength: 0,
+      queuedTrackIds: const {},
+      playlists: const {},
+      isBlockedByWifiOnly: false,
+    );
+
+    await _persistTracks();
+    await _persistPlaylists();
   }
 
   String? localPath(String trackId) => state.tracks[trackId]?.filePath;
