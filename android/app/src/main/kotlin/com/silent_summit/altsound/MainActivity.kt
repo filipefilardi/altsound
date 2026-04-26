@@ -1,4 +1,4 @@
-package com.silent_summit.jellymusic
+package com.silent_summit.altsound
 
 import com.ryanheise.audioservice.AudioServiceActivity
 
