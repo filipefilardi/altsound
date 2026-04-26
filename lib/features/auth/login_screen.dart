@@ -29,7 +29,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
-    ref.read(authControllerProvider.notifier).login(
+    ref
+        .read(authControllerProvider.notifier)
+        .login(
           serverUrl: _serverCtrl.text.trim(),
           username: _userCtrl.text.trim(),
           password: _passCtrl.text,
@@ -48,8 +50,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 420),
                 child: Form(
@@ -58,27 +59,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const SizedBox(height: 24),
-                      Container(
-                        width: 76,
-                        height: 76,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: AppGradients.accent,
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.4),
-                              blurRadius: 28,
-                              offset: const Offset(0, 10),
-                              spreadRadius: -4,
-                            ),
-                          ],
-                        ),
-                        alignment: Alignment.center,
-                        child: const Icon(Icons.graphic_eq,
-                            size: 40, color: Color(0xFF1A0F05)),
-                      ),
-                      const SizedBox(height: 24),
                       Text(
                         'AltSound',
                         style: Theme.of(context).textTheme.displayMedium,
@@ -102,9 +82,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           hintText: 'https://jellyfin.example.com',
                           prefixIcon: Icon(Icons.dns_outlined),
                         ),
-                        validator: (v) => (v == null || v.trim().isEmpty)
-                            ? 'Required'
-                            : null,
+                        validator: (v) =>
+                            (v == null || v.trim().isEmpty) ? 'Required' : null,
                       ),
                       const SizedBox(height: 12),
                       TextFormField(
@@ -116,9 +95,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           labelText: 'Username',
                           prefixIcon: Icon(Icons.person_outline),
                         ),
-                        validator: (v) => (v == null || v.trim().isEmpty)
-                            ? 'Required'
-                            : null,
+                        validator: (v) =>
+                            (v == null || v.trim().isEmpty) ? 'Required' : null,
                       ),
                       const SizedBox(height: 12),
                       TextFormField(
@@ -130,9 +108,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           labelText: 'Password',
                           prefixIcon: const Icon(Icons.lock_outline),
                           suffixIcon: IconButton(
-                            icon: Icon(_obscure
-                                ? Icons.visibility_outlined
-                                : Icons.visibility_off_outlined),
+                            icon: Icon(
+                              _obscure
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                            ),
                             onPressed: () =>
                                 setState(() => _obscure = !_obscure),
                           ),
