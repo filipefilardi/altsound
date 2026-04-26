@@ -52,6 +52,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
     final mediaItem = ref.watch(currentMediaItemProvider).value;
     final state = ref.watch(playbackStateProvider).value;
     final artistId = mediaItem?.extras?['artistId'] as String?;
+    final albumId = mediaItem?.extras?['albumId'] as String?;
 
     if (mediaItem == null) {
       return Scaffold(
@@ -80,6 +81,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                     const SizedBox(height: 4),
                     _TopBar(
                       album: mediaItem.album ?? '',
+                      albumId: albumId,
                       onQueue: () => showQueueBottomSheet(context, ref),
                     ),
                     Expanded(
@@ -306,8 +308,13 @@ class _BlurredBackdrop extends StatelessWidget {
 }
 
 class _TopBar extends StatelessWidget {
-  const _TopBar({required this.album, required this.onQueue});
+  const _TopBar({
+    required this.album,
+    required this.albumId,
+    required this.onQueue,
+  });
   final String album;
+  final String? albumId;
   final VoidCallback onQueue;
 
   @override
@@ -333,14 +340,21 @@ class _TopBar extends StatelessWidget {
                       ),
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  album,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
+                InkWell(
+                  onTap: albumId == null || albumId!.isEmpty || album.isEmpty
+                      ? null
+                      : () => context.push('/album/$albumId'),
+                  child: Text(
+                    album,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: albumId == null || albumId!.isEmpty || album.isEmpty
+                          ? AppColors.textPrimary
+                          : AppColors.primary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
