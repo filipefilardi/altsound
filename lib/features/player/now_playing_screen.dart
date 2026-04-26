@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:audio_service/audio_service.dart';
@@ -275,14 +276,17 @@ class _BlurredBackdrop extends StatelessWidget {
     if (artUri == null) {
       return const ColoredBox(color: AppColors.background);
     }
+    final isLocal = artUri!.scheme == 'file';
     return Positioned.fill(
       child: Stack(
         fit: StackFit.expand,
         children: [
-          CachedNetworkImage(
-            imageUrl: artUri!.toString(),
+          Image(
+            image: isLocal
+                ? FileImage(File(artUri!.toFilePath()))
+                : CachedNetworkImageProvider(artUri!.toString()),
             fit: BoxFit.cover,
-            errorWidget: (_, __, ___) =>
+            errorBuilder: (_, __, ___) =>
                 const ColoredBox(color: AppColors.background),
           ),
           BackdropFilter(

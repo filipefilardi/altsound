@@ -138,10 +138,13 @@ class PlayerController {
   }
 
   MediaItem _toMediaItem(jf.Track t) {
+    final localPath = downloads.localPath(t.id);
+    final localArtPath = downloads.localArtworkPath(t.id);
     final art = (t.imageTag == null || t.imageTag!.isEmpty)
         ? null
-        : repo.imageUrl(t.imageItemId, imageTag: t.imageTag, size: 600);
-    final localPath = downloads.localPath(t.id);
+        : (localArtPath != null
+            ? Uri.file(localArtPath).toString()
+            : repo.imageUrl(t.imageItemId, imageTag: t.imageTag, size: 600));
     final streamUrl =
         localPath != null ? Uri.file(localPath).toString() : repo.streamUrl(t.id);
     return MediaItem(
