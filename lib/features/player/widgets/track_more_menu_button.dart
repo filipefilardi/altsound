@@ -45,6 +45,12 @@ class TrackMoreMenuButton extends ConsumerWidget {
               ),
               ListTile(
                 leading: const Icon(Icons.queue_music),
+                title: const Text('Play next'),
+                onTap: () =>
+                    Navigator.of(sheetContext).pop(_TrackAction.playNext),
+              ),
+              ListTile(
+                leading: const Icon(Icons.add_to_queue),
                 title: const Text('Add to queue'),
                 onTap: () =>
                     Navigator.of(sheetContext).pop(_TrackAction.addToQueue),
@@ -74,8 +80,24 @@ class TrackMoreMenuButton extends ConsumerWidget {
     _TrackAction action,
   ) async {
     switch (action) {
+      case _TrackAction.playNext:
+        await ref.read(playerControllerProvider).playNext(track);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Playing next')),
+          );
+        }
       case _TrackAction.addToQueue:
-        await ref.read(playerControllerProvider).addTrackToQueue(track);
+        final added =
+            await ref.read(playerControllerProvider).addToQueue(track);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content:
+                  Text(added ? 'Added to queue' : 'Already in queue'),
+            ),
+          );
+        }
       case _TrackAction.goToAlbum:
         if (track.albumId != null && track.albumId!.isNotEmpty) {
           context.push('/album/${track.albumId}');
@@ -92,6 +114,7 @@ class TrackMoreMenuButton extends ConsumerWidget {
 
 enum _TrackAction {
   addToPlaylist,
+  playNext,
   addToQueue,
   goToAlbum,
   goToArtist,

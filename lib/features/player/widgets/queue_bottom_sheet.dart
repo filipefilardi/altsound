@@ -28,7 +28,6 @@ class _QueueSheet extends ConsumerStatefulWidget {
 
 class _QueueSheetState extends ConsumerState<_QueueSheet> {
   final _scrollController = ScrollController();
-  bool _autoScrolled = false;
 
   @override
   void dispose() {
@@ -36,31 +35,17 @@ class _QueueSheetState extends ConsumerState<_QueueSheet> {
     super.dispose();
   }
 
-  void _maybeAutoScroll(int? currentIndex, int total) {
-    if (_autoScrolled || currentIndex == null || total == 0) return;
-    _autoScrolled = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_scrollController.hasClients) return;
-      final viewport = _scrollController.position.viewportDimension;
-      final headroom = viewport * 0.3;
-      final target =
-          (currentIndex * _kQueueRowHeight - headroom).clamp(0.0, double.infinity);
-      _scrollController.animateTo(
-        target,
-        duration: const Duration(milliseconds: 280),
-        curve: Curves.easeOutCubic,
-      );
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final queueAsync = ref.watch(queueProvider);
     final stateAsync = ref.watch(playbackStateProvider);
-    final queue = queueAsync.value ?? const <MediaItem>[];
-    final index = stateAsync.value?.queueIndex;
+    final userQueuedIds = ref.watch(userQueuedIdsProvider).value ?? const <String>{};
+    final fullQueue = queueAsync.value ?? const <MediaItem>[];
+    final absoluteIndex = stateAsync.value?.queueIndex;
 
-    _maybeAutoScroll(index, queue.length);
+    // Only show the current song and everything after it.
+    final offset = absoluteIndex ?? 0;
+    final queue = fullQueue.isEmpty ? fullQueue : fullQueue.sublist(offset);
 
     return DraggableScrollableSheet(
       expand: false,
@@ -71,10 +56,7 @@ class _QueueSheetState extends ConsumerState<_QueueSheet> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _Header(
-              currentIndex: index,
-              total: queue.length,
-            ),
+            _Header(total: queue.length),
             Expanded(
               child: queue.isEmpty
                   ? const Center(
@@ -89,23 +71,26 @@ class _QueueSheetState extends ConsumerState<_QueueSheet> {
                       padding: const EdgeInsets.only(bottom: 24),
                       itemCount: queue.length,
                       itemExtent: _kQueueRowHeight,
-                      onReorder: (oldIndex, newIndex) {
+                      onReorder: (displayOld, displayNew) {
                         ref
                             .read(playerControllerProvider)
-                            .reorderQueue(oldIndex, newIndex);
+                            .reorderQueue(displayOld + offset, displayNew + offset);
                       },
                       itemBuilder: (context, i) {
                         final m = queue[i];
-                        final isCurrent = i == index;
+                        final isCurrent = i == 0;
+                        final isUserQueued = userQueuedIds
+                            .contains(m.extras?['jellyfinId'] as String?);
                         return _QueueRow(
                           key: ValueKey(m.id + i.toString()),
                           item: m,
                           index: i,
                           isCurrent: isCurrent,
+                          isUserQueued: isUserQueued,
                           onTap: () {
                             ref
                                 .read(playerControllerProvider)
-                                .skipToIndex(i);
+                                .skipToIndex(i + offset);
                             Navigator.of(context).pop();
                           },
                         );
@@ -120,14 +105,12 @@ class _QueueSheetState extends ConsumerState<_QueueSheet> {
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.currentIndex, required this.total});
-  final int? currentIndex;
+  const _Header({required this.total});
   final int total;
 
   @override
   Widget build(BuildContext context) {
-    final position =
-        currentIndex == null || total == 0 ? '' : '${currentIndex! + 1} of $total';
+    final label = total == 0 ? '' : '$total ${total == 1 ? 'track' : 'tracks'}';
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
       child: Row(
@@ -138,11 +121,11 @@ class _Header extends StatelessWidget {
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(width: 10),
-          if (position.isNotEmpty)
+          if (label.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(bottom: 2),
               child: Text(
-                position,
+                label,
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
                       color: AppColors.textTertiary,
                       letterSpacing: 1.0,
@@ -161,12 +144,14 @@ class _QueueRow extends StatelessWidget {
     required this.item,
     required this.index,
     required this.isCurrent,
+    required this.isUserQueued,
     required this.onTap,
   });
 
   final MediaItem item;
   final int index;
   final bool isCurrent;
+  final bool isUserQueued;
   final VoidCallback onTap;
 
   @override
@@ -216,6 +201,15 @@ class _QueueRow extends StatelessWidget {
                   Icons.equalizer,
                   color: AppColors.primary,
                   size: 18,
+                ),
+              )
+            else if (isUserQueued)
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8),
+                child: Icon(
+                  Icons.queue_music,
+                  color: AppColors.textTertiary,
+                  size: 16,
                 ),
               ),
             ReorderableDragStartListener(

@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:rxdart/rxdart.dart';
@@ -27,9 +29,18 @@ class JellymusicAudioHandler extends BaseAudioHandler with SeekHandler {
 
   final AudioPlayer _player = AudioPlayer();
   final _errors = PublishSubject<PlayerError>();
+  final _userQueuedIds = BehaviorSubject<Set<String>>.seeded(const {});
+
+  // Original (un-shuffled) item order from the last loadQueue call.
+  // Used to restore order when the user turns shuffle off.
+  List<MediaItem> _originalItems = [];
 
   /// Stream of playback errors. Listeners typically show a snackbar / banner.
   Stream<PlayerError> get errorStream => _errors.stream;
+
+  /// IDs of tracks added by the user (via "Add to queue" / "Play next").
+  /// Cleared whenever a new playback queue is loaded.
+  Stream<Set<String>> get userQueuedIdsStream => _userQueuedIds.stream;
 
   /// Volume to restore on unmute. Never 0; never decreases below current
   /// non-muted level after explicit user volume changes.
@@ -68,18 +79,101 @@ class JellymusicAudioHandler extends BaseAudioHandler with SeekHandler {
     await _player.setLoopMode(next);
   }
 
+  /// Toggle shuffle. Physically reorders the queue so the display reflects
+  /// the change immediately. When enabling, remaining tracks are randomized.
+  /// When disabling, the original load order is restored.
+  /// Uses moveAudioSource to avoid audio interruption.
   Future<void> toggleShuffle() async {
-    await _player.setShuffleModeEnabled(!_player.shuffleModeEnabled);
+    final currentIdx = _player.currentIndex ?? 0;
+    final currentQueue = List<MediaItem>.from(queue.value);
+
+    if (currentQueue.isEmpty) {
+      await _player.setShuffleModeEnabled(!_player.shuffleModeEnabled);
+      return;
+    }
+
+    final wasEnabled = _player.shuffleModeEnabled;
+    final currentItem = currentQueue[currentIdx];
+
+    final List<MediaItem> newTail;
+
+    if (!wasEnabled) {
+      newTail = List<MediaItem>.from(currentQueue.sublist(currentIdx + 1))
+        ..shuffle(Random());
+    } else {
+      final currentId = currentItem.extras?['jellyfinId'] as String?;
+      final origIdx = _originalItems.indexWhere(
+        (m) => (m.extras?['jellyfinId'] as String?) == currentId,
+      );
+      final restOriginal =
+          origIdx >= 0 ? _originalItems.sublist(origIdx + 1) : <MediaItem>[];
+      final originalIds = _originalItems
+          .map((m) => m.extras?['jellyfinId'] as String?)
+          .toSet();
+      final userItems = currentQueue
+          .skip(currentIdx + 1)
+          .where((m) => !originalIds.contains(m.extras?['jellyfinId'] as String?))
+          .toList();
+      newTail = [...restOriginal, ...userItems];
+    }
+
+    await _rearrangeAfter(currentIdx, newTail);
+    await _player.setShuffleModeEnabled(!wasEnabled);
+  }
+
+  /// Rearranges items after [currentIdx] to match [newOrder] using
+  /// moveAudioSource so playback is not interrupted.
+  Future<void> _rearrangeAfter(int currentIdx, List<MediaItem> newOrder) async {
+    final working = List<MediaItem>.from(queue.value);
+    final startPos = currentIdx + 1;
+    for (int i = 0; i < newOrder.length; i++) {
+      final targetPos = startPos + i;
+      if (targetPos >= working.length) break;
+      final wantedId = newOrder[i].extras?['jellyfinId'] as String?;
+      int sourcePos = -1;
+      for (int j = targetPos; j < working.length; j++) {
+        if ((working[j].extras?['jellyfinId'] as String?) == wantedId) {
+          sourcePos = j;
+          break;
+        }
+      }
+      if (sourcePos > targetPos) {
+        await _player.moveAudioSource(sourcePos, targetPos);
+        final item = working.removeAt(sourcePos);
+        working.insert(targetPos, item);
+      }
+    }
+    queue.add(working);
   }
 
   Future<void> loadQueue(
     List<MediaItem> items, {
     int initialIndex = 0,
+    bool autoPlay = true,
+    bool randomizeStart = false,
   }) async {
     if (items.isEmpty) return;
-    queue.add(items);
-    mediaItem.add(items[initialIndex]);
-    final sources = items
+    final safeIndex = initialIndex.clamp(0, items.length - 1);
+    _originalItems = List<MediaItem>.from(items);
+
+    // If shuffle is already active, shuffle remaining tracks.
+    // Only pick a random starting track when the caller didn't select one.
+    final List<MediaItem> toLoad;
+    final int loadInitialIndex;
+    if (_player.shuffleModeEnabled && items.length > 1) {
+      final startIdx = randomizeStart ? Random().nextInt(items.length) : safeIndex;
+      final startItem = items[startIdx];
+      final rest = List<MediaItem>.from(items)
+        ..removeAt(startIdx)
+        ..shuffle(Random());
+      toLoad = [startItem, ...rest];
+      loadInitialIndex = 0;
+    } else {
+      toLoad = items;
+      loadInitialIndex = safeIndex;
+    }
+
+    final sources = toLoad
         .map((m) => AudioSource.uri(
               Uri.parse(m.extras!['streamUrl'] as String),
               tag: m,
@@ -88,12 +182,15 @@ class JellymusicAudioHandler extends BaseAudioHandler with SeekHandler {
     try {
       await _player.setAudioSources(
         sources,
-        initialIndex: initialIndex,
+        initialIndex: loadInitialIndex,
         initialPosition: Duration.zero,
       );
-      await _player.play();
+      queue.add(toLoad);
+      mediaItem.add(toLoad[loadInitialIndex]);
+      _userQueuedIds.add(const {});
+      if (autoPlay) await _player.play();
     } catch (e) {
-      _emitError(e, title: items[initialIndex].title);
+      _emitError(e, title: toLoad[loadInitialIndex].title);
     }
   }
 
@@ -116,7 +213,22 @@ class JellymusicAudioHandler extends BaseAudioHandler with SeekHandler {
   Future<void> appendToQueue(MediaItem item) async {
     final q = List<MediaItem>.from(queue.value)..add(item);
     queue.add(q);
+    _userQueuedIds.add({..._userQueuedIds.value, item.extras!['jellyfinId'] as String});
     await _player.addAudioSource(
+      AudioSource.uri(
+        Uri.parse(item.extras!['streamUrl'] as String),
+        tag: item,
+      ),
+    );
+  }
+
+  Future<void> insertNextInQueue(MediaItem item) async {
+    final insertAt = (_player.currentIndex ?? 0) + 1;
+    final q = List<MediaItem>.from(queue.value)..insert(insertAt, item);
+    queue.add(q);
+    _userQueuedIds.add({..._userQueuedIds.value, item.extras!['jellyfinId'] as String});
+    await _player.insertAudioSource(
+      insertAt,
       AudioSource.uri(
         Uri.parse(item.extras!['streamUrl'] as String),
         tag: item,

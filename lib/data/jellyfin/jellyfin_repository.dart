@@ -238,14 +238,13 @@ class JellyfinRepository {
         'ArtistIds': artistId,
         'SortBy': 'PlayCount',
         'SortOrder': 'Descending',
-        'Limit': 5,
+        'Limit': 500,
         'EnableUserData': true,
         'Fields': 'AlbumArtist,Artists,ArtistItems,AlbumId,RunTimeTicks,UserData',
       },
     );
     final popularTracks = ((topTracksRes.data?['Items'] as List?) ?? const [])
         .cast<Map<String, dynamic>>()
-        .where((json) => (json['UserData']?['PlayCount'] as int? ?? 0) > 0)
         .map(Track.fromJson)
         .toList();
     return Artist.fromJson(

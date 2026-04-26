@@ -136,26 +136,8 @@ class _ArtistView extends ConsumerWidget {
             child: _ArtistActionRow(artist: artist),
           ),
         ),
-        if (artist.popularTracks.isNotEmpty) ...[
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-              child: Text(
-                'Popular',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-            ),
-          ),
-          SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (_, i) => _PopularTrackTile(
-                index: i + 1,
-                track: artist.popularTracks[i],
-              ),
-              childCount: artist.popularTracks.length,
-            ),
-          ),
-        ],
+        if (artist.popularTracks.isNotEmpty)
+          _PopularTracksSection(artist: artist),
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 20, 4, 8),
@@ -202,6 +184,81 @@ class _ArtistView extends ConsumerWidget {
           ),
         _AboutSection(artistName: artist.name),
         const SliverToBoxAdapter(child: SizedBox(height: 32)),
+      ],
+    );
+  }
+}
+
+const _kDefaultTrackCount = 5;
+
+class _PopularTracksSection extends StatefulWidget {
+  const _PopularTracksSection({required this.artist});
+
+  final Artist artist;
+
+  @override
+  State<_PopularTracksSection> createState() => _PopularTracksSectionState();
+}
+
+class _PopularTracksSectionState extends State<_PopularTracksSection> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final tracks = widget.artist.popularTracks;
+    final shown = _expanded ? tracks : tracks.take(_kDefaultTrackCount).toList();
+
+    return SliverMainAxisGroup(
+      slivers: [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+            child: Text(
+              'Popular',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+          ),
+        ),
+        SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (_, i) => _PopularTrackTile(
+              index: i + 1,
+              track: shown[i],
+              allTracks: tracks,
+              contextId: widget.artist.id,
+            ),
+            childCount: shown.length,
+          ),
+        ),
+        if (tracks.length > _kDefaultTrackCount)
+          SliverToBoxAdapter(
+            child: InkWell(
+              onTap: () => setState(() => _expanded = !_expanded),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  children: [
+                    Icon(
+                      _expanded ? Icons.expand_less : Icons.expand_more,
+                      size: 18,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      _expanded
+                          ? 'Show less'
+                          : 'See all ${tracks.length} songs',
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -269,8 +326,9 @@ class _ArtistActionRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final playbackState = ref.watch(playbackStateProvider).value;
     final currentMediaItem = ref.watch(currentMediaItemProvider).value;
+    final shuffleEnabled = ref.watch(playerShuffleEnabledProvider).value ?? false;
     final isArtistPlaying = playbackState?.playing == true &&
-        currentMediaItem?.extras?['artistId'] == artist.id;
+        (currentMediaItem?.extras?['contextId'] as String?) == artist.id;
     final hasTracks = artist.popularTracks.isNotEmpty;
 
     return Row(
@@ -280,29 +338,27 @@ class _ArtistActionRow extends ConsumerWidget {
               ? () {
                   final controller = ref.read(playerControllerProvider);
                   if (isArtistPlaying) {
-                    controller.stop();
+                    controller.togglePlay();
                     return;
                   }
                   controller.playTracks(
                     artist.popularTracks,
-                    continueCurrentIfSameQueueAndPaused: true,
+                    contextId: artist.id,
                   );
                 }
               : null,
-          icon: isArtistPlaying ? Icons.stop : Icons.play_arrow,
-          tooltip: isArtistPlaying ? 'Stop' : 'Play',
+          icon: isArtistPlaying ? Icons.pause : Icons.play_arrow,
+          tooltip: isArtistPlaying ? 'Pause' : 'Play',
         ),
         const SizedBox(width: 12),
         IconButton(
           tooltip: 'Shuffle',
-          icon: const Icon(Icons.shuffle, color: AppColors.textPrimary),
+          icon: Icon(
+            Icons.shuffle,
+            color: shuffleEnabled ? AppColors.primary : AppColors.textPrimary,
+          ),
           onPressed: hasTracks
-              ? () async {
-                  final controller = ref.read(playerControllerProvider);
-                  await controller.toggleShuffle();
-                  if (!context.mounted) return;
-                  await controller.playTracks(artist.popularTracks);
-                }
+              ? () => ref.read(playerControllerProvider).toggleShuffle()
               : null,
         ),
       ],
@@ -428,10 +484,17 @@ class _AlbumCarouselTile extends ConsumerWidget {
 }
 
 class _PopularTrackTile extends ConsumerWidget {
-  const _PopularTrackTile({required this.index, required this.track});
+  const _PopularTrackTile({
+    required this.index,
+    required this.track,
+    required this.allTracks,
+    required this.contextId,
+  });
 
   final int index;
   final Track track;
+  final List<Track> allTracks;
+  final String contextId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -482,7 +545,14 @@ class _PopularTrackTile extends ConsumerWidget {
           TrackMoreMenuButton(track: track),
         ],
       ),
-      onTap: () => ref.read(playerControllerProvider).playTracks([track]),
+      onTap: () => ref
+          .read(playerControllerProvider)
+          .playTracks(
+            allTracks,
+            startIndex: index - 1,
+            contextId: contextId,
+            selectedTrack: true,
+          ),
     );
   }
 }

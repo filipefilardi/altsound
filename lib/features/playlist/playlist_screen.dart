@@ -518,6 +518,7 @@ class _PlaylistView extends ConsumerWidget {
                   track: entry.value,
                   index: entry.key,
                   allTracks: playlist.tracks,
+                  contextId: playlist.id,
                   inSelection: inSelection,
                   isSelected: selectedTrackIds.contains(entry.value.id),
                   onLongPress: () => onLongPress(entry.value.id),
@@ -657,18 +658,10 @@ class _ActionRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.read(playerControllerProvider);
     final playbackState = ref.watch(playbackStateProvider).value;
-    final queue = ref.watch(queueProvider).value ?? const [];
-    final playlistTrackIds = playlist.tracks.map((t) => t.id).toList();
-    final queueTrackIds = queue
-        .map((item) => item.extras?['jellyfinId'] as String?)
-        .whereType<String>()
-        .toList();
-    final matchesPlaylistQueue = playlistTrackIds.length == queueTrackIds.length &&
-        List<int>.generate(playlistTrackIds.length, (i) => i).every(
-          (i) => playlistTrackIds[i] == queueTrackIds[i],
-        );
-    final isPlaylistPlaying =
-        playbackState?.playing == true && matchesPlaylistQueue;
+    final currentMediaItem = ref.watch(currentMediaItemProvider).value;
+    final shuffleEnabled = ref.watch(playerShuffleEnabledProvider).value ?? false;
+    final isPlaylistPlaying = playbackState?.playing == true &&
+        (currentMediaItem?.extras?['contextId'] as String?) == playlist.id;
     final enabled = playlist.tracks.isNotEmpty && !selectionActive;
 
     return Opacity(
@@ -681,28 +674,27 @@ class _ActionRow extends ConsumerWidget {
               onTap: enabled
                   ? () {
                       if (isPlaylistPlaying) {
-                        controller.stop();
+                        controller.togglePlay();
                         return;
                       }
                       controller.playTracks(
                         playlist.tracks,
-                        continueCurrentIfSameQueueAndPaused: true,
+                        contextId: playlist.id,
                       );
                     }
                   : null,
-              icon: isPlaylistPlaying ? Icons.stop : Icons.play_arrow,
-              tooltip: isPlaylistPlaying ? 'Stop' : 'Play',
+              icon: isPlaylistPlaying ? Icons.pause : Icons.play_arrow,
+              tooltip: isPlaylistPlaying ? 'Pause' : 'Play',
             ),
             const SizedBox(width: 12),
             IconButton(
               tooltip: 'Shuffle',
-              icon: const Icon(Icons.shuffle, color: AppColors.textPrimary),
+              icon: Icon(
+                Icons.shuffle,
+                color: shuffleEnabled ? AppColors.primary : AppColors.textPrimary,
+              ),
               onPressed: enabled
-                  ? () async {
-                      await controller.toggleShuffle();
-                      if (!context.mounted) return;
-                      controller.playTracks(playlist.tracks);
-                    }
+                  ? () => controller.toggleShuffle()
                   : null,
             ),
             PlaylistDownloadButton(playlist: playlist),
@@ -782,6 +774,7 @@ class _PlaylistTrackTile extends ConsumerWidget {
     required this.track,
     required this.index,
     required this.allTracks,
+    required this.contextId,
     required this.inSelection,
     required this.isSelected,
     required this.onLongPress,
@@ -791,6 +784,7 @@ class _PlaylistTrackTile extends ConsumerWidget {
   final Track track;
   final int index;
   final List<Track> allTracks;
+  final String contextId;
   final bool inSelection;
   final bool isSelected;
   final VoidCallback onLongPress;
@@ -820,7 +814,12 @@ class _PlaylistTrackTile extends ConsumerWidget {
         } else {
           ref
               .read(playerControllerProvider)
-              .playTracks(allTracks, startIndex: index);
+              .playTracks(
+                allTracks,
+                startIndex: index,
+                contextId: contextId,
+                selectedTrack: true,
+              );
         }
       },
       selected: isSelected,
