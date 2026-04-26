@@ -127,7 +127,7 @@ class _OverviewTabState extends ConsumerState<_OverviewTab> {
     return ListView(
       padding: const EdgeInsets.only(bottom: 96),
       children: [
-        _ArtistHeader(artist: widget.artist, bioAsync: bioAsync),
+        _ArtistHeader(artist: widget.artist),
 
         // ── Popular Albums ──────────────────────────────────────────────
         _GroupHeader(label: 'POPULAR ALBUMS'),
@@ -135,6 +135,9 @@ class _OverviewTabState extends ConsumerState<_OverviewTab> {
 
         // ── Popular Songs ───────────────────────────────────────────────
         ..._buildSongsSection(topSongsAsync),
+
+        // ── About ───────────────────────────────────────────────────────
+        ..._buildAboutSection(bioAsync),
       ],
     );
   }
@@ -211,6 +214,19 @@ class _OverviewTabState extends ConsumerState<_OverviewTab> {
         );
       },
     );
+  }
+
+  List<Widget> _buildAboutSection(AsyncValue<String?> bioAsync) {
+    final bio = bioAsync.value;
+    if (bio == null || bio.isEmpty) return const [];
+    return [
+      const SizedBox(height: 4),
+      _GroupHeader(label: 'ABOUT'),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+        child: _BioText(bio: bio),
+      ),
+    ];
   }
 
   List<Widget> _buildSongsSection(AsyncValue<List<LbRecording>> topSongsAsync) {
@@ -334,9 +350,8 @@ class _DiscographyTab extends ConsumerWidget {
 // ── Shared header ─────────────────────────────────────────────────────────────
 
 class _ArtistHeader extends ConsumerWidget {
-  const _ArtistHeader({required this.artist, required this.bioAsync});
+  const _ArtistHeader({required this.artist});
   final MusicBrainzArtist artist;
-  final AsyncValue<String?> bioAsync;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -345,65 +360,54 @@ class _ArtistHeader extends ConsumerWidget {
       if (artist.type != null) artist.type!,
       if (artist.country != null) artist.country!,
     ].join(' · ');
-    final bio = bioAsync.value;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
-            children: [
-              ClipOval(
-                child: SizedBox(
-                  width: 72,
-                  height: 72,
-                  child: imageUrl != null
-                      ? CachedNetworkImage(
-                          imageUrl: imageUrl,
-                          fit: BoxFit.cover,
-                          placeholder: (_, __) =>
-                              Container(color: AppColors.surfaceElevated),
-                          errorWidget: (_, __, ___) =>
-                              _ArtistInitial(artist.name),
-                        )
-                      : _ArtistInitial(artist.name),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      artist.name,
-                      style: Theme.of(context).textTheme.titleLarge,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (meta.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(meta,
-                          style: const TextStyle(
-                              color: AppColors.textSecondary, fontSize: 13)),
-                    ],
-                    if (artist.disambiguation != null) ...[
-                      const SizedBox(height: 2),
-                      Text(artist.disambiguation!,
-                          style: const TextStyle(
-                              color: AppColors.textTertiary, fontSize: 12),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis),
-                    ],
-                  ],
-                ),
-              ),
-            ],
+          ClipOval(
+            child: SizedBox(
+              width: 72,
+              height: 72,
+              child: imageUrl != null
+                  ? CachedNetworkImage(
+                      imageUrl: imageUrl,
+                      fit: BoxFit.cover,
+                      placeholder: (_, __) =>
+                          Container(color: AppColors.surfaceElevated),
+                      errorWidget: (_, __, ___) => _ArtistInitial(artist.name),
+                    )
+                  : _ArtistInitial(artist.name),
+            ),
           ),
-          if (bio != null && bio.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            _BioText(bio: bio),
-          ],
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  artist.name,
+                  style: Theme.of(context).textTheme.titleLarge,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (meta.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(meta,
+                      style: const TextStyle(
+                          color: AppColors.textSecondary, fontSize: 13)),
+                ],
+                if (artist.disambiguation != null) ...[
+                  const SizedBox(height: 2),
+                  Text(artist.disambiguation!,
+                      style: const TextStyle(
+                          color: AppColors.textTertiary, fontSize: 12),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis),
+                ],
+              ],
+            ),
+          ),
         ],
       ),
     );
