@@ -211,7 +211,9 @@ class _ResultTile extends ConsumerWidget {
         context.push('/album/${item.id}');
       case MediaKind.track:
         final track = await ref.read(jellyfinRepositoryProvider).track(item.id);
-        await ref.read(playerControllerProvider).playTracks([track]);
+        await ref
+            .read(playerControllerProvider)
+            .playTracks([track], selectedTrack: true);
       case MediaKind.artist:
         context.push('/artist/${item.id}');
       case MediaKind.playlist:
@@ -379,7 +381,7 @@ class _SearchTrackMenuButton extends ConsumerWidget {
               includeLikedSongsShortcut: true,
             );
           case _TrackMenuAction.addToQueue:
-            await ref.read(playerControllerProvider).addTrackToQueue(track);
+            await ref.read(playerControllerProvider).addToQueue(track);
           case _TrackMenuAction.goToAlbum:
             context.push('/album/${track.albumId}');
           case _TrackMenuAction.goToArtist:

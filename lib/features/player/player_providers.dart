@@ -48,6 +48,12 @@ final playerErrorProvider = StreamProvider<PlayerError>((ref) {
   return ref.watch(audioHandlerProvider).errorStream;
 });
 
+/// Jellyfin IDs of tracks added by the user via "Add to queue" / "Play next".
+/// Empty whenever a new playback queue is loaded from an album/artist/playlist.
+final userQueuedIdsProvider = StreamProvider<Set<String>>((ref) {
+  return ref.watch(audioHandlerProvider).userQueuedIdsStream;
+});
+
 final playerControllerProvider = Provider<PlayerController>((ref) {
   return PlayerController(
     handler: ref.watch(audioHandlerProvider),
@@ -67,33 +73,39 @@ class PlayerController {
   final JellyfinRepository repo;
   final DownloadManager downloads;
 
-  /// If [tracks] match the currently loaded queue (by Jellyfin id), just
-  /// jump to [startIndex] — avoids reloading audio sources and the brief
-  /// playback gap / loading flash that comes with it.
+  /// Load [tracks] and play from [startIndex] onwards.
+  ///
+  /// If [contextId] is supplied (an album, artist, or playlist ID) and the
+  /// currently playing item belongs to the same context, this resumes without
+  /// reloading — preserving the existing queue. Tracks before [startIndex] are
+  /// not added to the queue so the queue always starts at the intended song.
   Future<void> playTracks(
     List<jf.Track> tracks, {
     int startIndex = 0,
-    bool continueCurrentIfSameQueueAndPaused = false,
+    String? contextId,
+    bool selectedTrack = false,
   }) async {
     if (tracks.isEmpty) return;
-    final mediaItems = tracks.map(_toMediaItem).toList();
-    final currentQueue = handler.queue.value;
-    final sameQueue = currentQueue.length == mediaItems.length &&
-        List<int>.generate(mediaItems.length, (i) => i).every(
-          (i) =>
-              currentQueue[i].extras?['jellyfinId'] ==
-              mediaItems[i].extras?['jellyfinId'],
-        );
-    if (sameQueue) {
-      if (continueCurrentIfSameQueueAndPaused &&
-          !handler.playbackState.value.playing) {
-        await handler.play();
+
+    // Resume without reloading if we're already in this context.
+    if (startIndex == 0 && contextId != null) {
+      final current = handler.mediaItem.value;
+      if ((current?.extras?['contextId'] as String?) == contextId) {
+        if (!handler.playbackState.value.playing) await handler.play();
         return;
       }
-      await handler.skipToQueueItem(startIndex);
-    } else {
-      await handler.loadQueue(mediaItems, initialIndex: startIndex);
     }
+
+    // Only queue tracks from startIndex onwards — no past songs in the queue.
+    final toLoad = tracks
+        .sublist(startIndex)
+        .map((t) => _toMediaItem(t, contextId: contextId))
+        .toList();
+    await handler.loadQueue(
+      toLoad,
+      initialIndex: 0,
+      randomizeStart: !selectedTrack,
+    );
   }
 
   Future<void> togglePlay() async {
@@ -124,20 +136,34 @@ class PlayerController {
 
   Future<void> toggleShuffle() => handler.toggleShuffle();
 
-  Future<void> addTrackToQueue(jf.Track track) async {
+  /// Insert [track] immediately after the current track.
+  Future<void> playNext(jf.Track track) async {
+    final item = _toMediaItem(track);
+    if (handler.queue.value.isEmpty) {
+      await handler.loadQueue([item], initialIndex: 0, autoPlay: false);
+      return;
+    }
+    await handler.insertNextInQueue(item);
+  }
+
+  /// Append [track] to the end of the queue. Never auto-plays.
+  /// Returns false if the track was already present in the queue.
+  Future<bool> addToQueue(jf.Track track) async {
     final item = _toMediaItem(track);
     final currentQueue = handler.queue.value;
     if (currentQueue.isEmpty) {
-      await handler.loadQueue([item], initialIndex: 0);
-      return;
+      await handler.loadQueue([item], initialIndex: 0, autoPlay: false);
+      return true;
     }
-    final exists = currentQueue
-        .any((q) => q.extras?['jellyfinId'] == item.extras?['jellyfinId']);
-    if (exists) return;
+    final alreadyInQueue = currentQueue.any(
+      (q) => (q.extras?['jellyfinId'] as String?) == track.id,
+    );
+    if (alreadyInQueue) return false;
     await handler.appendToQueue(item);
+    return true;
   }
 
-  MediaItem _toMediaItem(jf.Track t) {
+  MediaItem _toMediaItem(jf.Track t, {String? contextId}) {
     final localPath = downloads.localPath(t.id);
     final localArtPath = downloads.localArtworkPath(t.id);
     final art = (t.imageTag == null || t.imageTag!.isEmpty)
@@ -160,6 +186,7 @@ class PlayerController {
         'albumId': t.albumId,
         'artistId': t.artistId,
         'isOffline': localPath != null,
+        if (contextId != null) 'contextId': contextId,
       },
     );
   }

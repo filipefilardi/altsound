@@ -312,7 +312,12 @@ class _AlbumViewState extends ConsumerState<_AlbumView> {
               index: i,
               onTap: () => ref
                   .read(playerControllerProvider)
-                  .playTracks(album.tracks, startIndex: i),
+                  .playTracks(
+                    album.tracks,
+                    startIndex: i,
+                    contextId: album.id,
+                    selectedTrack: true,
+                  ),
             );
           },
         ),
@@ -352,8 +357,9 @@ class _ActionBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final playbackState = ref.watch(playbackStateProvider).value;
     final currentMediaItem = ref.watch(currentMediaItemProvider).value;
+    final shuffleEnabled = ref.watch(playerShuffleEnabledProvider).value ?? false;
     final isAlbumPlaying = playbackState?.playing == true &&
-        currentMediaItem?.extras?['albumId'] == album.id;
+        (currentMediaItem?.extras?['contextId'] as String?) == album.id;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -365,32 +371,27 @@ class _ActionBar extends ConsumerWidget {
                 : () {
                     final controller = ref.read(playerControllerProvider);
                     if (isAlbumPlaying) {
-                      controller.stop();
+                      controller.togglePlay();
                       return;
                     }
                     controller.playTracks(
                       album.tracks,
-                      continueCurrentIfSameQueueAndPaused: true,
+                      contextId: album.id,
                     );
                   },
-            icon: isAlbumPlaying ? Icons.stop : Icons.play_arrow,
-            tooltip: isAlbumPlaying ? 'Stop' : 'Play',
+            icon: isAlbumPlaying ? Icons.pause : Icons.play_arrow,
+            tooltip: isAlbumPlaying ? 'Pause' : 'Play',
           ),
           const SizedBox(width: 12),
           IconButton(
             tooltip: 'Shuffle',
-            icon: const Icon(Icons.shuffle, color: AppColors.textPrimary),
+            icon: Icon(
+              Icons.shuffle,
+              color: shuffleEnabled ? AppColors.primary : AppColors.textPrimary,
+            ),
             onPressed: album.tracks.isEmpty
                 ? null
-                : () async {
-                    await ref
-                        .read(playerControllerProvider)
-                        .toggleShuffle();
-                    if (!context.mounted) return;
-                    await ref
-                        .read(playerControllerProvider)
-                        .playTracks(album.tracks);
-                  },
+                : () => ref.read(playerControllerProvider).toggleShuffle(),
           ),
           AlbumDownloadButton(album: album),
           const Spacer(),
