@@ -13,19 +13,127 @@ import '../../data/downloads/download_preferences.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
 import '../../data/jellyfin/models/media_item.dart';
 import '../downloads/widgets/playlist_download_button.dart';
+import '../player/current_track_playlist_presence.dart';
+import '../player/now_playing_favorite.dart';
 import '../player/player_providers.dart';
 import '../player/widgets/mini_player_slot.dart';
 import '../player/widgets/playing_track_leading.dart';
 import '../player/widgets/track_more_menu_button.dart';
 import 'playlist_providers.dart';
 
-class PlaylistScreen extends ConsumerWidget {
+/// Album on each track row is shown when width is at or above this (phone vs tablet / landscape).
+const double _kPlaylistShowAlbumWidthBreakpoint = 600;
+
+enum _SelectionBulkAction { addToLiked, addToPlaylist, removeFromPlaylist }
+
+class PlaylistScreen extends ConsumerStatefulWidget {
   const PlaylistScreen({required this.playlistId, super.key});
 
   final String playlistId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PlaylistScreen> createState() => _PlaylistScreenState();
+}
+
+class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
+  final Set<String> _selectedTrackIds = {};
+  static const _emptySelection = <String>{};
+
+  bool get _inSelection => _selectedTrackIds.isNotEmpty;
+
+  void _clearSelection() {
+    if (_selectedTrackIds.isEmpty) return;
+    setState(() => _selectedTrackIds.clear());
+  }
+
+  void _toggleTrackSelected(String id) {
+    setState(() {
+      if (_selectedTrackIds.contains(id)) {
+        _selectedTrackIds.remove(id);
+      } else {
+        _selectedTrackIds.add(id);
+      }
+    });
+  }
+
+  void _onLongPressStartSelection(String id) {
+    setState(() {
+      _selectedTrackIds.add(id);
+    });
+  }
+
+  Future<void> _showSelectionActionsMenu(
+    BuildContext context, {
+    required String playlistId,
+  }) async {
+    if (_selectedTrackIds.isEmpty) return;
+    final count = _selectedTrackIds.length;
+    final action = await showModalBottomSheet<_SelectionBulkAction>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(
+                Icons.favorite_rounded,
+                color: Color(0xFFE5635A),
+              ),
+              title: const Text('Add to liked songs'),
+              onTap: () => Navigator.of(sheetContext)
+                  .pop(_SelectionBulkAction.addToLiked),
+            ),
+            ListTile(
+              leading: const Icon(
+                Icons.playlist_add,
+                color: AppColors.primary,
+              ),
+              title: const Text('Add to another playlist'),
+              onTap: () => Navigator.of(sheetContext)
+                  .pop(_SelectionBulkAction.addToPlaylist),
+            ),
+            ListTile(
+              leading: const Icon(Icons.remove_circle_outline),
+              title: const Text('Remove from this playlist'),
+              onTap: () => Navigator.of(sheetContext)
+                  .pop(_SelectionBulkAction.removeFromPlaylist),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (!context.mounted || action == null) return;
+    final ids = Set<String>.from(_selectedTrackIds);
+    switch (action) {
+      case _SelectionBulkAction.addToLiked:
+        await _bulkAddToLikedSongs(
+          context,
+          ids,
+          onDone: _clearSelection,
+        );
+      case _SelectionBulkAction.addToPlaylist:
+        await _showBulkAddToPlaylistDialog(
+          context,
+          currentPlaylistId: playlistId,
+          trackIds: ids,
+          onDone: _clearSelection,
+        );
+      case _SelectionBulkAction.removeFromPlaylist:
+        await _confirmBulkRemove(
+          context,
+          playlistId: playlistId,
+          count: count,
+          trackIds: ids,
+          onDone: _clearSelection,
+        );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final playlistId = widget.playlistId;
     final async = ref.watch(playlistProvider(playlistId));
     final playlist = async.value;
     final canDelete =
@@ -44,38 +152,84 @@ class PlaylistScreen extends ConsumerWidget {
       }
     });
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Playlist'),
-        actions: [
-          if (canDelete)
-            IconButton(
-              tooltip: 'Delete playlist',
-              icon: const Icon(Icons.delete_outline),
-              onPressed: () => _confirmDelete(context, ref, playlist),
+    return PopScope(
+      canPop: !_inSelection,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _clearSelection();
+      },
+      child: Scaffold(
+      appBar: _inSelection
+          ? AppBar(
+              leading: IconButton(
+                tooltip: 'Cancel',
+                icon: const Icon(Icons.close),
+                onPressed: _clearSelection,
+              ),
+              title: Text('${_selectedTrackIds.length} selected'),
+              actions: [
+                IconButton(
+                  tooltip: 'More',
+                  icon: const Icon(Icons.more_vert),
+                  onPressed: () => _showSelectionActionsMenu(
+                    context,
+                    playlistId: playlistId,
+                  ),
+                ),
+              ],
+            )
+          : AppBar(
+              title: const Text('Playlist'),
+              actions: [
+                if (canDelete)
+                  IconButton(
+                    tooltip: 'Delete playlist',
+                    icon: const Icon(Icons.delete_outline),
+                    onPressed: () => _confirmDelete(context, ref, playlist),
+                  ),
+              ],
             ),
-        ],
-      ),
       bottomNavigationBar: const MiniPlayerSlot(withTopDivider: true),
       body: async.when(
         loading: () {
           final offlinePlaylist = _buildOfflinePlaylist(playlistId, downloads);
           if (offlinePlaylist != null) {
-            return _PlaylistView(playlist: offlinePlaylist);
+            return _PlaylistView(
+              playlist: offlinePlaylist,
+              selectedTrackIds: _emptySelection,
+              inSelection: false,
+              onLongPress: (_) {},
+              onToggleSelected: (_) {},
+            );
           }
           return const _PlaylistLoading();
         },
         error: (e, _) {
           final offlinePlaylist = _buildOfflinePlaylist(playlistId, downloads);
-          if (offlinePlaylist != null) return _PlaylistView(playlist: offlinePlaylist);
+          if (offlinePlaylist != null) {
+            return _PlaylistView(
+              playlist: offlinePlaylist,
+              selectedTrackIds: _emptySelection,
+              inSelection: false,
+              onLongPress: (_) {},
+              onToggleSelected: (_) {},
+            );
+          }
           return ErrorStateView(
             title: "Couldn't load this playlist",
             message: e.toString(),
             onRetry: () => ref.invalidate(playlistProvider(playlistId)),
           );
         },
-        data: (playlist) => _PlaylistView(playlist: playlist),
+        data: (playlist) => _PlaylistView(
+          playlist: playlist,
+          selectedTrackIds: _selectedTrackIds,
+          inSelection: _inSelection,
+          onLongPress: _onLongPressStartSelection,
+          onToggleSelected: _toggleTrackSelected,
+        ),
       ),
+    ),
     );
   }
 
@@ -126,12 +280,220 @@ class PlaylistScreen extends ConsumerWidget {
     if (!context.mounted) return;
     context.pop();
   }
+
+  Future<void> _bulkAddToLikedSongs(
+    BuildContext context,
+    Set<String> trackIds, {
+    required VoidCallback onDone,
+  }) async {
+    if (trackIds.isEmpty) return;
+    final repo = ref.read(jellyfinRepositoryProvider);
+    try {
+      for (final id in trackIds) {
+        await repo.setFavorite(id, favorite: true);
+        await repo.addTrackToLikedSongs(id);
+      }
+      final liked = await repo.likedSongsPlaylist();
+      if (liked != null) {
+        ref.invalidate(playlistProvider(liked.id));
+      }
+      ref.invalidate(currentTrackPlaylistPresenceProvider);
+      ref.invalidate(nowPlayingFavoriteProvider);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              trackIds.length == 1
+                  ? 'Added 1 song to liked songs'
+                  : 'Added ${trackIds.length} songs to liked songs',
+            ),
+          ),
+        );
+        onDone();
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not add to liked songs: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _showBulkAddToPlaylistDialog(
+    BuildContext context, {
+    required String currentPlaylistId,
+    required Set<String> trackIds,
+    required VoidCallback onDone,
+  }) async {
+    if (trackIds.isEmpty) return;
+    final repo = ref.read(jellyfinRepositoryProvider);
+    final liked = await repo.likedSongsPlaylist();
+    var lists = await repo.playlists();
+    lists = lists
+        .where(
+          (p) =>
+              p.id != currentPlaylistId && p.id != (liked?.id),
+        )
+        .toList();
+    if (!context.mounted) return;
+
+    final canPickLiked = liked != null && liked.id != currentPlaylistId;
+    final chosen = await showModalBottomSheet<BrowseItem>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        if (lists.isEmpty && !canPickLiked) {
+          return const Padding(
+            padding: EdgeInsets.all(24),
+            child: Text(
+              'No other playlists. Create one from the Library tab.',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          );
+        }
+        return SafeArea(
+          child: ListView(
+            children: [
+              if (canPickLiked)
+                ListTile(
+                  leading: const Icon(
+                    Icons.favorite_rounded,
+                    color: Color(0xFFE5635A),
+                  ),
+                  title: const Text('Liked songs'),
+                  onTap: () => Navigator.of(sheetContext).pop(liked),
+                ),
+              ...lists.map(
+                (p) => ListTile(
+                  leading: const Icon(
+                    Icons.queue_music_rounded,
+                    color: AppColors.primary,
+                  ),
+                  title: Text(p.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+                  onTap: () => Navigator.of(sheetContext).pop(p),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
+    );
+    if (chosen == null || !context.mounted) return;
+    final targetId = chosen.id;
+    try {
+      for (final id in trackIds) {
+        if (liked != null && targetId == liked.id) {
+          await repo.setFavorite(id, favorite: true);
+        }
+        await repo.addTrackToPlaylist(trackId: id, playlistId: targetId);
+      }
+      ref.invalidate(playlistProvider(targetId));
+      if (liked != null && targetId == liked.id) {
+        ref.invalidate(currentTrackPlaylistPresenceProvider);
+        ref.invalidate(nowPlayingFavoriteProvider);
+      }
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Added to "${chosen.name}"',
+            ),
+          ),
+        );
+        onDone();
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not add to playlist: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _confirmBulkRemove(
+    BuildContext context, {
+    required String playlistId,
+    required int count,
+    required Set<String> trackIds,
+    required VoidCallback onDone,
+  }) async {
+    if (count == 0) return;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Remove from playlist?'),
+        content: Text(
+          count == 1
+              ? 'Remove 1 song from this playlist?'
+              : 'Remove $count songs from this playlist?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+    final repo = ref.read(jellyfinRepositoryProvider);
+    try {
+      for (final id in trackIds) {
+        final entry = await repo.playlistEntryIdForTrack(
+          playlistId: playlistId,
+          trackId: id,
+        );
+        if (entry != null) {
+          await repo.removeTrackFromPlaylistByEntry(
+            playlistId: playlistId,
+            playlistItemEntryId: entry,
+          );
+        }
+      }
+      ref.invalidate(playlistProvider(playlistId));
+      ref.invalidate(currentTrackPlaylistPresenceProvider);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              count == 1 ? 'Removed 1 song' : 'Removed $count songs',
+            ),
+          ),
+        );
+        onDone();
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not remove: $e')),
+        );
+      }
+    }
+  }
 }
 
 class _PlaylistView extends ConsumerWidget {
-  const _PlaylistView({required this.playlist});
+  const _PlaylistView({
+    required this.playlist,
+    required this.selectedTrackIds,
+    required this.inSelection,
+    required this.onLongPress,
+    required this.onToggleSelected,
+  });
 
   final PlaylistDetail playlist;
+  final Set<String> selectedTrackIds;
+  final bool inSelection;
+  final void Function(String trackId) onLongPress;
+  final void Function(String trackId) onToggleSelected;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -140,7 +502,7 @@ class _PlaylistView extends ConsumerWidget {
       children: [
         _PlaylistHeader(playlist: playlist),
         const SizedBox(height: 16),
-        _ActionRow(playlist: playlist),
+        _ActionRow(playlist: playlist, selectionActive: inSelection),
         const SizedBox(height: 8),
         if (playlist.tracks.isEmpty)
           const Padding(
@@ -156,6 +518,10 @@ class _PlaylistView extends ConsumerWidget {
                   track: entry.value,
                   index: entry.key,
                   allTracks: playlist.tracks,
+                  inSelection: inSelection,
+                  isSelected: selectedTrackIds.contains(entry.value.id),
+                  onLongPress: () => onLongPress(entry.value.id),
+                  onToggleSelected: () => onToggleSelected(entry.value.id),
                 ),
               ),
       ],
@@ -283,8 +649,9 @@ class _PlaylistArtwork extends ConsumerWidget {
 }
 
 class _ActionRow extends ConsumerWidget {
-  const _ActionRow({required this.playlist});
+  const _ActionRow({required this.playlist, this.selectionActive = false});
   final PlaylistDetail playlist;
+  final bool selectionActive;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -302,40 +669,46 @@ class _ActionRow extends ConsumerWidget {
         );
     final isPlaylistPlaying =
         playbackState?.playing == true && matchesPlaylistQueue;
-    final enabled = playlist.tracks.isNotEmpty;
+    final enabled = playlist.tracks.isNotEmpty && !selectionActive;
 
-    return Row(
-      children: [
-        _PlayPill(
-          onTap: enabled
-              ? () {
-                  if (isPlaylistPlaying) {
-                    controller.stop();
-                    return;
-                  }
-                  controller.playTracks(
-                    playlist.tracks,
-                    continueCurrentIfSameQueueAndPaused: true,
-                  );
-                }
-              : null,
-          icon: isPlaylistPlaying ? Icons.stop : Icons.play_arrow,
-          tooltip: isPlaylistPlaying ? 'Stop' : 'Play',
+    return Opacity(
+      opacity: selectionActive ? 0.45 : 1,
+      child: IgnorePointer(
+        ignoring: selectionActive,
+        child: Row(
+          children: [
+            _PlayPill(
+              onTap: enabled
+                  ? () {
+                      if (isPlaylistPlaying) {
+                        controller.stop();
+                        return;
+                      }
+                      controller.playTracks(
+                        playlist.tracks,
+                        continueCurrentIfSameQueueAndPaused: true,
+                      );
+                    }
+                  : null,
+              icon: isPlaylistPlaying ? Icons.stop : Icons.play_arrow,
+              tooltip: isPlaylistPlaying ? 'Stop' : 'Play',
+            ),
+            const SizedBox(width: 12),
+            IconButton(
+              tooltip: 'Shuffle',
+              icon: const Icon(Icons.shuffle, color: AppColors.textPrimary),
+              onPressed: enabled
+                  ? () async {
+                      await controller.toggleShuffle();
+                      if (!context.mounted) return;
+                      controller.playTracks(playlist.tracks);
+                    }
+                  : null,
+            ),
+            PlaylistDownloadButton(playlist: playlist),
+          ],
         ),
-        const SizedBox(width: 12),
-        IconButton(
-          tooltip: 'Shuffle',
-          icon: const Icon(Icons.shuffle, color: AppColors.textPrimary),
-          onPressed: enabled
-              ? () async {
-                  await controller.toggleShuffle();
-                  if (!context.mounted) return;
-                  controller.playTracks(playlist.tracks);
-                }
-              : null,
-        ),
-        PlaylistDownloadButton(playlist: playlist),
-      ],
+      ),
     );
   }
 }
@@ -409,14 +782,28 @@ class _PlaylistTrackTile extends ConsumerWidget {
     required this.track,
     required this.index,
     required this.allTracks,
+    required this.inSelection,
+    required this.isSelected,
+    required this.onLongPress,
+    required this.onToggleSelected,
   });
 
   final Track track;
   final int index;
   final List<Track> allTracks;
+  final bool inSelection;
+  final bool isSelected;
+  final VoidCallback onLongPress;
+  final VoidCallback onToggleSelected;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final showAlbumLine = MediaQuery.sizeOf(context).width >=
+        _kPlaylistShowAlbumWidthBreakpoint;
+    final hasAlbum =
+        showAlbumLine &&
+        track.albumName != null &&
+        track.albumName!.isNotEmpty;
     final current = ref.watch(currentMediaItemProvider).value;
     final isCurrent =
         current != null && current.extras?['jellyfinId'] == track.id;
@@ -425,54 +812,113 @@ class _PlaylistTrackTile extends ConsumerWidget {
     return ListTile(
       dense: true,
       visualDensity: VisualDensity.compact,
-      onTap: () => ref
-          .read(playerControllerProvider)
-          .playTracks(allTracks, startIndex: index),
-      leading: PlayingTrackLeading(
-        jellyfinTrackId: track.id,
-        indexLabel: '${index + 1}',
-      ),
+      isThreeLine: inSelection || hasAlbum,
+      onLongPress: onLongPress,
+      onTap: () {
+        if (inSelection) {
+          onToggleSelected();
+        } else {
+          ref
+              .read(playerControllerProvider)
+              .playTracks(allTracks, startIndex: index);
+        }
+      },
+      selected: isSelected,
+      selectedTileColor: AppColors.primary.withValues(alpha: 0.08),
+      leading: inSelection
+          ? Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Checkbox(
+                value: isSelected,
+                onChanged: (_) => onToggleSelected(),
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
+              ),
+            )
+          : PlayingTrackLeading(
+              jellyfinTrackId: track.id,
+              indexLabel: '${index + 1}',
+            ),
       title: Text(
         track.name,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
-          color: isCurrent ? AppColors.primary : AppColors.textPrimary,
-          fontWeight: isCurrent ? FontWeight.w600 : FontWeight.w500,
+          color: isCurrent && !inSelection
+              ? AppColors.primary
+              : AppColors.textPrimary,
+          fontWeight: isCurrent && !inSelection
+              ? FontWeight.w600
+              : FontWeight.w500,
         ),
       ),
-      subtitle: InkWell(
-        onTap: track.artistId == null || track.artistId!.isEmpty
-            ? null
-            : () => context.push('/artist/${track.artistId}'),
-        child: Text(
-          track.artistName,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            color: track.artistId == null || track.artistId!.isEmpty
-                ? AppColors.textSecondary
-                : AppColors.primary,
-            fontSize: 12,
-          ),
-        ),
-      ),
-      trailing: Row(
+      subtitle: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (isDownloaded)
-            const Padding(
-              padding: EdgeInsets.only(right: 4),
-              child: Icon(Icons.download_for_offline,
-                  size: 14, color: AppColors.primary),
+          InkWell(
+            onTap: inSelection
+                ? null
+                : (track.artistId == null || track.artistId!.isEmpty
+                    ? null
+                    : () => context.push('/artist/${track.artistId}')),
+            child: Text(
+              track.artistName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: inSelection
+                    ? AppColors.textSecondary
+                    : (track.artistId == null || track.artistId!.isEmpty
+                        ? AppColors.textSecondary
+                        : AppColors.primary),
+                fontSize: 12,
+              ),
             ),
-          PlayingTrackDuration(
-            jellyfinTrackId: track.id,
-            trackDuration: track.duration,
           ),
-          TrackMoreMenuButton(track: track),
+          if (hasAlbum) ...[
+            const SizedBox(height: 2),
+            InkWell(
+              onTap: inSelection
+                  ? null
+                  : (track.albumId == null || track.albumId!.isEmpty
+                      ? null
+                      : () => context.push('/album/${track.albumId}')),
+              child: Text(
+                track.albumName!,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: inSelection
+                      ? AppColors.textTertiary
+                      : (track.albumId == null || track.albumId!.isEmpty
+                          ? AppColors.textSecondary
+                          : AppColors.primary),
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
+      trailing: inSelection
+          ? null
+          : Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (isDownloaded)
+                  const Padding(
+                    padding: EdgeInsets.only(right: 4),
+                    child: Icon(Icons.download_for_offline,
+                        size: 14, color: AppColors.primary),
+                  ),
+                PlayingTrackDuration(
+                  jellyfinTrackId: track.id,
+                  trackDuration: track.duration,
+                ),
+                TrackMoreMenuButton(track: track),
+              ],
+            ),
     );
   }
 }
