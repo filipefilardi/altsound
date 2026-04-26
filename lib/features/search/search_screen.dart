@@ -225,66 +225,153 @@ class _SearchTrackMenuButton extends ConsumerWidget {
     return IconButton(
       icon: const Icon(Icons.more_vert, color: AppColors.textSecondary),
       onPressed: () async {
-        final track = await ref.read(jellyfinRepositoryProvider).track(trackId);
+        final repo = ref.read(jellyfinRepositoryProvider);
+        final track = await repo.track(trackId);
         if (!context.mounted) return;
-        await showModalBottomSheet<void>(
+        final imageUrl = repo.imageUrl(
+          track.imageItemId,
+          imageTag: track.imageTag,
+          size: 200,
+        );
+        final action = await showModalBottomSheet<_TrackMenuAction>(
           context: context,
           showDragHandle: true,
-          builder: (_) => SafeArea(
-            child: Wrap(
+          builder: (sheetCtx) => SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // ── Track header ──
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                  child: Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: SizedBox(
+                          width: 48,
+                          height: 48,
+                          child: CachedNetworkImage(
+                            imageUrl: imageUrl,
+                            fit: BoxFit.cover,
+                            placeholder: (_, __) =>
+                                Container(color: AppColors.surfaceHighlight),
+                            errorWidget: (_, __, ___) => Container(
+                              color: AppColors.surfaceHighlight,
+                              child: const Icon(
+                                Icons.music_note,
+                                color: AppColors.textTertiary,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              track.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                                fontSize: 15,
+                              ),
+                            ),
+                            if (track.albumName != null) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                '${track.artistName} · ${track.albumName}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ] else ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                track.artistName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1),
+                // ── Actions ──
                 ListTile(
                   leading: const Icon(Icons.playlist_add),
                   title: const Text('Add to playlist'),
-                  onTap: () async {
-                    Navigator.of(context).pop();
-                    if (!context.mounted) return;
-                    await openAddTrackToPlaylistFlow(
-                      context,
-                      ref,
-                      trackId: track.id,
-                      includeLikedSongsShortcut: true,
-                    );
-                  },
+                  onTap: () => Navigator.of(sheetCtx)
+                      .pop(_TrackMenuAction.addToPlaylist),
                 ),
+                const Divider(height: 1, indent: 56),
                 ListTile(
                   leading: const Icon(Icons.queue_music),
                   title: const Text('Add to queue'),
-                  onTap: () async {
-                    Navigator.of(context).pop();
-                    await ref
-                        .read(playerControllerProvider)
-                        .addTrackToQueue(track);
-                  },
+                  onTap: () =>
+                      Navigator.of(sheetCtx).pop(_TrackMenuAction.addToQueue),
                 ),
-                ListTile(
-                  leading: const Icon(Icons.album_outlined),
-                  title: const Text('Go to album'),
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    if (track.albumId != null && track.albumId!.isNotEmpty) {
-                      context.push('/album/${track.albumId}');
-                    }
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.person_outline),
-                  title: const Text('Go to artist'),
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    if (track.artistId != null && track.artistId!.isNotEmpty) {
-                      context.push('/artist/${track.artistId}');
-                    }
-                  },
-                ),
+                if (track.albumId != null && track.albumId!.isNotEmpty) ...[
+                  const Divider(height: 1, indent: 56),
+                  ListTile(
+                    leading: const Icon(Icons.album_outlined),
+                    title: const Text('Go to album'),
+                    onTap: () => Navigator.of(sheetCtx)
+                        .pop(_TrackMenuAction.goToAlbum),
+                  ),
+                ],
+                if (track.artistId != null && track.artistId!.isNotEmpty) ...[
+                  const Divider(height: 1, indent: 56),
+                  ListTile(
+                    leading: const Icon(Icons.person_outline),
+                    title: const Text('Go to artist'),
+                    onTap: () => Navigator.of(sheetCtx)
+                        .pop(_TrackMenuAction.goToArtist),
+                  ),
+                ],
+                const SizedBox(height: 8),
               ],
             ),
           ),
         );
+        if (action == null || !context.mounted) return;
+        switch (action) {
+          case _TrackMenuAction.addToPlaylist:
+            await openAddTrackToPlaylistFlow(
+              context,
+              ref,
+              trackId: track.id,
+              includeLikedSongsShortcut: true,
+            );
+          case _TrackMenuAction.addToQueue:
+            await ref.read(playerControllerProvider).addTrackToQueue(track);
+          case _TrackMenuAction.goToAlbum:
+            context.push('/album/${track.albumId}');
+          case _TrackMenuAction.goToArtist:
+            context.push('/artist/${track.artistId}');
+        }
       },
     );
   }
 }
+
+enum _TrackMenuAction { addToPlaylist, addToQueue, goToAlbum, goToArtist }
 
 class _GroupedResults extends StatelessWidget {
   const _GroupedResults({required this.results});

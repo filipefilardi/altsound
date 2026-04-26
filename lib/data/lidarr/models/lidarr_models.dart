@@ -103,23 +103,48 @@ class LidarrDefaults {
 
 class LidarrAlbumResult {
   const LidarrAlbumResult({
+    required this.foreignAlbumId,
     required this.title,
     required this.artistName,
     required this.releaseDate,
     required this.albumType,
+    required this.imageUrl,
+    required this.raw,
   });
 
+  final String foreignAlbumId;
   final String title;
   final String artistName;
   final String? releaseDate;
   final String? albumType;
+  final String? imageUrl;
+  final Map<String, dynamic> raw;
 
   factory LidarrAlbumResult.fromJson(Map<String, dynamic> json) {
+    final rawImages = json['images'] as List?;
+    final images = rawImages
+            ?.whereType<Map>()
+            .map((img) => img.map((k, v) => MapEntry('$k', v)))
+            .toList() ??
+        const <Map<String, dynamic>>[];
+    final coverImage = images.cast<Map<String, dynamic>?>().firstWhere(
+          (img) => img?['coverType'] == 'cover',
+          orElse: () => images.isEmpty ? null : images.first,
+        );
+
+    final nestedArtist = json['artist'] as Map?;
+    final artistName = json['artistName'] as String? ??
+        nestedArtist?.map((k, v) => MapEntry('$k', v))['artistName'] as String? ??
+        'Unknown artist';
+
     return LidarrAlbumResult(
+      foreignAlbumId: json['foreignAlbumId'] as String? ?? '',
       title: json['title'] as String? ?? 'Untitled album',
-      artistName: json['artistName'] as String? ?? 'Unknown artist',
+      artistName: artistName,
       releaseDate: json['releaseDate'] as String?,
       albumType: json['albumType'] as String?,
+      imageUrl: coverImage?['remoteUrl'] as String?,
+      raw: json,
     );
   }
 }
