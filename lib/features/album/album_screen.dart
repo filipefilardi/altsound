@@ -12,7 +12,6 @@ import '../../core/widgets/skeleton.dart';
 import '../../data/downloads/download_manager.dart';
 import '../../data/downloads/download_preferences.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
-import '../../data/local/connectivity_provider.dart';
 import '../../data/jellyfin/models/media_item.dart';
 import '../downloads/widgets/album_download_button.dart';
 import '../player/player_providers.dart';
@@ -29,7 +28,6 @@ class AlbumScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(albumProvider(albumId));
-    final isOffline = ref.watch(isOfflineProvider);
     final downloads = ref.watch(downloadManagerProvider);
 
     ref.listen(albumProvider(albumId), (prev, next) {
@@ -45,9 +43,9 @@ class AlbumScreen extends ConsumerWidget {
       bottomNavigationBar: const MiniPlayerSlot(withTopDivider: true),
       body: async.when(
         loading: () {
-          // If offline and we have local tracks, skip the spinner entirely.
+          // If we have local tracks, skip the spinner while remote metadata loads.
           final offlineAlbum = _buildOfflineAlbum(albumId, downloads);
-          if (isOffline && offlineAlbum != null) {
+          if (offlineAlbum != null) {
             return _AlbumView(album: offlineAlbum);
           }
           return const _AlbumLoading();
