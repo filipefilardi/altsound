@@ -291,12 +291,38 @@ class _ActionRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.read(playerControllerProvider);
+    final playbackState = ref.watch(playbackStateProvider).value;
+    final queue = ref.watch(queueProvider).value ?? const [];
+    final playlistTrackIds = playlist.tracks.map((t) => t.id).toList();
+    final queueTrackIds = queue
+        .map((item) => item.extras?['jellyfinId'] as String?)
+        .whereType<String>()
+        .toList();
+    final matchesPlaylistQueue = playlistTrackIds.length == queueTrackIds.length &&
+        List<int>.generate(playlistTrackIds.length, (i) => i).every(
+          (i) => playlistTrackIds[i] == queueTrackIds[i],
+        );
+    final isPlaylistPlaying =
+        playbackState?.playing == true && matchesPlaylistQueue;
     final enabled = playlist.tracks.isNotEmpty;
 
     return Row(
       children: [
         _PlayPill(
-          onTap: enabled ? () => controller.playTracks(playlist.tracks) : null,
+          onTap: enabled
+              ? () {
+                  if (isPlaylistPlaying) {
+                    controller.stop();
+                    return;
+                  }
+                  controller.playTracks(
+                    playlist.tracks,
+                    continueCurrentIfSameQueueAndPaused: true,
+                  );
+                }
+              : null,
+          icon: isPlaylistPlaying ? Icons.stop : Icons.play_arrow,
+          tooltip: isPlaylistPlaying ? 'Stop' : 'Play',
         ),
         const SizedBox(width: 12),
         IconButton(
@@ -317,37 +343,48 @@ class _ActionRow extends ConsumerWidget {
 }
 
 class _PlayPill extends StatelessWidget {
-  const _PlayPill({required this.onTap});
+  const _PlayPill({
+    required this.onTap,
+    required this.icon,
+    required this.tooltip,
+  });
   final VoidCallback? onTap;
+  final IconData icon;
+  final String tooltip;
 
   @override
   Widget build(BuildContext context) {
     final enabled = onTap != null;
     return Opacity(
       opacity: enabled ? 1 : 0.5,
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: AppGradients.accent,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primary.withValues(alpha: 0.3),
-              blurRadius: 18,
-              offset: const Offset(0, 6),
-              spreadRadius: -3,
-            ),
-          ],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          shape: const CircleBorder(),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: onTap,
-            child: const SizedBox(
-              width: 56,
-              height: 56,
-              child: Icon(Icons.play_arrow, color: Color(0xFF1A0F05), size: 30),
+      child: Tooltip(
+        message: tooltip,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: AppGradients.accent,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.3),
+                blurRadius: 18,
+                offset: const Offset(0, 6),
+                spreadRadius: -3,
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: onTap,
+              customBorder: const CircleBorder(),
+              splashColor: AppColors.primary.withValues(alpha: 0.2),
+              child: SizedBox(
+                width: 56,
+                height: 56,
+                child: Icon(icon, color: const Color(0xFF1A0F05), size: 30),
+              ),
             ),
           ),
         ),
