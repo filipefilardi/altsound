@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +10,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../jellyfin/jellyfin_repository.dart';
 import '../jellyfin/models/media_item.dart';
+import 'download_preferences.dart';
 import 'downloaded_track.dart';
 
 class DownloadProgress {
@@ -101,9 +103,12 @@ class DownloadManager extends Notifier<DownloadsState> {
   Future<void> enqueueTrack(Track track) async {
     if (!supported) return;
     if (state.isDownloaded(track.id)) return;
-    if (_queue.any((t) => t.id == track.id)) return;
-    _queue.add(track);
-    state = state.copyWith(queueLength: _queue.length);
+    if (!_queue.any((t) => t.id == track.id)) {
+      _queue.add(track);
+      state = state.copyWith(queueLength: _queue.length);
+    }
+    // Always attempt to restart drain — handles the case where drain paused
+    // because WiFi was unavailable and the queue already had items.
     if (!_running) unawaited(_drain());
   }
 
@@ -113,10 +118,27 @@ class DownloadManager extends Notifier<DownloadsState> {
     }
   }
 
+  Future<void> enqueuePlaylist(PlaylistDetail playlist) async {
+    for (final t in playlist.tracks) {
+      await enqueueTrack(t);
+    }
+  }
+
+  Future<void> deleteTracks(List<String> trackIds) async {
+    for (final id in trackIds) {
+      await deleteTrack(id);
+    }
+  }
+
   Future<void> _drain() async {
     _running = true;
     try {
       while (_queue.isNotEmpty) {
+        final prefs = ref.read(downloadPreferencesProvider);
+        if (prefs.wifiOnly) {
+          final connectivity = await Connectivity().checkConnectivity();
+          if (!connectivity.contains(ConnectivityResult.wifi)) break;
+        }
         final track = _queue.removeAt(0);
         state = state.copyWith(queueLength: _queue.length);
         await _downloadOne(track);

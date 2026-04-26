@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/empty_state.dart';
+import '../../data/downloads/download_manager.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
 import '../../data/jellyfin/models/media_item.dart';
 import '../player/player_providers.dart';
@@ -127,6 +128,9 @@ class _ResultTile extends ConsumerWidget {
         current != null &&
         current.extras?['jellyfinId'] == item.id;
 
+    final isDownloaded = isTrack &&
+        ref.watch(downloadManagerProvider).isDownloaded(item.id);
+
     final leading = isTrack
         ? SearchTrackArtwork(
             imageUrl: imageUrl,
@@ -173,6 +177,12 @@ class _ResultTile extends ConsumerWidget {
           ? Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                if (isDownloaded)
+                  const Padding(
+                    padding: EdgeInsets.only(right: 4),
+                    child: Icon(Icons.download_for_offline,
+                        size: 14, color: AppColors.primary),
+                  ),
                 if (item.runTime != null)
                   PlayingTrackDuration(
                     jellyfinTrackId: item.id,

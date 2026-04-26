@@ -166,9 +166,33 @@ class _DownloadedAlbumTile extends ConsumerWidget {
       trailing: IconButton(
         icon: const Icon(Icons.delete_outline,
             color: AppColors.textSecondary),
-        onPressed: () => manager.deleteAlbum(albumId),
+        onPressed: () => _confirmDelete(context, manager),
       ),
     );
+  }
+
+  Future<void> _confirmDelete(
+      BuildContext context, DownloadManager manager) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Remove download'),
+        content: Text(
+            'Remove "$albumName" from your downloads?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child:
+                const Text('Remove', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) manager.deleteAlbum(albumId);
   }
 }
 

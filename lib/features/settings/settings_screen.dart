@@ -69,6 +69,17 @@ class SettingsScreen extends ConsumerWidget {
                 const Icon(Icons.chevron_right, color: AppColors.textSecondary),
             onTap: () => context.push('/downloads'),
           ),
+          ListTile(
+            leading: const Icon(Icons.settings_outlined),
+            title: const Text('Download settings'),
+            subtitle: const Text(
+              'Auto-download, WiFi only',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+            trailing:
+                const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+            onTap: () => context.push('/settings/downloads'),
+          ),
           const _SectionLabel('Account'),
           ListTile(
             leading: const Icon(Icons.logout, color: AppColors.error),
