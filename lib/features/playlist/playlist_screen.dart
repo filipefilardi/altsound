@@ -11,7 +11,6 @@ import '../../core/widgets/skeleton.dart';
 import '../../data/downloads/download_manager.dart';
 import '../../data/downloads/download_preferences.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
-import '../../data/local/connectivity_provider.dart';
 import '../../data/jellyfin/models/media_item.dart';
 import '../downloads/widgets/playlist_download_button.dart';
 import '../player/player_providers.dart';
@@ -31,7 +30,6 @@ class PlaylistScreen extends ConsumerWidget {
     final playlist = async.value;
     final canDelete =
         playlist != null && playlist.name.toLowerCase().trim() != 'liked songs';
-    final isOffline = ref.watch(isOfflineProvider);
     final downloads = ref.watch(downloadManagerProvider);
 
     ref.listen(playlistProvider(playlistId), (prev, next) {
@@ -62,7 +60,7 @@ class PlaylistScreen extends ConsumerWidget {
       body: async.when(
         loading: () {
           final offlinePlaylist = _buildOfflinePlaylist(playlistId, downloads);
-          if (isOffline && offlinePlaylist != null) {
+          if (offlinePlaylist != null) {
             return _PlaylistView(playlist: offlinePlaylist);
           }
           return const _PlaylistLoading();
