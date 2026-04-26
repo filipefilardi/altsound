@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:audio_service/audio_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -23,19 +25,27 @@ class PlayerHeroArt extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final r = BorderRadius.circular(kPlayerArtCornerRadius);
+    final artUri = mediaItem.artUri;
+    final isLocal = artUri?.scheme == 'file';
     final child = ClipRRect(
       borderRadius: r,
       child: SizedBox(
         width: size,
         height: size,
-        child: mediaItem.artUri == null
+        child: artUri == null
             ? const _ArtFallback()
-            : CachedNetworkImage(
-                imageUrl: mediaItem.artUri!.toString(),
-                fit: BoxFit.cover,
-                placeholder: (_, __) => const _ArtFallback(),
-                errorWidget: (_, __, ___) => const _ArtFallback(),
-              ),
+            : isLocal
+                ? Image(
+                    image: FileImage(File(artUri.toFilePath())),
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const _ArtFallback(),
+                  )
+                : CachedNetworkImage(
+                    imageUrl: artUri.toString(),
+                    fit: BoxFit.cover,
+                    placeholder: (_, __) => const _ArtFallback(),
+                    errorWidget: (_, __, ___) => const _ArtFallback(),
+                  ),
       ),
     );
     if (!hero) return child;

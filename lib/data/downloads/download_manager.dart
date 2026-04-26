@@ -233,6 +233,7 @@ class DownloadManager extends Notifier<DownloadsState> {
       );
 
       final size = dest.existsSync() ? dest.lengthSync() : 0;
+      final artworkPath = await _cacheArtwork(track);
       final saved = DownloadedTrack(
         id: track.id,
         name: track.name,
@@ -246,6 +247,7 @@ class DownloadManager extends Notifier<DownloadsState> {
         imageTag: track.imageTag,
         filePath: dest.path,
         fileSize: size,
+        artworkPath: artworkPath,
         downloadedAt: DateTime.now(),
       );
 
@@ -267,6 +269,30 @@ class DownloadManager extends Notifier<DownloadsState> {
         _activeCancelToken = null;
       }
     }
+  }
+
+  Future<String?> _cacheArtwork(Track track) async {
+    final dir = _dir;
+    if (dir == null) return null;
+    if (track.imageTag == null || track.imageTag!.isEmpty) return null;
+
+    final imageItemId =
+        track.albumImageItemId ?? track.albumId ?? track.id;
+    final safeTag = track.imageTag!.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_');
+    final cover = File('${dir.path}/art_${imageItemId}_$safeTag.jpg');
+    if (cover.existsSync()) return cover.path;
+
+    try {
+      final repo = ref.read(jellyfinRepositoryProvider);
+      final url = repo.imageUrl(imageItemId, imageTag: track.imageTag, size: 800);
+      await _dio.download(url, cover.path);
+      if (cover.existsSync()) return cover.path;
+    } catch (_) {
+      try {
+        if (cover.existsSync()) cover.deleteSync();
+      } catch (_) {}
+    }
+    return null;
   }
 
   Future<void> deleteTrack(String trackId) async {
@@ -296,6 +322,16 @@ class DownloadManager extends Notifier<DownloadsState> {
     for (final id in ids) {
       await deleteTrack(id);
     }
+  }
+
+  String? localArtworkPath(String trackId) {
+    final path = state.tracks[trackId]?.artworkPath;
+    if (path == null) return null;
+    try {
+      final file = File(path);
+      if (file.existsSync()) return file.path;
+    } catch (_) {}
+    return null;
   }
 
   Future<void> clearAllDownloads() async {

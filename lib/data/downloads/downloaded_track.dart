@@ -14,6 +14,7 @@ class DownloadedTrack {
     required this.imageTag,
     required this.filePath,
     required this.fileSize,
+    required this.artworkPath,
     required this.downloadedAt,
   });
 
@@ -29,6 +30,7 @@ class DownloadedTrack {
   final String? imageTag;
   final String filePath;
   final int fileSize;
+  final String? artworkPath;
   final DateTime downloadedAt;
 
   Duration get duration => Duration(milliseconds: durationMs);
@@ -60,6 +62,7 @@ class DownloadedTrack {
         'imageTag': imageTag,
         'filePath': filePath,
         'fileSize': fileSize,
+        'artworkPath': artworkPath,
         'downloadedAt': downloadedAt.toIso8601String(),
       };
 
@@ -77,6 +80,7 @@ class DownloadedTrack {
       imageTag: json['imageTag'] as String?,
       filePath: json['filePath'] as String,
       fileSize: json['fileSize'] as int,
+      artworkPath: json['artworkPath'] as String?,
       downloadedAt: DateTime.parse(json['downloadedAt'] as String),
     );
   }
