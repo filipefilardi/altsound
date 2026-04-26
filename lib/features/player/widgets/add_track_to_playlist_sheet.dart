@@ -21,62 +21,25 @@ Future<void> openAddTrackToPlaylistFlow(
   required String trackId,
   bool includeLikedSongsShortcut = false,
 }) async {
-  final repo = ref.read(jellyfinRepositoryProvider);
-  final playlists = await repo.playlists();
+  final presence = await ref.read(currentTrackPlaylistPresenceProvider.future);
   if (!context.mounted) return;
 
-  if (playlists.isEmpty && !includeLikedSongsShortcut) {
-    await _showCreatePlaylistDialog(context, ref, trackId: trackId);
+  if (presence.memberships.isEmpty) {
+    await _saveToLikedSongs(context, ref, trackId: trackId);
     _invalidateTrackPlaylistPresence(ref);
     return;
   }
 
-  final selectedId = await showModalBottomSheet<String>(
-    context: context,
-    isScrollControlled: true,
-    showDragHandle: true,
-    builder: (sheetContext) => FractionallySizedBox(
-      heightFactor: 0.9,
-      child: SafeArea(
-        child: ListView(
-          children: [
-            if (includeLikedSongsShortcut) ...[
-              ListTile(
-                leading: const Icon(Icons.favorite),
-                title: const Text('Liked songs'),
-                subtitle: const Text('Favorite and add to Liked Songs playlist'),
-                onTap: () => Navigator.of(sheetContext).pop('__liked__'),
-              ),
-              if (playlists.isNotEmpty) const Divider(height: 1),
-            ],
-            const ListTile(
-              title: Text('Add to playlist'),
-            ),
-            ...playlists.map(
-              (playlist) => ListTile(
-                title: Text(playlist.name),
-                onTap: () => Navigator.of(sheetContext).pop(playlist.id),
-              ),
-            ),
-            const Divider(height: 1),
-            ListTile(
-              leading: const Icon(Icons.playlist_add_circle_outlined),
-              title: const Text('Create new playlist'),
-              onTap: () => Navigator.of(sheetContext).pop('__create__'),
-            ),
-          ],
-        ),
-      ),
-    ),
+  await openManageTrackPlaylistsSheet(
+    context,
+    ref,
+    trackId: trackId,
+    presence: presence,
   );
-
-  if (!context.mounted) return;
-  await _handlePlaylistSelection(context, ref, trackId: trackId, selectedId: selectedId);
   _invalidateTrackPlaylistPresence(ref);
 }
 
-/// Lists playlists (and favorite-only state) the track is saved in; tap a row
-/// to remove from that playlist (and clear favorite when removing Liked songs).
+/// Lists all playlists with search and allows add/remove in place.
 Future<void> openManageTrackPlaylistsSheet(
   BuildContext context,
   WidgetRef ref, {
@@ -85,10 +48,7 @@ Future<void> openManageTrackPlaylistsSheet(
 }) async {
   final repo = ref.read(jellyfinRepositoryProvider);
   final likedPlaylist = await repo.likedSongsPlaylist();
-  final likedId = likedPlaylist?.id;
-
-  final inLikedPlaylist = likedId != null &&
-      presence.memberships.any((m) => m.playlistId == likedId);
+  final allPlaylists = await repo.playlists();
 
   if (!context.mounted) return;
 
@@ -99,139 +59,37 @@ Future<void> openManageTrackPlaylistsSheet(
     builder: (sheetContext) => FractionallySizedBox(
       heightFactor: 0.9,
       child: SafeArea(
-        child: ListView(
-          children: [
-            const ListTile(
-              title: Text('Saved in'),
-              subtitle: Text('Tap a row to remove'),
-            ),
-            if (presence.isFavorite && !inLikedPlaylist)
-              ListTile(
-                leading: const Icon(Icons.favorite),
-                title: const Text('Favorites'),
-                trailing: const Icon(Icons.remove_circle_outline),
-                onTap: () async {
-                  try {
-                    await repo.setFavorite(trackId, favorite: false);
-                    if (!sheetContext.mounted) return;
-                    Navigator.of(sheetContext).pop();
-                    _invalidateTrackPlaylistPresence(ref);
-                    ref.invalidate(nowPlayingFavoriteProvider);
-                    if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Removed from favorites')),
-                    );
-                  } catch (e) {
-                    if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Could not update: $e')),
-                    );
-                  }
-                },
-              ),
-            ...presence.memberships.map(
-              (m) => ListTile(
-                leading: Icon(
-                  likedId != null && m.playlistId == likedId
-                      ? Icons.favorite
-                      : Icons.playlist_play,
-                ),
-                title: Text(m.playlistName),
-                trailing: const Icon(Icons.remove_circle_outline),
-                onTap: () async {
-                  try {
-                    await repo.removeTrackFromPlaylistByEntry(
-                      playlistId: m.playlistId,
-                      playlistItemEntryId: m.playlistItemEntryId,
-                    );
-                    if (likedId != null && m.playlistId == likedId) {
-                      await repo.setFavorite(trackId, favorite: false);
-                    }
-                    if (!sheetContext.mounted) return;
-                    Navigator.of(sheetContext).pop();
-                    _invalidateTrackPlaylistPresence(ref);
-                    ref.invalidate(nowPlayingFavoriteProvider);
-                    if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Removed from ${m.playlistName}')),
-                    );
-                  } catch (e) {
-                    if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Could not remove: $e')),
-                    );
-                  }
-                },
-              ),
-            ),
-            const Divider(height: 1),
-            ListTile(
-              leading: const Icon(Icons.playlist_add),
-              title: const Text('Add to another playlist'),
-              onTap: () {
-                Navigator.of(sheetContext).pop();
-                unawaited(
-                  openAddTrackToPlaylistFlow(
-                    context,
-                    ref,
-                    trackId: trackId,
-                    includeLikedSongsShortcut: true,
-                  ),
-                );
-              },
-            ),
-          ],
+        child: _ManageTrackPlaylistsSheet(
+          trackId: trackId,
+          initialPresence: presence,
+          allPlaylists: allPlaylists,
+          likedPlaylistId: likedPlaylist?.id,
         ),
       ),
     ),
   );
 }
 
-Future<void> _handlePlaylistSelection(
+Future<void> _saveToLikedSongs(
   BuildContext context,
   WidgetRef ref, {
   required String trackId,
-  required String? selectedId,
 }) async {
-  if (selectedId == null) return;
   final repo = ref.read(jellyfinRepositoryProvider);
-  if (selectedId == '__create__') {
-    await _showCreatePlaylistDialog(context, ref, trackId: trackId);
-    return;
+  try {
+    await repo.setFavorite(trackId, favorite: true);
+    await repo.addTrackToLikedSongs(trackId);
+    ref.invalidate(nowPlayingFavoriteProvider);
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Saved to Liked songs')),
+    );
+  } catch (e) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Could not save: $e')),
+    );
   }
-  if (selectedId == '__liked__') {
-    try {
-      await repo.setFavorite(trackId, favorite: true);
-      await repo.addTrackToLikedSongs(trackId);
-      ref.invalidate(nowPlayingFavoriteProvider);
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Saved to Liked songs')),
-      );
-    } catch (e) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not save: $e')),
-      );
-    }
-    return;
-  }
-
-  final playlists = await repo.playlists();
-  if (!context.mounted) return;
-  BrowseItem? selected;
-  for (final p in playlists) {
-    if (p.id == selectedId) {
-      selected = p;
-      break;
-    }
-  }
-  if (selected == null) return;
-  await repo.addTrackToPlaylist(trackId: trackId, playlistId: selectedId);
-  if (!context.mounted) return;
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text('Added to ${selected.name}')),
-  );
 }
 
 Future<void> _showCreatePlaylistDialog(
@@ -273,4 +131,254 @@ Future<void> _showCreatePlaylistDialog(
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(content: Text('Playlist "${created.name}" created')),
   );
+}
+
+class _ManageTrackPlaylistsSheet extends ConsumerStatefulWidget {
+  const _ManageTrackPlaylistsSheet({
+    required this.trackId,
+    required this.initialPresence,
+    required this.allPlaylists,
+    required this.likedPlaylistId,
+  });
+
+  final String trackId;
+  final CurrentTrackPlaylistPresence initialPresence;
+  final List<BrowseItem> allPlaylists;
+  final String? likedPlaylistId;
+
+  @override
+  ConsumerState<_ManageTrackPlaylistsSheet> createState() =>
+      _ManageTrackPlaylistsSheetState();
+}
+
+class _ManageTrackPlaylistsSheetState
+    extends ConsumerState<_ManageTrackPlaylistsSheet> {
+  final _searchCtrl = TextEditingController();
+  final Set<String> _playlistIdsContainingTrack = <String>{};
+  final Map<String, String> _entryIdByPlaylistId = <String, String>{};
+  bool _isFavorite = false;
+  String _query = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _isFavorite = widget.initialPresence.isFavorite;
+    for (final membership in widget.initialPresence.memberships) {
+      _playlistIdsContainingTrack.add(membership.playlistId);
+      _entryIdByPlaylistId[membership.playlistId] = membership.playlistItemEntryId;
+    }
+    _searchCtrl.addListener(() {
+      setState(() => _query = _searchCtrl.text.trim().toLowerCase());
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final playlists = widget.allPlaylists.where((playlist) {
+      if (_query.isEmpty) return true;
+      return playlist.name.toLowerCase().contains(_query);
+    }).toList();
+
+    return Column(
+      children: [
+        const ListTile(title: Text('Saved in')),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          child: TextField(
+            controller: _searchCtrl,
+            decoration: const InputDecoration(
+              hintText: 'Search playlists',
+              prefixIcon: Icon(Icons.search),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: OutlinedButton.icon(
+              onPressed: () => unawaited(_createPlaylistAndAttach(context)),
+              icon: const Icon(Icons.playlist_add),
+              label: const Text('Create new playlist'),
+            ),
+          ),
+        ),
+        Expanded(
+          child: ListView(
+            children: [
+              if (widget.likedPlaylistId != null)
+                _PlaylistToggleRow(
+                  icon: Icons.favorite,
+                  title: 'Liked songs',
+                  selected: _playlistIdsContainingTrack.contains(widget.likedPlaylistId),
+                  onChanged: (selected) => unawaited(
+                    _toggleLikedSongs(selected: selected),
+                  ),
+                ),
+              ...playlists.map(
+                (playlist) => _PlaylistToggleRow(
+                  icon: Icons.playlist_play,
+                  title: playlist.name,
+                  selected: _playlistIdsContainingTrack.contains(playlist.id),
+                  onChanged: (selected) => unawaited(
+                    _togglePlaylist(playlist: playlist, selected: selected),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _togglePlaylist({
+    required BrowseItem playlist,
+    required bool selected,
+  }) async {
+    final repo = ref.read(jellyfinRepositoryProvider);
+    try {
+      if (selected) {
+        await repo.addTrackToPlaylist(
+          trackId: widget.trackId,
+          playlistId: playlist.id,
+        );
+        final entryId = await repo.playlistEntryIdForTrack(
+          playlistId: playlist.id,
+          trackId: widget.trackId,
+        );
+        if (!mounted) return;
+        setState(() {
+          _playlistIdsContainingTrack.add(playlist.id);
+          if (entryId != null) _entryIdByPlaylistId[playlist.id] = entryId;
+        });
+      } else {
+        final entryId = _entryIdByPlaylistId[playlist.id] ??
+            await repo.playlistEntryIdForTrack(
+              playlistId: playlist.id,
+              trackId: widget.trackId,
+            );
+        if (entryId != null) {
+          await repo.removeTrackFromPlaylistByEntry(
+            playlistId: playlist.id,
+            playlistItemEntryId: entryId,
+          );
+        }
+        if (!mounted) return;
+        setState(() {
+          _playlistIdsContainingTrack.remove(playlist.id);
+          _entryIdByPlaylistId.remove(playlist.id);
+        });
+      }
+      _invalidateTrackPlaylistPresence(ref);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not update ${playlist.name}: $e')),
+      );
+    }
+  }
+
+  Future<void> _toggleLikedSongs({required bool selected}) async {
+    final likedId = widget.likedPlaylistId;
+    if (likedId == null) return;
+    final repo = ref.read(jellyfinRepositoryProvider);
+    try {
+      if (selected) {
+        await repo.setFavorite(widget.trackId, favorite: true);
+        await repo.addTrackToLikedSongs(widget.trackId);
+        final entryId = await repo.playlistEntryIdForTrack(
+          playlistId: likedId,
+          trackId: widget.trackId,
+        );
+        if (!mounted) return;
+        setState(() {
+          _isFavorite = true;
+          _playlistIdsContainingTrack.add(likedId);
+          if (entryId != null) _entryIdByPlaylistId[likedId] = entryId;
+        });
+      } else {
+        final entryId = _entryIdByPlaylistId[likedId] ??
+            await repo.playlistEntryIdForTrack(
+              playlistId: likedId,
+              trackId: widget.trackId,
+            );
+        if (entryId != null) {
+          await repo.removeTrackFromPlaylistByEntry(
+            playlistId: likedId,
+            playlistItemEntryId: entryId,
+          );
+        }
+        if (_isFavorite) {
+          await repo.setFavorite(widget.trackId, favorite: false);
+        }
+        if (!mounted) return;
+        setState(() {
+          _isFavorite = false;
+          _playlistIdsContainingTrack.remove(likedId);
+          _entryIdByPlaylistId.remove(likedId);
+        });
+      }
+      _invalidateTrackPlaylistPresence(ref);
+      ref.invalidate(nowPlayingFavoriteProvider);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not update Liked songs: $e')),
+      );
+    }
+  }
+
+  Future<void> _createPlaylistAndAttach(BuildContext context) async {
+    await _showCreatePlaylistDialog(context, ref, trackId: widget.trackId);
+    if (!mounted) return;
+    final repo = ref.read(jellyfinRepositoryProvider);
+    final refreshed = await repo.playlistsContainingTrack(
+      widget.trackId,
+      playlistsCache: widget.allPlaylists,
+    );
+    if (!mounted) return;
+    setState(() {
+      _playlistIdsContainingTrack
+        ..clear()
+        ..addAll(refreshed.map((m) => m.playlistId));
+      _entryIdByPlaylistId
+        ..clear()
+        ..addEntries(
+          refreshed.map((m) => MapEntry(m.playlistId, m.playlistItemEntryId)),
+        );
+    });
+    _invalidateTrackPlaylistPresence(ref);
+  }
+}
+
+class _PlaylistToggleRow extends StatelessWidget {
+  const _PlaylistToggleRow({
+    required this.icon,
+    required this.title,
+    required this.selected,
+    required this.onChanged,
+  });
+
+  final IconData icon;
+  final String title;
+  final bool selected;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return CheckboxListTile(
+      value: selected,
+      onChanged: (value) => onChanged(value ?? false),
+      title: Text(title),
+      secondary: Icon(icon),
+      controlAffinity: ListTileControlAffinity.trailing,
+    );
+  }
 }

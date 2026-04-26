@@ -205,7 +205,9 @@ class _AlbumCarouselTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final repo = ref.watch(jellyfinRepositoryProvider);
-    final imageUrl = repo.imageUrl(album.id, imageTag: album.imageTag, size: 400);
+    final imageUrl = (album.imageTag == null || album.imageTag!.isEmpty)
+        ? null
+        : repo.imageUrl(album.id, imageTag: album.imageTag, size: 400);
     return SizedBox(
       width: 150,
       child: InkWell(
@@ -217,17 +219,28 @@ class _AlbumCarouselTile extends ConsumerWidget {
             Expanded(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: CachedNetworkImage(
-                  imageUrl: imageUrl,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  placeholder: (_, __) =>
-                      Container(color: AppColors.surfaceElevated),
-                  errorWidget: (_, __, ___) => Container(
-                    color: AppColors.surfaceElevated,
-                    child: const Icon(Icons.album, color: AppColors.textTertiary),
-                  ),
-                ),
+                child: imageUrl == null
+                    ? Container(
+                        color: AppColors.surfaceElevated,
+                        child: const Icon(
+                          Icons.album,
+                          color: AppColors.textTertiary,
+                        ),
+                      )
+                    : CachedNetworkImage(
+                        imageUrl: imageUrl,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        placeholder: (_, __) =>
+                            Container(color: AppColors.surfaceElevated),
+                        errorWidget: (_, __, ___) => Container(
+                          color: AppColors.surfaceElevated,
+                          child: const Icon(
+                            Icons.album,
+                            color: AppColors.textTertiary,
+                          ),
+                        ),
+                      ),
               ),
             ),
             const SizedBox(height: 8),

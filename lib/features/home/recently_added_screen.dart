@@ -48,8 +48,9 @@ class RecentlyAddedScreen extends ConsumerWidget {
             itemCount: items.length,
             itemBuilder: (_, i) {
               final item = items[i];
-              final imageUrl =
-                  repo.imageUrl(item.id, imageTag: item.imageTag, size: 400);
+              final imageUrl = (item.imageTag == null || item.imageTag!.isEmpty)
+                  ? null
+                  : repo.imageUrl(item.id, imageTag: item.imageTag, size: 400);
               return InkWell(
                 borderRadius: BorderRadius.circular(12),
                 onTap: () => context.push('/album/${item.id}'),
@@ -59,20 +60,29 @@ class RecentlyAddedScreen extends ConsumerWidget {
                     Expanded(
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
-                        child: CachedNetworkImage(
-                          imageUrl: imageUrl,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                          placeholder: (_, __) =>
-                              const ColoredBox(color: AppColors.surfaceElevated),
-                          errorWidget: (_, __, ___) => const ColoredBox(
-                            color: AppColors.surfaceElevated,
-                            child: Icon(
-                              Icons.album,
-                              color: AppColors.textTertiary,
-                            ),
-                          ),
-                        ),
+                        child: imageUrl == null
+                            ? const ColoredBox(
+                                color: AppColors.surfaceElevated,
+                                child: Icon(
+                                  Icons.album,
+                                  color: AppColors.textTertiary,
+                                ),
+                              )
+                            : CachedNetworkImage(
+                                imageUrl: imageUrl,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                                placeholder: (_, __) => const ColoredBox(
+                                  color: AppColors.surfaceElevated,
+                                ),
+                                errorWidget: (_, __, ___) => const ColoredBox(
+                                  color: AppColors.surfaceElevated,
+                                  child: Icon(
+                                    Icons.album,
+                                    color: AppColors.textTertiary,
+                                  ),
+                                ),
+                              ),
                       ),
                     ),
                     const SizedBox(height: 8),

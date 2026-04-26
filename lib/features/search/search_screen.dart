@@ -10,6 +10,7 @@ import '../../core/widgets/empty_state.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
 import '../../data/jellyfin/models/media_item.dart';
 import '../player/player_providers.dart';
+import '../player/widgets/add_track_to_playlist_sheet.dart';
 import '../player/widgets/playing_track_leading.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
@@ -238,94 +239,12 @@ class _SearchTrackMenuButton extends ConsumerWidget {
                   onTap: () async {
                     Navigator.of(context).pop();
                     if (!context.mounted) return;
-                    final repo = ref.read(jellyfinRepositoryProvider);
-                    final playlists = await repo.playlists();
-                    if (!context.mounted) return;
-                    BrowseItem? picked;
-                    if (playlists.isNotEmpty) {
-                      picked = await showModalBottomSheet<BrowseItem>(
-                        context: context,
-                        isScrollControlled: true,
-                        showDragHandle: true,
-                        builder: (sheetContext) => FractionallySizedBox(
-                          heightFactor: 0.9,
-                          child: SafeArea(
-                            child: ListView(
-                              children: [
-                                const ListTile(title: Text('Add to playlist')),
-                                ...playlists.map(
-                                  (playlist) => ListTile(
-                                    title: Text(playlist.name),
-                                    onTap: () =>
-                                        Navigator.of(sheetContext).pop(playlist),
-                                  ),
-                                ),
-                                const Divider(height: 1),
-                                ListTile(
-                                  onTap: () => Navigator.of(sheetContext)
-                                      .pop(const BrowseItem(
-                                    id: '__create__',
-                                    name: 'Create new playlist',
-                                    kind: MediaKind.playlist,
-                                  )),
-                                  title: const Text('Create new playlist'),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    }
-                    if (!context.mounted) return;
-                    if (picked?.id == '__create__') {
-                      final ctrl = TextEditingController();
-                      final name = await showDialog<String>(
-                        context: context,
-                        builder: (dialogContext) => AlertDialog(
-                          title: const Text('Create playlist'),
-                          content: TextField(
-                            controller: ctrl,
-                            autofocus: true,
-                            decoration:
-                                const InputDecoration(hintText: 'Playlist name'),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.of(dialogContext).pop(),
-                              child: const Text('Cancel'),
-                            ),
-                            FilledButton(
-                              onPressed: () =>
-                                  Navigator.of(dialogContext).pop(ctrl.text.trim()),
-                              child: const Text('Create'),
-                            ),
-                          ],
-                        ),
-                      );
-                      final playlistName = name?.trim() ?? '';
-                      if (playlistName.isNotEmpty) {
-                        final playlist = await repo.createPlaylist(playlistName);
-                        await repo.addTrackToPlaylist(
-                          trackId: track.id,
-                          playlistId: playlist.id,
-                        );
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Added to ${playlist.name}')),
-                        );
-                      }
-                      return;
-                    }
-                    if (picked != null) {
-                      await repo.addTrackToPlaylist(
-                        trackId: track.id,
-                        playlistId: picked.id,
-                      );
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Added to ${picked.name}')),
-                      );
-                    }
+                    await openAddTrackToPlaylistFlow(
+                      context,
+                      ref,
+                      trackId: track.id,
+                      includeLikedSongsShortcut: true,
+                    );
                   },
                 ),
                 ListTile(
@@ -379,9 +298,9 @@ class _GroupedResults extends StatelessWidget {
     final playlists = results.where((r) => r.kind == MediaKind.playlist).toList();
 
     final sections = <(String, List<BrowseItem>)>[
+      if (artists.isNotEmpty) ('Artists', artists),
       if (tracks.isNotEmpty) ('Songs', tracks),
       if (albums.isNotEmpty) ('Albums', albums),
-      if (artists.isNotEmpty) ('Artists', artists),
       if (playlists.isNotEmpty) ('Playlists', playlists),
     ];
 
