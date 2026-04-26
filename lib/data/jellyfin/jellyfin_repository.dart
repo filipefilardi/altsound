@@ -133,7 +133,7 @@ class JellyfinRepository {
       '/Users/${s.userId}/Items',
       queryParameters: {
         'searchTerm': t,
-        'IncludeItemTypes': 'MusicAlbum,MusicArtist,Audio',
+        'IncludeItemTypes': 'MusicAlbum,MusicArtist,Audio,Playlist',
         'Recursive': true,
         'Limit': 50,
         'Fields': 'AlbumArtist,Artists,ArtistItems,AlbumId,RunTimeTicks',

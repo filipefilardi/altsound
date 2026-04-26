@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/theme/app_colors.dart';
 import '../../../data/jellyfin/jellyfin_repository.dart';
 import '../../../data/jellyfin/models/media_item.dart';
 import '../current_track_playlist_presence.dart';
@@ -12,43 +13,41 @@ void _invalidateTrackPlaylistPresence(WidgetRef ref) {
   ref.invalidate(currentTrackPlaylistPresenceProvider);
 }
 
-/// Opens the add-to-playlist sheet (and handles selection). When
-/// [includeLikedSongsShortcut] is true, offers "Liked songs" first (favorite +
-/// Jellyfin Liked Songs playlist).
 Future<void> openAddTrackToPlaylistFlow(
   BuildContext context,
   WidgetRef ref, {
   required String trackId,
   bool includeLikedSongsShortcut = false,
 }) async {
-  final presence = await ref.read(currentTrackPlaylistPresenceProvider.future);
-  if (!context.mounted) return;
-
-  if (presence.memberships.isEmpty) {
-    await _saveToLikedSongs(context, ref, trackId: trackId);
-    _invalidateTrackPlaylistPresence(ref);
-    return;
-  }
-
-  await openManageTrackPlaylistsSheet(
-    context,
-    ref,
-    trackId: trackId,
-    presence: presence,
-  );
+  await openManageTrackPlaylistsSheet(context, ref, trackId: trackId);
   _invalidateTrackPlaylistPresence(ref);
 }
 
-/// Lists all playlists with search and allows add/remove in place.
+/// Fetches the correct presence for [trackId] then shows the manage sheet.
 Future<void> openManageTrackPlaylistsSheet(
   BuildContext context,
   WidgetRef ref, {
   required String trackId,
-  required CurrentTrackPlaylistPresence presence,
 }) async {
   final repo = ref.read(jellyfinRepositoryProvider);
-  final likedPlaylist = await repo.likedSongsPlaylist();
-  final allPlaylists = await repo.playlists();
+  final results = await Future.wait([
+    repo.likedSongsPlaylist(),
+    repo.playlists(),
+    repo.isFavorite(trackId),
+  ]);
+
+  final likedPlaylist = results[0] as BrowseItem?;
+  final allPlaylists = results[1] as List<BrowseItem>;
+  final isFavorite = results[2] as bool;
+
+  final memberships = await repo.playlistsContainingTrack(
+    trackId,
+    playlistsCache: allPlaylists,
+  );
+  final presence = CurrentTrackPlaylistPresence(
+    isFavorite: isFavorite,
+    memberships: memberships,
+  );
 
   if (!context.mounted) return;
 
@@ -62,34 +61,12 @@ Future<void> openManageTrackPlaylistsSheet(
         child: _ManageTrackPlaylistsSheet(
           trackId: trackId,
           initialPresence: presence,
-          allPlaylists: allPlaylists,
+          initialPlaylists: allPlaylists,
           likedPlaylistId: likedPlaylist?.id,
         ),
       ),
     ),
   );
-}
-
-Future<void> _saveToLikedSongs(
-  BuildContext context,
-  WidgetRef ref, {
-  required String trackId,
-}) async {
-  final repo = ref.read(jellyfinRepositoryProvider);
-  try {
-    await repo.setFavorite(trackId, favorite: true);
-    await repo.addTrackToLikedSongs(trackId);
-    ref.invalidate(nowPlayingFavoriteProvider);
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Saved to Liked songs')),
-    );
-  } catch (e) {
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Could not save: $e')),
-    );
-  }
 }
 
 Future<void> _showCreatePlaylistDialog(
@@ -101,7 +78,7 @@ Future<void> _showCreatePlaylistDialog(
   final name = await showDialog<String>(
     context: context,
     builder: (_) => AlertDialog(
-      title: const Text('Create playlist'),
+      title: const Text('New playlist'),
       content: TextField(
         controller: ctrl,
         autofocus: true,
@@ -137,13 +114,13 @@ class _ManageTrackPlaylistsSheet extends ConsumerStatefulWidget {
   const _ManageTrackPlaylistsSheet({
     required this.trackId,
     required this.initialPresence,
-    required this.allPlaylists,
+    required this.initialPlaylists,
     required this.likedPlaylistId,
   });
 
   final String trackId;
   final CurrentTrackPlaylistPresence initialPresence;
-  final List<BrowseItem> allPlaylists;
+  final List<BrowseItem> initialPlaylists;
   final String? likedPlaylistId;
 
   @override
@@ -156,12 +133,14 @@ class _ManageTrackPlaylistsSheetState
   final _searchCtrl = TextEditingController();
   final Set<String> _playlistIdsContainingTrack = <String>{};
   final Map<String, String> _entryIdByPlaylistId = <String, String>{};
+  late List<BrowseItem> _allPlaylists;
   bool _isFavorite = false;
   String _query = '';
 
   @override
   void initState() {
     super.initState();
+    _allPlaylists = List.of(widget.initialPlaylists);
     _isFavorite = widget.initialPresence.isFavorite;
     for (final membership in widget.initialPresence.memberships) {
       _playlistIdsContainingTrack.add(membership.playlistId);
@@ -180,16 +159,24 @@ class _ManageTrackPlaylistsSheetState
 
   @override
   Widget build(BuildContext context) {
-    final playlists = widget.allPlaylists.where((playlist) {
+    final playlists = _allPlaylists.where((playlist) {
+      if (playlist.id == widget.likedPlaylistId) return false;
       if (_query.isEmpty) return true;
       return playlist.name.toLowerCase().contains(_query);
     }).toList();
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const ListTile(title: Text('Saved in')),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
+          child: Text(
+            'ADD TO PLAYLIST',
+            style: Theme.of(context).textTheme.labelLarge,
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
           child: TextField(
             controller: _searchCtrl,
             decoration: const InputDecoration(
@@ -198,39 +185,40 @@ class _ManageTrackPlaylistsSheetState
             ),
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: OutlinedButton.icon(
-              onPressed: () => unawaited(_createPlaylistAndAttach(context)),
-              icon: const Icon(Icons.playlist_add),
-              label: const Text('Create new playlist'),
-            ),
-          ),
-        ),
         Expanded(
           child: ListView(
             children: [
+              _NewPlaylistRow(
+                onTap: () => unawaited(_createPlaylistAndAttach(context)),
+              ),
+              const SizedBox(height: 4),
               if (widget.likedPlaylistId != null)
                 _PlaylistToggleRow(
-                  icon: Icons.favorite,
+                  icon: Icons.favorite_rounded,
+                  iconColor: const Color(0xFFE5635A),
                   title: 'Liked songs',
                   selected: _playlistIdsContainingTrack.contains(widget.likedPlaylistId),
-                  onChanged: (selected) => unawaited(
-                    _toggleLikedSongs(selected: selected),
+                  onTap: () => unawaited(
+                    _toggleLikedSongs(
+                      selected: !_playlistIdsContainingTrack.contains(widget.likedPlaylistId),
+                    ),
                   ),
                 ),
               ...playlists.map(
                 (playlist) => _PlaylistToggleRow(
-                  icon: Icons.playlist_play,
+                  icon: Icons.queue_music_rounded,
+                  iconColor: AppColors.primary,
                   title: playlist.name,
                   selected: _playlistIdsContainingTrack.contains(playlist.id),
-                  onChanged: (selected) => unawaited(
-                    _togglePlaylist(playlist: playlist, selected: selected),
+                  onTap: () => unawaited(
+                    _togglePlaylist(
+                      playlist: playlist,
+                      selected: !_playlistIdsContainingTrack.contains(playlist.id),
+                    ),
                   ),
                 ),
               ),
+              const SizedBox(height: 16),
             ],
           ),
         ),
@@ -339,46 +327,98 @@ class _ManageTrackPlaylistsSheetState
     await _showCreatePlaylistDialog(context, ref, trackId: widget.trackId);
     if (!mounted) return;
     final repo = ref.read(jellyfinRepositoryProvider);
-    final refreshed = await repo.playlistsContainingTrack(
+    final refreshedPlaylists = await repo.playlists();
+    final refreshedMemberships = await repo.playlistsContainingTrack(
       widget.trackId,
-      playlistsCache: widget.allPlaylists,
+      playlistsCache: refreshedPlaylists,
     );
     if (!mounted) return;
     setState(() {
+      _allPlaylists = refreshedPlaylists;
       _playlistIdsContainingTrack
         ..clear()
-        ..addAll(refreshed.map((m) => m.playlistId));
+        ..addAll(refreshedMemberships.map((m) => m.playlistId));
       _entryIdByPlaylistId
         ..clear()
         ..addEntries(
-          refreshed.map((m) => MapEntry(m.playlistId, m.playlistItemEntryId)),
+          refreshedMemberships.map((m) => MapEntry(m.playlistId, m.playlistItemEntryId)),
         );
     });
     _invalidateTrackPlaylistPresence(ref);
   }
 }
 
-class _PlaylistToggleRow extends StatelessWidget {
-  const _PlaylistToggleRow({
-    required this.icon,
-    required this.title,
-    required this.selected,
-    required this.onChanged,
-  });
+class _NewPlaylistRow extends StatelessWidget {
+  const _NewPlaylistRow({required this.onTap});
 
-  final IconData icon;
-  final String title;
-  final bool selected;
-  final ValueChanged<bool> onChanged;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return CheckboxListTile(
-      value: selected,
-      onChanged: (value) => onChanged(value ?? false),
-      title: Text(title),
-      secondary: Icon(icon),
-      controlAffinity: ListTileControlAffinity.trailing,
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      leading: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: AppColors.primary.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: const Icon(Icons.add_rounded, color: AppColors.primary, size: 22),
+      ),
+      title: Text(
+        'New playlist',
+        style: Theme.of(context).textTheme.titleMedium,
+      ),
+      onTap: onTap,
+    );
+  }
+}
+
+class _PlaylistToggleRow extends StatelessWidget {
+  const _PlaylistToggleRow({
+    required this.icon,
+    required this.iconColor,
+    required this.title,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final Color iconColor;
+  final String title;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      leading: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: iconColor.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(icon, color: iconColor, size: 20),
+      ),
+      title: Text(
+        title,
+        style: Theme.of(context).textTheme.titleMedium,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      trailing: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 200),
+        child: Icon(
+          selected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+          key: ValueKey(selected),
+          color: selected ? AppColors.primary : AppColors.textTertiary,
+          size: 22,
+        ),
+      ),
+      onTap: onTap,
     );
   }
 }

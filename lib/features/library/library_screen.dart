@@ -26,11 +26,6 @@ class LibraryScreen extends ConsumerWidget {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _createPlaylist(context, ref),
-        tooltip: 'New playlist',
-        child: const Icon(Icons.add),
-      ),
       body: playlistsAsync.when(
         loading: () => const _LibraryLoading(),
         error: (e, _) => Center(
@@ -52,7 +47,8 @@ class LibraryScreen extends ConsumerWidget {
             padding: const EdgeInsets.only(top: 8, bottom: 96),
             children: [
               _SectionTile(
-                icon: Icons.favorite_outline,
+                icon: Icons.favorite_rounded,
+                iconColor: AppColors.error,
                 title: 'Liked Songs',
                 subtitle: liked == null
                     ? 'Songs you heart appear here automatically'
@@ -75,6 +71,9 @@ class LibraryScreen extends ConsumerWidget {
                   context.push('/playlist/${playlist.id}');
                 },
               ),
+              _NewPlaylistTile(
+                onTap: () => _createPlaylist(context, ref),
+              ),
               ...rest.map(
                 (playlist) => _SectionTile(
                   icon: Icons.queue_music_outlined,
@@ -85,14 +84,6 @@ class LibraryScreen extends ConsumerWidget {
                   onTap: () => context.push('/playlist/${playlist.id}'),
                 ),
               ),
-              if (rest.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  child: Text(
-                    'No playlists yet. Tap + to create one.',
-                    style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
-                  ),
-                ),
             ],
           );
         },
@@ -179,15 +170,52 @@ class _LibraryLoading extends StatelessWidget {
   }
 }
 
+class _NewPlaylistTile extends StatelessWidget {
+  const _NewPlaylistTile({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      leading: Container(
+        width: 52,
+        height: 52,
+        decoration: BoxDecoration(
+          color: AppColors.primary.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Icon(Icons.add_rounded, color: AppColors.primary, size: 24),
+      ),
+      title: Text(
+        'New Playlist',
+        style: TextStyle(
+          color: AppColors.primary,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      subtitle: const Text(
+        'Create a new playlist',
+        style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+      ),
+      trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+      onTap: onTap,
+    );
+  }
+}
+
 class _SectionTile extends StatelessWidget {
   const _SectionTile({
     required this.icon,
     required this.title,
     required this.subtitle,
     required this.onTap,
+    this.iconColor = AppColors.textPrimary,
   });
 
   final IconData icon;
+  final Color iconColor;
   final String title;
   final String subtitle;
   final VoidCallback onTap;
@@ -200,10 +228,12 @@ class _SectionTile extends StatelessWidget {
         width: 52,
         height: 52,
         decoration: BoxDecoration(
-          color: AppColors.surfaceElevated,
+          color: iconColor == AppColors.textPrimary
+              ? AppColors.surfaceElevated
+              : iconColor.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(icon, color: AppColors.textPrimary, size: 22),
+        child: Icon(icon, color: iconColor, size: 22),
       ),
       title: Text(title,
           style: const TextStyle(
