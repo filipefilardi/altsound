@@ -10,6 +10,7 @@ import '../../core/widgets/skeleton.dart';
 import '../../data/downloads/download_manager.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
 import '../../data/jellyfin/models/media_item.dart';
+import '../../data/musicbrainz/wikipedia_repository.dart';
 import '../player/widgets/mini_player_slot.dart';
 import '../player/player_providers.dart';
 import '../player/widgets/playing_track_leading.dart';
@@ -199,8 +200,62 @@ class _ArtistView extends ConsumerWidget {
               ),
             ),
           ),
+        _AboutSection(artistName: artist.name),
         const SliverToBoxAdapter(child: SizedBox(height: 32)),
       ],
+    );
+  }
+}
+
+class _AboutSection extends ConsumerWidget {
+  const _AboutSection({required this.artistName});
+  final String artistName;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final bio = ref.watch(artistBioProvider(artistName)).value;
+    if (bio == null || bio.isEmpty) return const SliverToBoxAdapter(child: SizedBox.shrink());
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('About', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            _ExpandableBio(bio: bio),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ExpandableBio extends StatefulWidget {
+  const _ExpandableBio({required this.bio});
+  final String bio;
+
+  @override
+  State<_ExpandableBio> createState() => _ExpandableBioState();
+}
+
+class _ExpandableBioState extends State<_ExpandableBio> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => setState(() => _expanded = !_expanded),
+      child: Text(
+        widget.bio,
+        maxLines: _expanded ? null : 3,
+        overflow: _expanded ? TextOverflow.visible : TextOverflow.ellipsis,
+        style: const TextStyle(
+          color: AppColors.textSecondary,
+          fontSize: 13,
+          height: 1.5,
+        ),
+      ),
     );
   }
 }

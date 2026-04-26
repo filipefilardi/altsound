@@ -11,6 +11,7 @@ import '../../data/lidarr/lidarr_repository.dart';
 import '../../data/musicbrainz/listenbrainz_repository.dart';
 import '../../data/musicbrainz/musicbrainz_repository.dart';
 import '../../data/musicbrainz/wikipedia_repository.dart';
+import 'mb_release_sheet.dart';
 
 // Search result providers — autoDispose so stale queries are released.
 final _mbArtistSearchProvider =
@@ -67,6 +68,38 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final hasLidarr = ref.watch(lidarrRepositoryProvider) != null;
+    if (!hasLidarr) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Discover')),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.travel_explore, size: 64, color: AppColors.textTertiary),
+                const SizedBox(height: 16),
+                Text('Lidarr not configured',
+                    style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 8),
+                const Text(
+                  'Set up Lidarr in Settings to use music discovery.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: AppColors.textSecondary),
+                ),
+                const SizedBox(height: 24),
+                FilledButton(
+                  onPressed: () => context.push('/settings/lidarr'),
+                  child: const Text('Configure Lidarr'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       body: CustomScrollView(
         slivers: [
@@ -185,46 +218,52 @@ class _ArtistChip extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final imageUrl = ref.watch(artistImageProvider(artist.artistName)).value;
-    final hasMbid = artist.artistMbid != null;
+    final mbid = artist.artistMbid;
 
-    return GestureDetector(
-      onTap: hasMbid
-          ? () => context.push(
-                '/discover/mb-artist',
-                extra: MusicBrainzArtist(
-                  id: artist.artistMbid!,
-                  name: artist.artistName,
+    void onTap() {
+      if (mbid == null) return;
+      context.push(
+        '/discover/mb-artist',
+        extra: MusicBrainzArtist(id: mbid, name: artist.artistName),
+      );
+    }
+
+    return SizedBox(
+      width: 76,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: mbid != null ? onTap : null,
+          borderRadius: BorderRadius.circular(38),
+          child: Column(
+            children: [
+              ClipOval(
+                child: SizedBox(
+                  width: 68,
+                  height: 68,
+                  child: imageUrl != null
+                      ? CachedNetworkImage(
+                          imageUrl: imageUrl,
+                          fit: BoxFit.cover,
+                          placeholder: (_, __) =>
+                              Container(color: AppColors.surfaceElevated),
+                          errorWidget: (_, __, ___) =>
+                              _ArtistInitial(artist.artistName),
+                        )
+                      : _ArtistInitial(artist.artistName),
                 ),
-              )
-          : null,
-      child: SizedBox(
-        width: 76,
-        child: Column(
-          children: [
-            ClipOval(
-              child: SizedBox(
-                width: 68,
-                height: 68,
-                child: imageUrl != null
-                    ? CachedNetworkImage(
-                        imageUrl: imageUrl,
-                        fit: BoxFit.cover,
-                        placeholder: (_, __) =>
-                            Container(color: AppColors.surfaceElevated),
-                        errorWidget: (_, __, ___) => _ArtistInitial(artist.artistName),
-                      )
-                    : _ArtistInitial(artist.artistName),
               ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              artist.artistName,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
-            ),
-          ],
+              const SizedBox(height: 6),
+              Text(
+                artist.artistName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    fontSize: 11, color: AppColors.textSecondary),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -267,9 +306,37 @@ class _TrendingReleasesState extends ConsumerState<_TrendingReleases> {
 
   static const _kPreview = 5;
 
+  void _openSheet(LbReleaseGroup g, bool isInLidarr) {
+    if (g.mbid == null || g.artistMbid == null) {
+      if (g.artistMbid != null) {
+        context.push(
+          '/discover/mb-artist',
+          extra: MusicBrainzArtist(id: g.artistMbid!, name: g.artistName),
+        );
+      }
+      return;
+    }
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => MbReleaseSheet(
+        release: MusicBrainzReleaseGroup(id: g.mbid!, title: g.title),
+        artist: MusicBrainzArtist(id: g.artistMbid!, name: g.artistName),
+        isInLidarr: isInLidarr,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final async = ref.watch(trendingReleaseGroupsProvider);
+    final monitoredIds = ref.watch(lidarrMonitoredArtistIdsProvider).when(
+          data: (ids) => ids,
+          error: (_, __) => const <String>{},
+          loading: () => const <String>{},
+        );
+
     return async.when(
       loading: () => SliverList(
         delegate: SliverChildBuilderDelegate(
@@ -302,19 +369,14 @@ class _TrendingReleasesState extends ConsumerState<_TrendingReleases> {
                 );
               }
               final g = visible[i];
+              final isInLidarr = g.artistMbid != null &&
+                  monitoredIds.contains(g.artistMbid);
               return _ReleaseTile(
                 title: g.title,
                 artist: g.artistName,
                 coverArtUrl: g.coverArtUrl,
-                onTap: g.artistMbid == null
-                    ? null
-                    : () => context.push(
-                          '/discover/mb-artist',
-                          extra: MusicBrainzArtist(
-                            id: g.artistMbid!,
-                            name: g.artistName,
-                          ),
-                        ),
+                isInLidarr: isInLidarr,
+                onTap: () => _openSheet(g, isInLidarr),
               );
             },
             childCount: visible.length + (hasMore ? 1 : 0),
@@ -339,9 +401,39 @@ class _TrendingSongsState extends ConsumerState<_TrendingSongs> {
 
   static const _kPreview = 5;
 
+  void _openAlbumSheet(LbRecording rec, bool isInLidarr) {
+    if (rec.releaseGroupMbid != null && rec.artistMbid != null) {
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        showDragHandle: true,
+        builder: (_) => MbReleaseSheet(
+          release: MusicBrainzReleaseGroup(
+            id: rec.releaseGroupMbid!,
+            title: rec.releaseName ?? rec.trackName,
+          ),
+          artist: MusicBrainzArtist(
+              id: rec.artistMbid!, name: rec.artistName),
+          isInLidarr: isInLidarr,
+        ),
+      );
+    } else if (rec.artistMbid != null) {
+      context.push(
+        '/discover/mb-artist',
+        extra: MusicBrainzArtist(id: rec.artistMbid!, name: rec.artistName),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final async = ref.watch(trendingRecordingsProvider);
+    final monitoredIds = ref.watch(lidarrMonitoredArtistIdsProvider).when(
+          data: (ids) => ids,
+          error: (_, __) => const <String>{},
+          loading: () => const <String>{},
+        );
+
     return async.when(
       loading: () => SliverList(
         delegate: SliverChildBuilderDelegate(
@@ -374,10 +466,13 @@ class _TrendingSongsState extends ConsumerState<_TrendingSongs> {
                 );
               }
               final rec = visible[i];
+              final isInLidarr = rec.artistMbid != null &&
+                  monitoredIds.contains(rec.artistMbid);
               return _SongTile(
                 trackName: rec.trackName,
                 artistName: rec.artistName,
-                artistMbid: rec.artistMbid,
+                isInLidarr: isInLidarr,
+                onTap: () => _openAlbumSheet(rec, isInLidarr),
               );
             },
             childCount: visible.length + (hasMore ? 1 : 0),
@@ -435,9 +530,30 @@ class _ReleaseResults extends ConsumerWidget {
   const _ReleaseResults({required this.query});
   final String query;
 
+  void _openSheet(
+      BuildContext context, MusicBrainzReleaseGroup release, bool isInLidarr,
+      {required String artistId, required String artistName}) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => MbReleaseSheet(
+        release: release,
+        artist: MusicBrainzArtist(id: artistId, name: artistName),
+        isInLidarr: isInLidarr,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(_mbReleaseSearchProvider(query));
+    final monitoredIds = ref.watch(lidarrMonitoredArtistIdsProvider).when(
+          data: (ids) => ids,
+          error: (_, __) => const <String>{},
+          loading: () => const <String>{},
+        );
+
     return async.when(
       loading: () => const SliverToBoxAdapter(
         child: Padding(
@@ -448,7 +564,8 @@ class _ReleaseResults extends ConsumerWidget {
       error: (e, _) => SliverToBoxAdapter(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          child: Text('$e', style: const TextStyle(color: AppColors.textSecondary)),
+          child: Text('$e',
+              style: const TextStyle(color: AppColors.textSecondary)),
         ),
       ),
       data: (releases) {
@@ -465,18 +582,21 @@ class _ReleaseResults extends ConsumerWidget {
           delegate: SliverChildBuilderDelegate(
             (_, i) {
               final r = releases[i];
+              final isInLidarr =
+                  r.artistId != null && monitoredIds.contains(r.artistId);
               return _ReleaseTile(
                 title: r.title,
                 artist: r.artistName ?? '',
                 coverArtUrl: r.coverArtUrl,
+                isInLidarr: isInLidarr,
                 onTap: r.artistId == null
                     ? null
-                    : () => context.push(
-                          '/discover/mb-artist',
-                          extra: MusicBrainzArtist(
-                            id: r.artistId!,
-                            name: r.artistName ?? '',
-                          ),
+                    : () => _openSheet(
+                          context,
+                          r,
+                          isInLidarr,
+                          artistId: r.artistId!,
+                          artistName: r.artistName ?? '',
                         ),
               );
             },
@@ -551,12 +671,14 @@ class _ReleaseTile extends StatelessWidget {
     required this.title,
     required this.artist,
     required this.coverArtUrl,
+    this.isInLidarr = false,
     this.onTap,
   });
 
   final String title;
   final String artist;
   final String? coverArtUrl;
+  final bool isInLidarr;
   final VoidCallback? onTap;
 
   @override
@@ -580,8 +702,8 @@ class _ReleaseTile extends StatelessWidget {
                   placeholder: (_, __) => Container(color: AppColors.surfaceElevated),
                   errorWidget: (_, __, ___) => Container(
                     color: AppColors.surfaceElevated,
-                    child:
-                        const Icon(Icons.album, color: AppColors.textTertiary, size: 20),
+                    child: const Icon(Icons.album,
+                        color: AppColors.textTertiary, size: 20),
                   ),
                 ),
         ),
@@ -593,9 +715,11 @@ class _ReleaseTile extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
       ),
-      trailing: onTap != null
-          ? const Icon(Icons.chevron_right, color: AppColors.textTertiary)
-          : null,
+      trailing: isInLidarr
+          ? _InLidarrBadge()
+          : onTap != null
+              ? const Icon(Icons.chevron_right, color: AppColors.textTertiary)
+              : null,
     );
   }
 }
@@ -604,23 +728,20 @@ class _SongTile extends StatelessWidget {
   const _SongTile({
     required this.trackName,
     required this.artistName,
-    this.artistMbid,
+    this.isInLidarr = false,
+    this.onTap,
   });
 
   final String trackName;
   final String artistName;
-  final String? artistMbid;
+  final bool isInLidarr;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-      onTap: artistMbid == null
-          ? null
-          : () => context.push(
-                '/discover/mb-artist',
-                extra: MusicBrainzArtist(id: artistMbid!, name: artistName),
-              ),
+      onTap: onTap,
       leading: Container(
         width: 40,
         height: 40,
@@ -637,9 +758,11 @@ class _SongTile extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
       ),
-      trailing: artistMbid != null
-          ? const Icon(Icons.chevron_right, color: AppColors.textTertiary)
-          : null,
+      trailing: isInLidarr
+          ? _InLidarrBadge()
+          : onTap != null
+              ? const Icon(Icons.chevron_right, color: AppColors.textTertiary)
+              : null,
     );
   }
 }
