@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/jellyfin/jellyfin_repository.dart';
 import '../../../data/jellyfin/models/media_item.dart';
+import '../../playlist/playlist_providers.dart';
 import '../current_track_playlist_presence.dart';
 import '../now_playing_favorite.dart';
 
@@ -264,6 +265,7 @@ class _ManageTrackPlaylistsSheetState
           _entryIdByPlaylistId.remove(playlist.id);
         });
       }
+      ref.invalidate(playlistProvider(playlist.id));
       _invalidateTrackPlaylistPresence(ref);
     } catch (e) {
       if (!mounted) return;
@@ -313,6 +315,7 @@ class _ManageTrackPlaylistsSheetState
           _entryIdByPlaylistId.remove(likedId);
         });
       }
+      ref.invalidate(playlistProvider(likedId));
       _invalidateTrackPlaylistPresence(ref);
       ref.invalidate(nowPlayingFavoriteProvider);
     } catch (e) {
@@ -344,6 +347,9 @@ class _ManageTrackPlaylistsSheetState
           refreshedMemberships.map((m) => MapEntry(m.playlistId, m.playlistItemEntryId)),
         );
     });
+    for (final m in refreshedMemberships) {
+      ref.invalidate(playlistProvider(m.playlistId));
+    }
     _invalidateTrackPlaylistPresence(ref);
   }
 }

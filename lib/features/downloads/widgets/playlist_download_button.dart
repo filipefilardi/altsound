@@ -6,17 +6,17 @@ import '../../../data/downloads/download_manager.dart';
 import '../../../data/downloads/download_preferences.dart';
 import '../../../data/jellyfin/models/media_item.dart';
 
-class AlbumDownloadButton extends ConsumerWidget {
-  const AlbumDownloadButton({required this.album, super.key});
-  final Album album;
+class PlaylistDownloadButton extends ConsumerWidget {
+  const PlaylistDownloadButton({required this.playlist, super.key});
+  final PlaylistDetail playlist;
 
   Future<void> _confirmDelete(
       BuildContext context, WidgetRef ref, DownloadManager manager) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Remove download'),
-        content: Text('Remove "${album.name}" from your downloads?'),
+        title: const Text('Remove downloads'),
+        content: Text('Remove all downloaded songs from "${playlist.name}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -31,8 +31,10 @@ class AlbumDownloadButton extends ConsumerWidget {
       ),
     );
     if (confirmed == true) {
-      manager.deleteAlbum(album.id);
-      ref.read(downloadPreferencesProvider.notifier).unsubscribeAlbum(album.id);
+      manager.deleteTracks(playlist.tracks.map((t) => t.id).toList());
+      ref
+          .read(downloadPreferencesProvider.notifier)
+          .unsubscribePlaylist(playlist.id);
     }
   }
 
@@ -42,13 +44,13 @@ class AlbumDownloadButton extends ConsumerWidget {
     final manager = ref.read(downloadManagerProvider.notifier);
 
     if (!manager.supported) return const SizedBox.shrink();
-    if (album.tracks.isEmpty) return const SizedBox.shrink();
+    if (playlist.tracks.isEmpty) return const SizedBox.shrink();
 
     final downloadedCount =
-        album.tracks.where((t) => downloads.isDownloaded(t.id)).length;
+        playlist.tracks.where((t) => downloads.isDownloaded(t.id)).length;
     final inProgress =
-        album.tracks.any((t) => downloads.progressFor(t.id) != null);
-    final allDone = downloadedCount == album.tracks.length;
+        playlist.tracks.any((t) => downloads.progressFor(t.id) != null);
+    final allDone = downloadedCount == playlist.tracks.length;
 
     if (allDone) {
       return IconButton(
@@ -59,7 +61,7 @@ class AlbumDownloadButton extends ConsumerWidget {
     }
 
     if (inProgress) {
-      final activeProgresses = album.tracks
+      final activeProgresses = playlist.tracks
           .map((t) => downloads.progressFor(t.id))
           .whereType<double>()
           .toList();
@@ -67,7 +69,7 @@ class AlbumDownloadButton extends ConsumerWidget {
               (activeProgresses.isEmpty
                   ? 0
                   : activeProgresses.reduce((a, b) => a + b))) /
-          album.tracks.length;
+          playlist.tracks.length;
       return SizedBox(
         width: 40,
         height: 40,
@@ -87,11 +89,13 @@ class AlbumDownloadButton extends ConsumerWidget {
     }
 
     return IconButton(
-      tooltip: 'Download album',
+      tooltip: 'Download playlist',
       icon: const Icon(Icons.download_outlined, color: AppColors.textPrimary),
       onPressed: () {
-        manager.enqueueAlbum(album);
-        ref.read(downloadPreferencesProvider.notifier).subscribeAlbum(album.id);
+        manager.enqueuePlaylist(playlist);
+        ref
+            .read(downloadPreferencesProvider.notifier)
+            .subscribePlaylist(playlist.id);
       },
     );
   }

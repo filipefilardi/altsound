@@ -9,6 +9,8 @@ import '../../core/theme/app_gradients.dart';
 import '../../core/utils/format.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/skeleton.dart';
+import '../../data/downloads/download_manager.dart';
+import '../../data/downloads/download_preferences.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
 import '../../data/jellyfin/models/media_item.dart';
 import '../downloads/widgets/album_download_button.dart';
@@ -26,6 +28,15 @@ class AlbumScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(albumProvider(albumId));
+
+    ref.listen(albumProvider(albumId), (prev, next) {
+      if (prev?.value == null && next.value != null) {
+        final prefs = ref.read(downloadPreferencesProvider);
+        if (prefs.autoDownload && prefs.isAlbumSubscribed(next.value!.id)) {
+          ref.read(downloadManagerProvider.notifier).enqueueAlbum(next.value!);
+        }
+      }
+    });
 
     return Scaffold(
       bottomNavigationBar: const MiniPlayerSlot(withTopDivider: true),
@@ -400,6 +411,8 @@ class _TrackTile extends ConsumerWidget {
     final current = ref.watch(currentMediaItemProvider).value;
     final isCurrent =
         current != null && current.extras?['jellyfinId'] == track.id;
+    final isDownloaded =
+        ref.watch(downloadManagerProvider).isDownloaded(track.id);
 
     return ListTile(
       onTap: onTap,
@@ -428,6 +441,12 @@ class _TrackTile extends ConsumerWidget {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (isDownloaded)
+            const Padding(
+              padding: EdgeInsets.only(right: 4),
+              child: Icon(Icons.download_for_offline,
+                  size: 14, color: AppColors.primary),
+            ),
           PlayingTrackDuration(
             jellyfinTrackId: track.id,
             trackDuration: track.duration,

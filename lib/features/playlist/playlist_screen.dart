@@ -8,17 +8,16 @@ import '../../core/theme/app_gradients.dart';
 import '../../core/utils/format.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/skeleton.dart';
+import '../../data/downloads/download_manager.dart';
+import '../../data/downloads/download_preferences.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
 import '../../data/jellyfin/models/media_item.dart';
+import '../downloads/widgets/playlist_download_button.dart';
 import '../player/player_providers.dart';
 import '../player/widgets/mini_player_slot.dart';
 import '../player/widgets/playing_track_leading.dart';
 import '../player/widgets/track_more_menu_button.dart';
-
-final playlistProvider =
-    FutureProvider.family<PlaylistDetail, String>((ref, playlistId) {
-  return ref.read(jellyfinRepositoryProvider).playlist(playlistId);
-});
+import 'playlist_providers.dart';
 
 class PlaylistScreen extends ConsumerWidget {
   const PlaylistScreen({required this.playlistId, super.key});
@@ -31,6 +30,19 @@ class PlaylistScreen extends ConsumerWidget {
     final playlist = async.value;
     final canDelete =
         playlist != null && playlist.name.toLowerCase().trim() != 'liked songs';
+
+    ref.listen(playlistProvider(playlistId), (prev, next) {
+      if (prev?.value == null && next.value != null) {
+        final prefs = ref.read(downloadPreferencesProvider);
+        if (prefs.autoDownload &&
+            prefs.isPlaylistSubscribed(next.value!.id)) {
+          ref
+              .read(downloadManagerProvider.notifier)
+              .enqueuePlaylist(next.value!);
+        }
+      }
+    });
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Playlist'),
@@ -267,6 +279,7 @@ class _ActionRow extends ConsumerWidget {
                 }
               : null,
         ),
+        PlaylistDownloadButton(playlist: playlist),
       ],
     );
   }
@@ -341,6 +354,8 @@ class _PlaylistTrackTile extends ConsumerWidget {
     final current = ref.watch(currentMediaItemProvider).value;
     final isCurrent =
         current != null && current.extras?['jellyfinId'] == track.id;
+    final isDownloaded =
+        ref.watch(downloadManagerProvider).isDownloaded(track.id);
     return ListTile(
       dense: true,
       visualDensity: VisualDensity.compact,
@@ -379,6 +394,12 @@ class _PlaylistTrackTile extends ConsumerWidget {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (isDownloaded)
+            const Padding(
+              padding: EdgeInsets.only(right: 4),
+              child: Icon(Icons.download_for_offline,
+                  size: 14, color: AppColors.primary),
+            ),
           PlayingTrackDuration(
             jellyfinTrackId: track.id,
             trackDuration: track.duration,

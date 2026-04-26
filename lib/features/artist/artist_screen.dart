@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/skeleton.dart';
+import '../../data/downloads/download_manager.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
 import '../../data/jellyfin/models/media_item.dart';
 import '../player/widgets/mini_player_slot.dart';
@@ -276,6 +277,8 @@ class _PopularTrackTile extends ConsumerWidget {
     final repo = ref.watch(jellyfinRepositoryProvider);
     final imageUrl =
         repo.imageUrl(track.imageItemId, imageTag: track.imageTag, size: 200);
+    final isDownloaded =
+        ref.watch(downloadManagerProvider).isDownloaded(track.id);
 
     return ListTile(
       contentPadding: EdgeInsets.zero,
@@ -302,6 +305,12 @@ class _PopularTrackTile extends ConsumerWidget {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (isDownloaded)
+            const Padding(
+              padding: EdgeInsets.only(right: 4),
+              child: Icon(Icons.download_for_offline,
+                  size: 14, color: AppColors.primary),
+            ),
           PlayingTrackDuration(
             jellyfinTrackId: track.id,
             trackDuration: track.duration,

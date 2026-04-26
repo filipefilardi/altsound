@@ -9,6 +9,7 @@ import '../features/artist/artist_screen.dart';
 import '../features/auth/auth_controller.dart';
 import '../features/auth/login_screen.dart';
 import '../features/downloads/downloads_screen.dart';
+import '../features/downloads/downloads_settings_screen.dart';
 import '../features/lidarr/lidarr_artist_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/library/library_screen.dart';
@@ -77,6 +78,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/settings/lidarr',
         builder: (_, __) => const LidarrSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/settings/downloads',
+        builder: (_, __) => const DownloadsSettingsScreen(),
       ),
       GoRoute(
         path: '/artist/:id',
