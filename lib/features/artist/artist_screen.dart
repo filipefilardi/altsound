@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_gradients.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/skeleton.dart';
 import '../../data/downloads/download_manager.dart';
@@ -128,6 +129,12 @@ class _ArtistView extends ConsumerWidget {
             ),
           ),
         ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: _ArtistActionRow(artist: artist),
+          ),
+        ),
         if (artist.popularTracks.isNotEmpty) ...[
           SliverToBoxAdapter(
             child: Padding(
@@ -194,6 +201,108 @@ class _ArtistView extends ConsumerWidget {
           ),
         const SliverToBoxAdapter(child: SizedBox(height: 32)),
       ],
+    );
+  }
+}
+
+class _ArtistActionRow extends ConsumerWidget {
+  const _ArtistActionRow({required this.artist});
+
+  final Artist artist;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final playbackState = ref.watch(playbackStateProvider).value;
+    final currentMediaItem = ref.watch(currentMediaItemProvider).value;
+    final isArtistPlaying = playbackState?.playing == true &&
+        currentMediaItem?.extras?['artistId'] == artist.id;
+    final hasTracks = artist.popularTracks.isNotEmpty;
+
+    return Row(
+      children: [
+        _PlayPill(
+          onTap: hasTracks
+              ? () {
+                  final controller = ref.read(playerControllerProvider);
+                  if (isArtistPlaying) {
+                    controller.stop();
+                    return;
+                  }
+                  controller.playTracks(
+                    artist.popularTracks,
+                    continueCurrentIfSameQueueAndPaused: true,
+                  );
+                }
+              : null,
+          icon: isArtistPlaying ? Icons.stop : Icons.play_arrow,
+          tooltip: isArtistPlaying ? 'Stop' : 'Play',
+        ),
+        const SizedBox(width: 12),
+        IconButton(
+          tooltip: 'Shuffle',
+          icon: const Icon(Icons.shuffle, color: AppColors.textPrimary),
+          onPressed: hasTracks
+              ? () async {
+                  final controller = ref.read(playerControllerProvider);
+                  await controller.toggleShuffle();
+                  if (!context.mounted) return;
+                  await controller.playTracks(artist.popularTracks);
+                }
+              : null,
+        ),
+      ],
+    );
+  }
+}
+
+class _PlayPill extends StatelessWidget {
+  const _PlayPill({
+    required this.onTap,
+    required this.icon,
+    required this.tooltip,
+  });
+
+  final VoidCallback? onTap;
+  final IconData icon;
+  final String tooltip;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onTap != null;
+    return Opacity(
+      opacity: enabled ? 1 : 0.5,
+      child: Tooltip(
+        message: tooltip,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: AppGradients.accent,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.3),
+                blurRadius: 18,
+                offset: const Offset(0, 6),
+                spreadRadius: -3,
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: onTap,
+              customBorder: const CircleBorder(),
+              splashColor: AppColors.primary.withValues(alpha: 0.2),
+              child: SizedBox(
+                width: 56,
+                height: 56,
+                child: Icon(icon, color: const Color(0xFF1A0F05), size: 30),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

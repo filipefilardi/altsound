@@ -73,6 +73,7 @@ class PlayerController {
   Future<void> playTracks(
     List<jf.Track> tracks, {
     int startIndex = 0,
+    bool continueCurrentIfSameQueueAndPaused = false,
   }) async {
     if (tracks.isEmpty) return;
     final mediaItems = tracks.map(_toMediaItem).toList();
@@ -84,6 +85,11 @@ class PlayerController {
               mediaItems[i].extras?['jellyfinId'],
         );
     if (sameQueue) {
+      if (continueCurrentIfSameQueueAndPaused &&
+          !handler.playbackState.value.playing) {
+        await handler.play();
+        return;
+      }
       await handler.skipToQueueItem(startIndex);
     } else {
       await handler.loadQueue(mediaItems, initialIndex: startIndex);
@@ -98,6 +104,8 @@ class PlayerController {
       await handler.play();
     }
   }
+
+  Future<void> stop() => handler.stop();
 
   Future<void> next() => handler.skipToNext();
   Future<void> previous() => handler.skipToPrevious();
@@ -146,6 +154,7 @@ class PlayerController {
       extras: {
         'streamUrl': streamUrl,
         'jellyfinId': t.id,
+        'albumId': t.albumId,
         'artistId': t.artistId,
         'isOffline': localPath != null,
       },
