@@ -211,29 +211,53 @@ class _TrendingArtists extends ConsumerWidget {
   }
 }
 
-class _ArtistChip extends ConsumerWidget {
+class _ArtistChip extends ConsumerStatefulWidget {
   const _ArtistChip({required this.artist});
   final LbArtist artist;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final imageUrl = ref.watch(artistImageProvider(artist.artistName)).value;
-    final mbid = artist.artistMbid;
+  ConsumerState<_ArtistChip> createState() => _ArtistChipState();
+}
 
-    void onTap() {
-      if (mbid == null) return;
+class _ArtistChipState extends ConsumerState<_ArtistChip> {
+  bool _loading = false;
+
+  Future<void> _onTap() async {
+    final mbid = widget.artist.artistMbid;
+    if (mbid != null) {
       context.push(
         '/discover/mb-artist',
-        extra: MusicBrainzArtist(id: mbid, name: artist.artistName),
+        extra: MusicBrainzArtist(id: mbid, name: widget.artist.artistName),
       );
+      return;
     }
+    // No MBID from ListenBrainz — search MusicBrainz by name as fallback.
+    setState(() => _loading = true);
+    try {
+      final results = await ref
+          .read(musicBrainzRepositoryProvider)
+          .searchArtists(widget.artist.artistName);
+      if (!mounted) return;
+      if (results.isNotEmpty) {
+        context.push('/discover/mb-artist', extra: results.first);
+      }
+    } catch (_) {
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final imageUrl =
+        ref.watch(artistImageProvider(widget.artist.artistName)).value;
 
     return SizedBox(
       width: 76,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: mbid != null ? onTap : null,
+          onTap: _loading ? null : _onTap,
           borderRadius: BorderRadius.circular(38),
           child: Column(
             children: [
@@ -241,21 +265,32 @@ class _ArtistChip extends ConsumerWidget {
                 child: SizedBox(
                   width: 68,
                   height: 68,
-                  child: imageUrl != null
-                      ? CachedNetworkImage(
-                          imageUrl: imageUrl,
-                          fit: BoxFit.cover,
-                          placeholder: (_, __) =>
-                              Container(color: AppColors.surfaceElevated),
-                          errorWidget: (_, __, ___) =>
-                              _ArtistInitial(artist.artistName),
+                  child: _loading
+                      ? Container(
+                          color: AppColors.surfaceElevated,
+                          child: const Center(
+                            child: SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
                         )
-                      : _ArtistInitial(artist.artistName),
+                      : imageUrl != null
+                          ? CachedNetworkImage(
+                              imageUrl: imageUrl,
+                              fit: BoxFit.cover,
+                              placeholder: (_, __) =>
+                                  Container(color: AppColors.surfaceElevated),
+                              errorWidget: (_, __, ___) =>
+                                  _ArtistInitial(widget.artist.artistName),
+                            )
+                          : _ArtistInitial(widget.artist.artistName),
                 ),
               ),
               const SizedBox(height: 6),
               Text(
-                artist.artistName,
+                widget.artist.artistName,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
