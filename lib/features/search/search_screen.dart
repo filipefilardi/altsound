@@ -10,6 +10,7 @@ import '../../core/widgets/empty_state.dart';
 import '../../data/downloads/download_manager.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
 import '../../data/jellyfin/models/media_item.dart';
+import '../../data/lidarr/lidarr_repository.dart';
 import '../player/player_providers.dart';
 import '../player/widgets/add_track_to_playlist_sheet.dart';
 import '../player/widgets/playing_track_leading.dart';
@@ -48,15 +49,18 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final hasLidarr = ref.watch(lidarrRepositoryProvider) != null;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Search'),
         actions: [
-          IconButton(
-            tooltip: 'Discover via Lidarr',
-            icon: const Icon(Icons.travel_explore),
-            onPressed: () => context.push('/discover'),
-          ),
+          if (hasLidarr)
+            IconButton(
+              tooltip: 'Discover via Lidarr',
+              icon: const Icon(Icons.travel_explore),
+              onPressed: () => context.push('/discover'),
+            ),
         ],
       ),
       body: Column(
@@ -84,7 +88,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           ),
           Expanded(
             child: _term.isEmpty
-                ? _IdleHint(onDiscover: () => context.push('/discover'))
+                ? _IdleHint(
+                    onDiscover:
+                        hasLidarr ? () => context.push('/discover') : null,
+                  )
                 : FutureBuilder<List<BrowseItem>>(
                     future: _future,
                     builder: (context, snap) {
@@ -100,7 +107,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                       if (results.isEmpty) {
                         return _NoResults(
                           term: _term,
-                          onDiscover: () => context.push('/discover'),
+                          onDiscover: hasLidarr
+                              ? () => context.push('/discover')
+                              : null,
                         );
                       }
                       return _GroupedResults(results: results);
@@ -451,8 +460,8 @@ class _SectionHeader extends StatelessWidget {
 }
 
 class _IdleHint extends StatelessWidget {
-  const _IdleHint({required this.onDiscover});
-  final VoidCallback onDiscover;
+  const _IdleHint({this.onDiscover});
+  final VoidCallback? onDiscover;
 
   @override
   Widget build(BuildContext context) {
@@ -460,32 +469,36 @@ class _IdleHint extends StatelessWidget {
       icon: Icons.search,
       title: 'Search your Jellyfin library',
       message: 'Find songs, albums, and artists you already have.',
-      action: TextButton.icon(
-        onPressed: onDiscover,
-        icon: const Icon(Icons.travel_explore),
-        label: const Text('Discover via Lidarr'),
-      ),
+      action: onDiscover == null
+          ? null
+          : TextButton.icon(
+              onPressed: onDiscover,
+              icon: const Icon(Icons.travel_explore),
+              label: const Text('Discover via Lidarr'),
+            ),
     );
   }
 }
 
 class _NoResults extends StatelessWidget {
-  const _NoResults({required this.term, required this.onDiscover});
+  const _NoResults({required this.term, this.onDiscover});
   final String term;
-  final VoidCallback onDiscover;
+  final VoidCallback? onDiscover;
 
   @override
   Widget build(BuildContext context) {
     return EmptyState(
       icon: Icons.search_off,
       title: 'No matches in your library',
-      message: 'Nothing matched "$term". Try a different spelling, or request '
-          'it through Lidarr.',
-      action: ElevatedButton.icon(
-        onPressed: onDiscover,
-        icon: const Icon(Icons.travel_explore, color: Color(0xFF1A0F05)),
-        label: Text('REQUEST "$term" VIA LIDARR'),
-      ),
+      message: 'Nothing matched "$term". Try a different spelling'
+          '${onDiscover != null ? ', or request it through Lidarr.' : '.'}',
+      action: onDiscover == null
+          ? null
+          : ElevatedButton.icon(
+              onPressed: onDiscover,
+              icon: const Icon(Icons.travel_explore, color: Color(0xFF1A0F05)),
+              label: Text('REQUEST "$term" VIA LIDARR'),
+            ),
     );
   }
 }
