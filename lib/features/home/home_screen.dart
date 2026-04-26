@@ -6,7 +6,9 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
 import '../../data/jellyfin/models/media_item.dart';
+import '../../data/local/connectivity_provider.dart';
 import '../auth/auth_controller.dart';
+import '../downloads/offline_library_view.dart';
 import 'home_controller.dart';
 import 'widgets/shelf.dart';
 
@@ -17,6 +19,39 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(authControllerProvider);
     final username = state is AuthAuthenticated ? state.session.username : '';
+    final isOffline = ref.watch(isOfflineProvider);
+
+    if (isOffline) {
+      return Scaffold(
+        body: CustomScrollView(
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              sliver: SliverToBoxAdapter(
+                child: _Greeting(username: username),
+              ),
+            ),
+            const SliverPadding(
+              padding: EdgeInsets.fromLTRB(20, 20, 20, 8),
+              sliver: SliverToBoxAdapter(
+                child: Text(
+                  'DOWNLOADED ALBUMS',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.4,
+                  ),
+                ),
+              ),
+            ),
+            const SliverFillRemaining(
+              child: OfflineLibraryView(),
+            ),
+          ],
+        ),
+      );
+    }
 
     return Scaffold(
       body: RefreshIndicator(

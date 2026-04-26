@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/theme/app_colors.dart';
+import '../../data/local/connectivity_provider.dart';
 import '../player/widgets/mini_player_slot.dart';
 import '../player/player_providers.dart';
 
@@ -48,10 +50,21 @@ class _AppShellState extends ConsumerState<AppShell> {
 
   @override
   Widget build(BuildContext context) {
+    final isOffline = ref.watch(isOfflineProvider);
+
     return Scaffold(
       body: SafeArea(
         bottom: false,
-        child: widget.navigationShell,
+        child: Column(
+          children: [
+            AnimatedSize(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeInOut,
+              child: isOffline ? const _OfflineBanner() : const SizedBox.shrink(),
+            ),
+            Expanded(child: widget.navigationShell),
+          ],
+        ),
       ),
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
@@ -80,6 +93,34 @@ class _AppShellState extends ConsumerState<AppShell> {
                 label: 'Library',
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OfflineBanner extends StatelessWidget {
+  const _OfflineBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      color: AppColors.surfaceHighlight,
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: const Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.wifi_off_rounded, size: 13, color: AppColors.textSecondary),
+          SizedBox(width: 6),
+          Text(
+            'Offline · playing from downloads',
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),

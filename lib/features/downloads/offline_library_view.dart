@@ -1,0 +1,228 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../core/theme/app_colors.dart';
+import '../../data/downloads/download_manager.dart';
+import '../../data/downloads/downloaded_playlist.dart';
+import '../../data/downloads/downloaded_track.dart';
+import '../../data/jellyfin/jellyfin_repository.dart';
+
+class OfflineLibraryView extends ConsumerWidget {
+  const OfflineLibraryView({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final downloads = ref.watch(downloadManagerProvider);
+
+    final albums = _groupAlbums(downloads.tracks.values.toList());
+    final playlists = downloads.playlists.values.toList()
+      ..sort((a, b) {
+        final aTime = _latestDownload(a, downloads);
+        final bTime = _latestDownload(b, downloads);
+        return bTime.compareTo(aTime);
+      });
+
+    if (albums.isEmpty && playlists.isEmpty) {
+      return const Center(child: _EmptyOffline());
+    }
+
+    final repo = ref.watch(jellyfinRepositoryProvider);
+    final items = <_OfflineItem>[];
+
+    if (playlists.isNotEmpty) {
+      items.add(const _OfflineItem.header('Playlists'));
+      for (final p in playlists) {
+        items.add(_OfflineItem.playlist(p));
+      }
+    }
+
+    if (albums.isNotEmpty) {
+      items.add(const _OfflineItem.header('Albums'));
+      for (final a in albums) {
+        items.add(_OfflineItem.album(a));
+      }
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.only(top: 8, bottom: 96),
+      itemCount: items.length,
+      itemBuilder: (context, i) {
+        final item = items[i];
+        if (item.isHeader) {
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 16, 8),
+            child: Text(
+              item.header!.toUpperCase(),
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+          );
+        }
+
+        if (item.playlist != null) {
+          final p = item.playlist!;
+          final trackCount = p.trackIds
+              .where((id) => downloads.tracks.containsKey(id))
+              .length;
+          final imageUrl =
+              repo.imageUrl(p.id, imageTag: p.imageTag, size: 200);
+          return _ContentTile(
+            imageUrl: imageUrl,
+            title: p.name,
+            subtitle: '$trackCount songs downloaded',
+            isRound: false,
+            onTap: () => context.push('/playlist/${p.id}'),
+          );
+        }
+
+        final a = item.album!;
+        final imageUrl =
+            repo.imageUrl(a.imageItemId, imageTag: a.imageTag, size: 200);
+        return _ContentTile(
+          imageUrl: imageUrl,
+          title: a.albumName,
+          subtitle: '${a.artistName} · ${a.trackCount} songs',
+          isRound: false,
+          onTap: () => context.push('/album/${a.albumId}'),
+        );
+      },
+    );
+  }
+
+  List<_AlbumGroup> _groupAlbums(List<DownloadedTrack> tracks) {
+    final map = <String, List<DownloadedTrack>>{};
+    for (final t in tracks) {
+      (map[t.albumId ?? 'unknown'] ??= []).add(t);
+    }
+    return map.entries.map((e) => _AlbumGroup(e.key, e.value)).toList()
+      ..sort((a, b) => b.latestDownload.compareTo(a.latestDownload));
+  }
+
+  DateTime _latestDownload(
+      DownloadedPlaylist playlist, DownloadsState downloads) {
+    final times = playlist.trackIds
+        .map((id) => downloads.tracks[id]?.downloadedAt)
+        .where((t) => t != null)
+        .cast<DateTime>();
+    if (times.isEmpty) return DateTime.fromMillisecondsSinceEpoch(0);
+    return times.reduce((a, b) => a.isAfter(b) ? a : b);
+  }
+}
+
+// ── data helpers ────────────────────────────────────────────────────────────
+
+class _AlbumGroup {
+  _AlbumGroup(this.albumId, this.tracks);
+  final String albumId;
+  final List<DownloadedTrack> tracks;
+
+  String get albumName => tracks.first.albumName ?? 'Unknown Album';
+  String get artistName => tracks.first.artistName;
+  String get imageItemId => tracks.first.imageItemId;
+  String? get imageTag => tracks.first.imageTag;
+  int get trackCount => tracks.length;
+  DateTime get latestDownload =>
+      tracks.map((t) => t.downloadedAt).reduce((a, b) => a.isAfter(b) ? a : b);
+}
+
+class _OfflineItem {
+  const _OfflineItem._({this.header, this.playlist, this.album});
+
+  const _OfflineItem.header(String text) : this._(header: text);
+  const _OfflineItem.playlist(DownloadedPlaylist p) : this._(playlist: p);
+  _OfflineItem.album(_AlbumGroup a) : this._(album: a);
+
+  final String? header;
+  final DownloadedPlaylist? playlist;
+  final _AlbumGroup? album;
+
+  bool get isHeader => header != null;
+}
+
+// ── shared tile ─────────────────────────────────────────────────────────────
+
+class _ContentTile extends StatelessWidget {
+  const _ContentTile({
+    required this.imageUrl,
+    required this.title,
+    required this.subtitle,
+    required this.isRound,
+    required this.onTap,
+  });
+
+  final String imageUrl;
+  final String title;
+  final String subtitle;
+  final bool isRound;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      leading: ClipRRect(
+        borderRadius: BorderRadius.circular(isRound ? 28 : 6),
+        child: SizedBox(
+          width: 52,
+          height: 52,
+          child: CachedNetworkImage(
+            imageUrl: imageUrl,
+            fit: BoxFit.cover,
+            placeholder: (_, __) =>
+                const ColoredBox(color: AppColors.surfaceElevated),
+            errorWidget: (_, __, ___) => const ColoredBox(
+              color: AppColors.surfaceElevated,
+              child:
+                  Icon(Icons.album, color: AppColors.textTertiary, size: 24),
+            ),
+          ),
+        ),
+      ),
+      title: Text(
+        title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontWeight: FontWeight.w600),
+      ),
+      subtitle: Text(
+        subtitle,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style:
+            const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+      ),
+      trailing:
+          const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+      onTap: onTap,
+    );
+  }
+}
+
+class _EmptyOffline extends StatelessWidget {
+  const _EmptyOffline();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.wifi_off_rounded,
+              size: 56, color: AppColors.textTertiary),
+          const SizedBox(height: 20),
+          Text("You're offline",
+              style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 8),
+          const Text(
+            'No downloaded songs yet.\nDownload albums or playlists while online to listen anywhere.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: AppColors.textSecondary),
+          ),
+        ],
+      ),
+    );
+  }
+}

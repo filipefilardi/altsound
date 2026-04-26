@@ -1,3 +1,5 @@
+import '../jellyfin/models/media_item.dart';
+
 class DownloadedTrack {
   const DownloadedTrack({
     required this.id,
@@ -30,6 +32,20 @@ class DownloadedTrack {
   final DateTime downloadedAt;
 
   Duration get duration => Duration(milliseconds: durationMs);
+
+  Track toTrack() => Track(
+        id: id,
+        name: name,
+        albumId: albumId,
+        albumName: albumName,
+        artistName: artistName,
+        artistId: null,
+        duration: duration,
+        trackNumber: trackNumber,
+        discNumber: discNumber,
+        imageTag: imageTag,
+        albumImageItemId: imageItemId,
+      );
 
   Map<String, dynamic> toJson() => {
         'id': id,

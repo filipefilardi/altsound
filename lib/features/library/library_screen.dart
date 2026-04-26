@@ -6,6 +6,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/skeleton.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
 import '../../data/jellyfin/models/media_item.dart';
+import '../../data/local/connectivity_provider.dart';
+import '../downloads/offline_library_view.dart';
 
 class LibraryScreen extends ConsumerWidget {
   const LibraryScreen({super.key});
@@ -14,6 +16,7 @@ class LibraryScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final likedSongsAsync = ref.watch(_likedSongsPlaylistProvider);
     final playlistsAsync = ref.watch(_playlistsProvider);
+    final isOffline = ref.watch(isOfflineProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -26,7 +29,9 @@ class LibraryScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: playlistsAsync.when(
+      body: isOffline
+          ? const OfflineLibraryView()
+          : playlistsAsync.when(
         loading: () => const _LibraryLoading(),
         error: (e, _) => Center(
           child: Text(
