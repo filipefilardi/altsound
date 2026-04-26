@@ -1,16 +1,31 @@
 # AltSound
 
-A new Flutter project.
+## Short description
 
-## Getting Started
+Modern Flutter music player for Jellyfin, with optional Lidarr discovery.
 
-This project is a starting point for a Flutter application.
+## Full description (summarized)
 
-A few resources to get you started if this is your first Flutter project:
+AltSound is a mobile music app built with Flutter that streams your library from a Jellyfin server. It includes playback controls, queue management, search, library navigation, and optional Lidarr integration for discovering and adding albums.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Run
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### Requirements
+
+- Flutter SDK installed
+- A running Jellyfin server
+- Device or emulator (Android/iOS)
+- Optional: Lidarr server for discovery features
+
+### How to run
+
+```bash
+flutter pub get
+flutter run
+```
+
+### Useful commands
+
+```bash
+flutter analyze
+```
