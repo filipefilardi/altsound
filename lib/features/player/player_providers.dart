@@ -130,7 +130,9 @@ class PlayerController {
   }
 
   MediaItem _toMediaItem(jf.Track t) {
-    final art = repo.imageUrl(t.imageItemId, imageTag: t.imageTag, size: 600);
+    final art = (t.imageTag == null || t.imageTag!.isEmpty)
+        ? null
+        : repo.imageUrl(t.imageItemId, imageTag: t.imageTag, size: 600);
     final localPath = downloads.localPath(t.id);
     final streamUrl =
         localPath != null ? Uri.file(localPath).toString() : repo.streamUrl(t.id);
@@ -140,7 +142,7 @@ class PlayerController {
       album: t.albumName,
       artist: t.artistName,
       duration: t.duration,
-      artUri: Uri.parse(art),
+      artUri: art == null ? null : Uri.parse(art),
       extras: {
         'streamUrl': streamUrl,
         'jellyfinId': t.id,

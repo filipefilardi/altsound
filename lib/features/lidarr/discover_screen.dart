@@ -157,48 +157,13 @@ class _DiscoverScreenState extends ConsumerState<DiscoverScreen> {
   }
 }
 
-class _ArtistTile extends ConsumerStatefulWidget {
+class _ArtistTile extends StatelessWidget {
   const _ArtistTile({required this.artist});
   final LidarrArtistResult artist;
 
   @override
-  ConsumerState<_ArtistTile> createState() => _ArtistTileState();
-}
-
-class _ArtistTileState extends ConsumerState<_ArtistTile> {
-  bool _busy = false;
-  bool _added = false;
-
-  Future<void> _request() async {
-    final repo = ref.read(lidarrRepositoryProvider);
-    if (repo == null) return;
-    setState(() => _busy = true);
-    try {
-      final defaults = await repo.defaults();
-      await repo.addArtist(widget.artist, defaults: defaults);
-      if (!mounted) return;
-      setState(() {
-        _busy = false;
-        _added = true;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text('Requested ${widget.artist.name} via Lidarr.')),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _busy = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lidarr error: $e')),
-      );
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final a = widget.artist;
-    final alreadyAdded = a.alreadyMonitored || _added;
-
+    final a = artist;
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       onTap: () => context.push('/discover/artist', extra: a),
@@ -210,8 +175,7 @@ class _ArtistTileState extends ConsumerState<_ArtistTile> {
           child: a.imageUrl == null
               ? Container(
                   color: AppColors.surfaceElevated,
-                  child: const Icon(Icons.person,
-                      color: AppColors.textTertiary),
+                  child: const Icon(Icons.person, color: AppColors.textTertiary),
                 )
               : CachedNetworkImage(
                   imageUrl: a.imageUrl!,
@@ -220,33 +184,21 @@ class _ArtistTileState extends ConsumerState<_ArtistTile> {
                       Container(color: AppColors.surfaceElevated),
                   errorWidget: (_, __, ___) => Container(
                     color: AppColors.surfaceElevated,
-                    child: const Icon(Icons.person,
-                        color: AppColors.textTertiary),
+                    child: const Icon(Icons.person, color: AppColors.textTertiary),
                   ),
                 ),
         ),
       ),
       title: Text(a.name, maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: Text(
-        a.albumCount == null
-            ? (a.overview ?? 'Artist')
-            : '${a.albumCount} albums',
+        a.albumCount == null ? (a.overview ?? 'Artist') : '${a.albumCount} albums',
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
       ),
-      trailing: alreadyAdded
+      trailing: a.alreadyMonitored
           ? const Icon(Icons.check, color: AppColors.primary)
-          : _busy
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2.5),
-                )
-              : TextButton(
-                  onPressed: _request,
-                  child: const Text('REQUEST'),
-                ),
+          : const Icon(Icons.chevron_right, color: AppColors.textTertiary),
     );
   }
 }

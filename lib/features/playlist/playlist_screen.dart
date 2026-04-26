@@ -128,36 +128,10 @@ class _PlaylistHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final repo = ref.read(jellyfinRepositoryProvider);
-    final firstTrack = playlist.tracks.firstOrNull;
-
-    // Use playlist image tag if available, else fall back to first track's art
-    final String? artId = playlist.imageTag != null
-        ? playlist.id
-        : firstTrack?.albumImageItemId ?? firstTrack?.id;
-    final String? artTag = playlist.imageTag ?? firstTrack?.imageTag;
-    final imageUrl =
-        artId != null ? repo.imageUrl(artId, imageTag: artTag, size: 300) : null;
-
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: SizedBox(
-            width: 120,
-            height: 120,
-            child: imageUrl != null
-                ? CachedNetworkImage(
-                    imageUrl: imageUrl,
-                    fit: BoxFit.cover,
-                    placeholder: (_, __) =>
-                        const ColoredBox(color: AppColors.surfaceElevated),
-                    errorWidget: (_, __, ___) => const _ArtFallback(),
-                  )
-                : const _ArtFallback(),
-          ),
-        ),
+        _PlaylistArtwork(playlist: playlist),
         const SizedBox(width: 16),
         Expanded(
           child: Column(
@@ -178,6 +152,91 @@ class _PlaylistHeader extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _PlaylistArtwork extends ConsumerWidget {
+  const _PlaylistArtwork({required this.playlist});
+
+  final PlaylistDetail playlist;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final repo = ref.read(jellyfinRepositoryProvider);
+    final uniqueAlbumTracks = <Track>[];
+    final seenAlbumIds = <String>{};
+
+    for (final track in playlist.tracks) {
+      final albumId = track.albumImageItemId ?? track.albumId ?? track.id;
+      if (seenAlbumIds.add(albumId)) {
+        uniqueAlbumTracks.add(track);
+      }
+      if (uniqueAlbumTracks.length == 4) break;
+    }
+
+    // Build cover from current playlist tracks to keep artwork synchronized.
+    if (uniqueAlbumTracks.length > 1) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: SizedBox(
+          width: 120,
+          height: 120,
+          child: GridView.builder(
+            physics: const NeverScrollableScrollPhysics(),
+            padding: EdgeInsets.zero,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 1,
+              crossAxisSpacing: 1,
+            ),
+            itemCount: 4,
+            itemBuilder: (_, index) {
+              final track = uniqueAlbumTracks[index % uniqueAlbumTracks.length];
+              if (track.imageTag == null || track.imageTag!.isEmpty) {
+                return const _ArtFallback();
+              }
+              final artId = track.albumImageItemId ?? track.id;
+              final imageUrl = repo.imageUrl(
+                artId,
+                imageTag: track.imageTag,
+                size: 300,
+              );
+              return CachedNetworkImage(
+                imageUrl: imageUrl,
+                fit: BoxFit.cover,
+                placeholder: (_, __) =>
+                    const ColoredBox(color: AppColors.surfaceElevated),
+                errorWidget: (_, __, ___) => const _ArtFallback(),
+              );
+            },
+          ),
+        ),
+      );
+    }
+
+    final firstTrack = playlist.tracks.firstOrNull;
+    final artId = firstTrack?.albumImageItemId ?? firstTrack?.id ?? playlist.id;
+    final artTag = firstTrack?.imageTag ?? playlist.imageTag;
+    final imageUrl = (artTag == null || artTag.isEmpty)
+        ? null
+        : repo.imageUrl(artId, imageTag: artTag, size: 300);
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: SizedBox(
+        width: 120,
+        height: 120,
+        child: imageUrl == null
+            ? const _ArtFallback()
+            : CachedNetworkImage(
+                imageUrl: imageUrl,
+                fit: BoxFit.cover,
+                placeholder: (_, __) =>
+                    const ColoredBox(color: AppColors.surfaceElevated),
+                errorWidget: (_, __, ___) => const _ArtFallback(),
+              ),
+      ),
     );
   }
 }

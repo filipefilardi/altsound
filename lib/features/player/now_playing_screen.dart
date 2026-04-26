@@ -377,7 +377,7 @@ class _SecondaryControls extends ConsumerWidget {
     final offline = mediaItem.extras?['isOffline'] == true;
     final presenceAsync = ref.watch(currentTrackPlaylistPresenceProvider);
     final saved = switch (presenceAsync) {
-      AsyncData(:final value) => value.isSaved,
+      AsyncData(:final value) => value.memberships.isNotEmpty,
       _ => false,
     };
 

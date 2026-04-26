@@ -16,7 +16,9 @@ class MediaCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final repo = ref.watch(jellyfinRepositoryProvider);
-    final imageUrl = repo.imageUrl(item.id, imageTag: item.imageTag);
+    final imageUrl = (item.imageTag == null || item.imageTag!.isEmpty)
+        ? null
+        : repo.imageUrl(item.id, imageTag: item.imageTag);
 
     return InkWell(
       borderRadius: BorderRadius.circular(12),
@@ -49,12 +51,14 @@ class MediaCard extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    child: CachedNetworkImage(
-                      imageUrl: imageUrl,
-                      fit: BoxFit.cover,
-                      placeholder: (_, __) => const _Fallback(),
-                      errorWidget: (_, __, ___) => const _Fallback(),
-                    ),
+                    child: imageUrl == null
+                        ? const _Fallback()
+                        : CachedNetworkImage(
+                            imageUrl: imageUrl,
+                            fit: BoxFit.cover,
+                            placeholder: (_, __) => const _Fallback(),
+                            errorWidget: (_, __, ___) => const _Fallback(),
+                          ),
                   ),
                 ),
               ),
