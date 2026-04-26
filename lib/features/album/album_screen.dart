@@ -12,6 +12,7 @@ import '../../core/widgets/skeleton.dart';
 import '../../data/downloads/download_manager.dart';
 import '../../data/downloads/download_preferences.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
+import '../../data/local/connectivity_provider.dart';
 import '../../data/jellyfin/models/media_item.dart';
 import '../downloads/widgets/album_download_button.dart';
 import '../player/player_providers.dart';
@@ -28,6 +29,8 @@ class AlbumScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(albumProvider(albumId));
+    final isOffline = ref.watch(isOfflineProvider);
+    final downloads = ref.watch(downloadManagerProvider);
 
     ref.listen(albumProvider(albumId), (prev, next) {
       if (prev?.value == null && next.value != null) {
@@ -41,28 +44,62 @@ class AlbumScreen extends ConsumerWidget {
     return Scaffold(
       bottomNavigationBar: const MiniPlayerSlot(withTopDivider: true),
       body: async.when(
-        loading: () => const _AlbumLoading(),
-        error: (e, _) => SafeArea(
-          child: Stack(
-            children: [
-              Positioned(
-                top: 8,
-                left: 8,
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () => context.pop(),
+        loading: () {
+          // If offline and we have local tracks, skip the spinner entirely.
+          final offlineAlbum = _buildOfflineAlbum(albumId, downloads);
+          if (isOffline && offlineAlbum != null) {
+            return _AlbumView(album: offlineAlbum);
+          }
+          return const _AlbumLoading();
+        },
+        error: (e, _) {
+          final offlineAlbum = _buildOfflineAlbum(albumId, downloads);
+          if (offlineAlbum != null) return _AlbumView(album: offlineAlbum);
+          return SafeArea(
+            child: Stack(
+              children: [
+                Positioned(
+                  top: 8,
+                  left: 8,
+                  child: IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () => context.pop(),
+                  ),
                 ),
-              ),
-              ErrorStateView(
-                title: "Couldn't load this album",
-                message: e.toString(),
-                onRetry: () => ref.invalidate(albumProvider(albumId)),
-              ),
-            ],
-          ),
-        ),
+                ErrorStateView(
+                  title: "Couldn't load this album",
+                  message: e.toString(),
+                  onRetry: () => ref.invalidate(albumProvider(albumId)),
+                ),
+              ],
+            ),
+          );
+        },
         data: (album) => _AlbumView(album: album),
       ),
+    );
+  }
+
+  static Album? _buildOfflineAlbum(
+      String albumId, DownloadsState downloads) {
+    final tracks = downloads.tracks.values
+        .where((t) => t.albumId == albumId)
+        .toList();
+    if (tracks.isEmpty) return null;
+    tracks.sort((a, b) {
+      final disc = (a.discNumber ?? 0).compareTo(b.discNumber ?? 0);
+      if (disc != 0) return disc;
+      return (a.trackNumber ?? 0).compareTo(b.trackNumber ?? 0);
+    });
+    final first = tracks.first;
+    return Album(
+      id: albumId,
+      name: first.albumName ?? 'Unknown Album',
+      artistName: first.artistName,
+      artistId: null,
+      year: null,
+      imageTag: first.imageTag,
+      tracks: tracks.map((t) => t.toTrack()).toList(),
     );
   }
 }

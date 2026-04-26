@@ -11,29 +11,28 @@ import 'package:path_provider/path_provider.dart';
 import '../jellyfin/jellyfin_repository.dart';
 import '../jellyfin/models/media_item.dart';
 import 'download_preferences.dart';
+import 'downloaded_playlist.dart';
 import 'downloaded_track.dart';
-
-class DownloadProgress {
-  const DownloadProgress({
-    required this.trackId,
-    required this.progress,
-  });
-  final String trackId;
-  final double progress;
-}
 
 class DownloadsState {
   const DownloadsState({
     this.tracks = const {},
     this.progress = const {},
     this.queueLength = 0,
+    this.queuedTrackIds = const {},
+    this.playlists = const {},
+    this.isBlockedByWifiOnly = false,
   });
 
   final Map<String, DownloadedTrack> tracks;
   final Map<String, double> progress;
   final int queueLength;
+  final Set<String> queuedTrackIds;
+  final Map<String, DownloadedPlaylist> playlists;
+  final bool isBlockedByWifiOnly;
 
   bool isDownloaded(String trackId) => tracks.containsKey(trackId);
+  bool isQueued(String trackId) => queuedTrackIds.contains(trackId);
   double? progressFor(String trackId) => progress[trackId];
 
   int get totalSizeBytes =>
@@ -43,11 +42,17 @@ class DownloadsState {
     Map<String, DownloadedTrack>? tracks,
     Map<String, double>? progress,
     int? queueLength,
+    Set<String>? queuedTrackIds,
+    Map<String, DownloadedPlaylist>? playlists,
+    bool? isBlockedByWifiOnly,
   }) =>
       DownloadsState(
         tracks: tracks ?? this.tracks,
         progress: progress ?? this.progress,
         queueLength: queueLength ?? this.queueLength,
+        queuedTrackIds: queuedTrackIds ?? this.queuedTrackIds,
+        playlists: playlists ?? this.playlists,
+        isBlockedByWifiOnly: isBlockedByWifiOnly ?? this.isBlockedByWifiOnly,
       );
 }
 
@@ -58,15 +63,13 @@ class DownloadManager extends Notifier<DownloadsState> {
   late final Dio _dio = Dio();
   Directory? _dir;
   File? _manifestFile;
+  File? _playlistsFile;
   final List<Track> _queue = [];
   bool _running = false;
 
   @override
   DownloadsState build() {
-    if (!kIsWeb) {
-      // Fire-and-forget bootstrap from disk.
-      _bootstrap();
-    }
+    if (!kIsWeb) _bootstrap();
     return const DownloadsState();
   }
 
@@ -78,26 +81,46 @@ class DownloadManager extends Notifier<DownloadsState> {
       final dir = Directory('${docs.path}/downloads');
       if (!dir.existsSync()) dir.createSync(recursive: true);
       _dir = dir;
+
       _manifestFile = File('${dir.path}/manifest.json');
+      _playlistsFile = File('${dir.path}/playlists.json');
+
+      Map<String, DownloadedTrack> tracks = {};
       if (_manifestFile!.existsSync()) {
         final raw = await _manifestFile!.readAsString();
         final list = (jsonDecode(raw) as List).cast<Map<String, dynamic>>();
-        final map = {
+        tracks = {
           for (final json in list)
             json['id'] as String: DownloadedTrack.fromJson(json),
         };
-        state = state.copyWith(tracks: map);
       }
-    } catch (_) {
-      // ignore — start with empty state
-    }
+
+      Map<String, DownloadedPlaylist> playlists = {};
+      if (_playlistsFile!.existsSync()) {
+        final raw = await _playlistsFile!.readAsString();
+        final list = (jsonDecode(raw) as List).cast<Map<String, dynamic>>();
+        playlists = {
+          for (final json in list)
+            json['id'] as String: DownloadedPlaylist.fromJson(json),
+        };
+      }
+
+      state = state.copyWith(tracks: tracks, playlists: playlists);
+    } catch (_) {}
   }
 
-  Future<void> _persist() async {
+  Future<void> _persistTracks() async {
     final file = _manifestFile;
     if (file == null) return;
-    final list = state.tracks.values.map((t) => t.toJson()).toList();
-    await file.writeAsString(jsonEncode(list));
+    await file.writeAsString(
+        jsonEncode(state.tracks.values.map((t) => t.toJson()).toList()));
+  }
+
+  Future<void> _persistPlaylists() async {
+    final file = _playlistsFile;
+    if (file == null) return;
+    await file.writeAsString(
+        jsonEncode(state.playlists.values.map((p) => p.toJson()).toList()));
   }
 
   Future<void> enqueueTrack(Track track) async {
@@ -105,10 +128,11 @@ class DownloadManager extends Notifier<DownloadsState> {
     if (state.isDownloaded(track.id)) return;
     if (!_queue.any((t) => t.id == track.id)) {
       _queue.add(track);
-      state = state.copyWith(queueLength: _queue.length);
+      state = state.copyWith(
+        queueLength: _queue.length,
+        queuedTrackIds: {...state.queuedTrackIds, track.id},
+      );
     }
-    // Always attempt to restart drain — handles the case where drain paused
-    // because WiFi was unavailable and the queue already had items.
     if (!_running) unawaited(_drain());
   }
 
@@ -119,6 +143,17 @@ class DownloadManager extends Notifier<DownloadsState> {
   }
 
   Future<void> enqueuePlaylist(PlaylistDetail playlist) async {
+    // Save playlist metadata for offline reconstruction before downloading.
+    final downloaded = DownloadedPlaylist(
+      id: playlist.id,
+      name: playlist.name,
+      imageTag: playlist.imageTag,
+      trackIds: playlist.tracks.map((t) => t.id).toList(),
+    );
+    state = state.copyWith(
+        playlists: {...state.playlists, playlist.id: downloaded});
+    await _persistPlaylists();
+
     for (final t in playlist.tracks) {
       await enqueueTrack(t);
     }
@@ -130,17 +165,39 @@ class DownloadManager extends Notifier<DownloadsState> {
     }
   }
 
+  Future<void> deletePlaylist(String playlistId) async {
+    final playlist = state.playlists[playlistId];
+    if (playlist != null) {
+      for (final id in playlist.trackIds) {
+        await deleteTrack(id);
+      }
+    }
+    final playlists = Map<String, DownloadedPlaylist>.from(state.playlists)
+      ..remove(playlistId);
+    state = state.copyWith(playlists: playlists);
+    await _persistPlaylists();
+  }
+
   Future<void> _drain() async {
     _running = true;
+    if (state.isBlockedByWifiOnly) {
+      state = state.copyWith(isBlockedByWifiOnly: false);
+    }
     try {
       while (_queue.isNotEmpty) {
         final prefs = ref.read(downloadPreferencesProvider);
         if (prefs.wifiOnly) {
           final connectivity = await Connectivity().checkConnectivity();
-          if (!connectivity.contains(ConnectivityResult.wifi)) break;
+          if (!connectivity.contains(ConnectivityResult.wifi)) {
+            state = state.copyWith(isBlockedByWifiOnly: true);
+            break;
+          }
         }
         final track = _queue.removeAt(0);
-        state = state.copyWith(queueLength: _queue.length);
+        state = state.copyWith(
+          queueLength: _queue.length,
+          queuedTrackIds: {...state.queuedTrackIds}..remove(track.id),
+        );
         await _downloadOne(track);
       }
     } finally {
@@ -193,9 +250,8 @@ class DownloadManager extends Notifier<DownloadsState> {
       final clearedProgress = Map<String, double>.from(state.progress)
         ..remove(track.id);
       state = state.copyWith(tracks: tracks, progress: clearedProgress);
-      await _persist();
+      await _persistTracks();
     } catch (_) {
-      // remove the partial file and progress on failure
       try {
         if (dest.existsSync()) dest.deleteSync();
       } catch (_) {}
@@ -212,10 +268,16 @@ class DownloadManager extends Notifier<DownloadsState> {
       final f = File(t.filePath);
       if (f.existsSync()) f.deleteSync();
     } catch (_) {}
+    _queue.removeWhere((q) => q.id == trackId);
     final tracks = Map<String, DownloadedTrack>.from(state.tracks)
       ..remove(trackId);
-    state = state.copyWith(tracks: tracks);
-    await _persist();
+    final queued = {...state.queuedTrackIds}..remove(trackId);
+    state = state.copyWith(
+      tracks: tracks,
+      queueLength: _queue.length,
+      queuedTrackIds: queued,
+    );
+    await _persistTracks();
   }
 
   Future<void> deleteAlbum(String albumId) async {

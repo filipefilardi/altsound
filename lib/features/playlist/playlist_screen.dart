@@ -11,6 +11,7 @@ import '../../core/widgets/skeleton.dart';
 import '../../data/downloads/download_manager.dart';
 import '../../data/downloads/download_preferences.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
+import '../../data/local/connectivity_provider.dart';
 import '../../data/jellyfin/models/media_item.dart';
 import '../downloads/widgets/playlist_download_button.dart';
 import '../player/player_providers.dart';
@@ -30,6 +31,8 @@ class PlaylistScreen extends ConsumerWidget {
     final playlist = async.value;
     final canDelete =
         playlist != null && playlist.name.toLowerCase().trim() != 'liked songs';
+    final isOffline = ref.watch(isOfflineProvider);
+    final downloads = ref.watch(downloadManagerProvider);
 
     ref.listen(playlistProvider(playlistId), (prev, next) {
       if (prev?.value == null && next.value != null) {
@@ -57,14 +60,42 @@ class PlaylistScreen extends ConsumerWidget {
       ),
       bottomNavigationBar: const MiniPlayerSlot(withTopDivider: true),
       body: async.when(
-        loading: () => const _PlaylistLoading(),
-        error: (e, _) => ErrorStateView(
-          title: "Couldn't load this playlist",
-          message: e.toString(),
-          onRetry: () => ref.invalidate(playlistProvider(playlistId)),
-        ),
+        loading: () {
+          final offlinePlaylist = _buildOfflinePlaylist(playlistId, downloads);
+          if (isOffline && offlinePlaylist != null) {
+            return _PlaylistView(playlist: offlinePlaylist);
+          }
+          return const _PlaylistLoading();
+        },
+        error: (e, _) {
+          final offlinePlaylist = _buildOfflinePlaylist(playlistId, downloads);
+          if (offlinePlaylist != null) return _PlaylistView(playlist: offlinePlaylist);
+          return ErrorStateView(
+            title: "Couldn't load this playlist",
+            message: e.toString(),
+            onRetry: () => ref.invalidate(playlistProvider(playlistId)),
+          );
+        },
         data: (playlist) => _PlaylistView(playlist: playlist),
       ),
+    );
+  }
+
+  static PlaylistDetail? _buildOfflinePlaylist(
+      String playlistId, DownloadsState downloads) {
+    final saved = downloads.playlists[playlistId];
+    if (saved == null) return null;
+    final tracks = saved.trackIds
+        .map((id) => downloads.tracks[id])
+        .where((t) => t != null)
+        .map((t) => t!.toTrack())
+        .toList();
+    if (tracks.isEmpty) return null;
+    return PlaylistDetail(
+      id: playlistId,
+      name: saved.name,
+      imageTag: saved.imageTag,
+      tracks: tracks,
     );
   }
 

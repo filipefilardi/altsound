@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../data/downloads/download_manager.dart';
@@ -36,6 +37,32 @@ class AlbumDownloadButton extends ConsumerWidget {
     }
   }
 
+  void _showWifiOnlyDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('WiFi required'),
+        content: const Text(
+          'WiFi-only downloads is enabled and you\'re not on WiFi. '
+          'Connect to WiFi or turn off this setting to download.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              context.push('/settings/downloads');
+            },
+            child: const Text('Open settings'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final downloads = ref.watch(downloadManagerProvider);
@@ -49,6 +76,10 @@ class AlbumDownloadButton extends ConsumerWidget {
     final inProgress =
         album.tracks.any((t) => downloads.progressFor(t.id) != null);
     final allDone = downloadedCount == album.tracks.length;
+    final isQueuedButBlocked = !allDone &&
+        !inProgress &&
+        downloads.isBlockedByWifiOnly &&
+        album.tracks.any((t) => downloads.isQueued(t.id));
 
     if (allDone) {
       return IconButton(
@@ -86,12 +117,30 @@ class AlbumDownloadButton extends ConsumerWidget {
       );
     }
 
+    if (isQueuedButBlocked) {
+      return IconButton(
+        tooltip: 'Waiting for WiFi — tap to change settings',
+        icon: const Icon(Icons.wifi_off_rounded, color: AppColors.textSecondary),
+        onPressed: () => _showWifiOnlyDialog(context),
+      );
+    }
+
     return IconButton(
       tooltip: 'Download album',
       icon: const Icon(Icons.download_outlined, color: AppColors.textPrimary),
-      onPressed: () {
+      onPressed: () async {
+        final canDownload = await ref
+            .read(downloadPreferencesProvider.notifier)
+            .canDownloadNow();
+        if (!context.mounted) return;
+        if (!canDownload) {
+          _showWifiOnlyDialog(context);
+          return;
+        }
         manager.enqueueAlbum(album);
-        ref.read(downloadPreferencesProvider.notifier).subscribeAlbum(album.id);
+        ref
+            .read(downloadPreferencesProvider.notifier)
+            .subscribeAlbum(album.id);
       },
     );
   }
