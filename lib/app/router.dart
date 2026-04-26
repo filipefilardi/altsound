@@ -11,6 +11,7 @@ import '../features/auth/login_screen.dart';
 import '../features/downloads/downloads_screen.dart';
 import '../features/downloads/downloads_settings_screen.dart';
 import '../features/lidarr/lidarr_artist_screen.dart';
+import '../features/lidarr/mb_artist_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/library/library_screen.dart';
 import '../features/lidarr/discover_screen.dart';
@@ -21,6 +22,7 @@ import '../features/search/search_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/shell/app_shell.dart';
 import '../data/lidarr/models/lidarr_models.dart';
+import '../data/musicbrainz/musicbrainz_repository.dart';
 
 class _AuthListenable extends ChangeNotifier {
   _AuthListenable(this._ref) {
@@ -67,6 +69,18 @@ final routerProvider = Provider<GoRouter>((ref) {
           final artist = st.extra;
           if (artist is LidarrArtistResult) {
             return LidarrArtistScreen(artist: artist);
+          }
+          return const Scaffold(
+            body: Center(child: Text('Artist payload missing.')),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/discover/mb-artist',
+        builder: (_, st) {
+          final artist = st.extra;
+          if (artist is MusicBrainzArtist) {
+            return MbArtistScreen(artist: artist);
           }
           return const Scaffold(
             body: Center(child: Text('Artist payload missing.')),
