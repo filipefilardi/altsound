@@ -432,32 +432,8 @@ Future<void> _onPlaylistTap(
   required String trackId,
   required bool saved,
 }) async {
-  if (!saved) {
-    await openAddTrackToPlaylistFlow(
-      context,
-      ref,
-      trackId: trackId,
-      includeLikedSongsShortcut: true,
-    );
-    return;
-  }
-  final presence = await ref.read(currentTrackPlaylistPresenceProvider.future);
-  if (!context.mounted) return;
-  if (!presence.isSaved) {
-    await openAddTrackToPlaylistFlow(
-      context,
-      ref,
-      trackId: trackId,
-      includeLikedSongsShortcut: true,
-    );
-    return;
-  }
-  await openManageTrackPlaylistsSheet(
-    context,
-    ref,
-    trackId: trackId,
-    presence: presence,
-  );
+  await openManageTrackPlaylistsSheet(context, ref, trackId: trackId);
+  ref.invalidate(currentTrackPlaylistPresenceProvider);
 }
 
 class _Scrubber extends ConsumerWidget {
