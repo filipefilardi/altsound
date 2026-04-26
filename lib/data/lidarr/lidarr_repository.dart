@@ -118,22 +118,25 @@ class LidarrRepository {
     );
   }
 
-  Future<void> addArtist(
-    LidarrArtistResult artist, {
+  Future<void> addAlbum(
+    LidarrArtistResult artist,
+    LidarrAlbumResult album, {
     required LidarrDefaults defaults,
-    bool searchForMissingAlbums = true,
-    String monitor = 'all',
   }) async {
+    if (album.foreignAlbumId.isEmpty) {
+      throw const LidarrException('Album has no MusicBrainz ID — cannot request it.');
+    }
     final payload = <String, dynamic>{
       ...artist.raw,
       'qualityProfileId': defaults.qualityProfileId,
       'metadataProfileId': defaults.metadataProfileId,
       'rootFolderPath': defaults.rootFolderPath,
       'monitored': true,
-      'monitorNewItems': 'all',
+      'monitorNewItems': 'none',
       'addOptions': {
-        'monitor': monitor,
-        'searchForMissingAlbums': searchForMissingAlbums,
+        'monitor': 'specificAlbum',
+        'albumsToMonitor': [album.foreignAlbumId],
+        'searchForMissingAlbums': true,
       },
     };
     payload.remove('id');
