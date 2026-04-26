@@ -17,6 +17,19 @@ final lidarrRepositoryProvider = Provider<LidarrRepository?>((ref) {
   return LidarrRepository(config);
 });
 
+/// Set of MusicBrainz artist MBIDs currently monitored in Lidarr.
+/// Used across screens for status badges; not autoDispose so it stays cached.
+final lidarrMonitoredArtistIdsProvider = FutureProvider<Set<String>>((ref) async {
+  final repo = ref.watch(lidarrRepositoryProvider);
+  if (repo == null) return const {};
+  try {
+    final artists = await repo.monitoredArtists();
+    return {for (final a in artists) if (a.foreignArtistId.isNotEmpty) a.foreignArtistId};
+  } catch (_) {
+    return const {};
+  }
+});
+
 class LidarrRepository {
   LidarrRepository(this._config) {
     final base = _normalize(_config.url);
