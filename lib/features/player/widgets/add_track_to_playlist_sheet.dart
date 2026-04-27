@@ -24,6 +24,45 @@ Future<void> openAddTrackToPlaylistFlow(
   _invalidateTrackPlaylistPresence(ref);
 }
 
+Future<void> openAddTracksToPlaylistFlow(
+  BuildContext context,
+  WidgetRef ref, {
+  required List<String> trackIds,
+}) async {
+  if (trackIds.isEmpty) return;
+  final repo = ref.read(jellyfinRepositoryProvider);
+  final playlists = await repo.playlists();
+  if (!context.mounted) return;
+
+  final target = await showModalBottomSheet<BrowseItem>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    builder: (sheetContext) => FractionallySizedBox(
+      heightFactor: 0.9,
+      child: SafeArea(
+        child: _PickPlaylistSheet(playlists: playlists),
+      ),
+    ),
+  );
+  if (target == null || !context.mounted) return;
+
+  int addedCount = 0;
+  for (final id in trackIds) {
+    await repo.addTrackToPlaylist(trackId: id, playlistId: target.id);
+    addedCount++;
+  }
+  ref.invalidate(playlistProvider(target.id));
+  if (!context.mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(
+        'Added $addedCount song${addedCount == 1 ? '' : 's'} to "${target.name}"',
+      ),
+    ),
+  );
+}
+
 /// Fetches the correct presence for [trackId] then shows the manage sheet.
 Future<void> openManageTrackPlaylistsSheet(
   BuildContext context,
@@ -425,6 +464,87 @@ class _PlaylistToggleRow extends StatelessWidget {
         ),
       ),
       onTap: onTap,
+    );
+  }
+}
+
+class _PickPlaylistSheet extends StatefulWidget {
+  const _PickPlaylistSheet({required this.playlists});
+
+  final List<BrowseItem> playlists;
+
+  @override
+  State<_PickPlaylistSheet> createState() => _PickPlaylistSheetState();
+}
+
+class _PickPlaylistSheetState extends State<_PickPlaylistSheet> {
+  final _searchCtrl = TextEditingController();
+  String _query = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _searchCtrl.addListener(() {
+      setState(() => _query = _searchCtrl.text.trim().toLowerCase());
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final playlists = widget.playlists.where((playlist) {
+      if (_query.isEmpty) return true;
+      return playlist.name.toLowerCase().contains(_query);
+    }).toList();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
+          child: Text(
+            'ADD TO PLAYLIST',
+            style: Theme.of(context).textTheme.labelLarge,
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          child: TextField(
+            controller: _searchCtrl,
+            decoration: const InputDecoration(
+              hintText: 'Search playlists',
+              prefixIcon: Icon(Icons.search),
+            ),
+          ),
+        ),
+        Expanded(
+          child: playlists.isEmpty
+              ? const Center(
+                  child: Text(
+                    'No playlists found',
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
+                )
+              : ListView.builder(
+                  itemCount: playlists.length,
+                  itemBuilder: (_, index) {
+                    final playlist = playlists[index];
+                    return ListTile(
+                      leading: const Icon(
+                        Icons.queue_music_rounded,
+                        color: AppColors.primary,
+                      ),
+                      title: Text(playlist.name),
+                      onTap: () => Navigator.of(context).pop(playlist),
+                    );
+                  },
+                ),
+        ),
+      ],
     );
   }
 }

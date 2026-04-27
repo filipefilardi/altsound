@@ -222,6 +222,40 @@ class JellymusicAudioHandler extends BaseAudioHandler with SeekHandler {
     );
   }
 
+  Future<void> insertUserQueuedItems(List<MediaItem> items) async {
+    if (items.isEmpty) return;
+    final q = List<MediaItem>.from(queue.value);
+    if (q.isEmpty) return;
+
+    int insertAt = (_player.currentIndex ?? 0) + 1;
+    while (insertAt < q.length) {
+      final id = q[insertAt].extras?['jellyfinId'] as String?;
+      if (id == null || !_userQueuedIds.value.contains(id)) break;
+      insertAt++;
+    }
+
+    for (int i = 0; i < items.length; i++) {
+      final target = insertAt + i;
+      final item = items[i];
+      q.insert(target, item);
+      await _player.insertAudioSource(
+        target,
+        AudioSource.uri(
+          Uri.parse(item.extras!['streamUrl'] as String),
+          tag: item,
+        ),
+      );
+    }
+
+    queue.add(q);
+    _userQueuedIds.add({
+      ..._userQueuedIds.value,
+      ...items
+          .map((m) => m.extras?['jellyfinId'] as String?)
+          .whereType<String>(),
+    });
+  }
+
   Future<void> insertNextInQueue(MediaItem item) async {
     final insertAt = (_player.currentIndex ?? 0) + 1;
     final q = List<MediaItem>.from(queue.value)..insert(insertAt, item);

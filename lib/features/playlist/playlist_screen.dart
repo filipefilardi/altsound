@@ -16,6 +16,7 @@ import '../downloads/widgets/playlist_download_button.dart';
 import '../player/current_track_playlist_presence.dart';
 import '../player/now_playing_favorite.dart';
 import '../player/player_providers.dart';
+import '../player/widgets/add_track_to_playlist_sheet.dart';
 import '../player/widgets/mini_player_slot.dart';
 import '../player/widgets/playing_track_leading.dart';
 import '../player/widgets/track_more_menu_button.dart';
@@ -698,12 +699,66 @@ class _ActionRow extends ConsumerWidget {
                   : null,
             ),
             PlaylistDownloadButton(playlist: playlist),
+            IconButton(
+              tooltip: 'More actions',
+              icon: const Icon(Icons.more_vert),
+              onPressed: enabled
+                  ? () async {
+                      final action =
+                          await showModalBottomSheet<_PlaylistCollectionAction>(
+                        context: context,
+                        showDragHandle: true,
+                        builder: (sheetContext) => SafeArea(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              ListTile(
+                                leading: const Icon(Icons.playlist_add),
+                                title: const Text('Add to playlist'),
+                                onTap: () => Navigator.of(sheetContext)
+                                    .pop(_PlaylistCollectionAction.addToPlaylist),
+                              ),
+                              ListTile(
+                                leading: const Icon(Icons.add_to_queue),
+                                title: const Text('Add to queue'),
+                                onTap: () => Navigator.of(sheetContext)
+                                    .pop(_PlaylistCollectionAction.addToQueue),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                      if (action == null || !context.mounted) return;
+                      switch (action) {
+                        case _PlaylistCollectionAction.addToPlaylist:
+                          await openAddTracksToPlaylistFlow(
+                            context,
+                            ref,
+                            trackIds: playlist.tracks.map((t) => t.id).toList(),
+                          );
+                        case _PlaylistCollectionAction.addToQueue:
+                          final added = await controller
+                              .addTracksToQueue(playlist.tracks);
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Added $added song${added == 1 ? '' : 's'} to queue',
+                              ),
+                            ),
+                          );
+                      }
+                    }
+                  : null,
+            ),
           ],
         ),
       ),
     );
   }
 }
+
+enum _PlaylistCollectionAction { addToPlaylist, addToQueue }
 
 class _PlayPill extends StatelessWidget {
   const _PlayPill({

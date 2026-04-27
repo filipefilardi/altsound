@@ -146,21 +146,26 @@ class PlayerController {
     await handler.insertNextInQueue(item);
   }
 
-  /// Append [track] to the end of the queue. Never auto-plays.
-  /// Returns false if the track was already present in the queue.
+  /// Add [track] to the user-priority queue segment. Never auto-plays.
   Future<bool> addToQueue(jf.Track track) async {
-    final item = _toMediaItem(track);
-    final currentQueue = handler.queue.value;
-    if (currentQueue.isEmpty) {
-      await handler.loadQueue([item], initialIndex: 0, autoPlay: false);
-      return true;
-    }
-    final alreadyInQueue = currentQueue.any(
-      (q) => (q.extras?['jellyfinId'] as String?) == track.id,
-    );
-    if (alreadyInQueue) return false;
-    await handler.appendToQueue(item);
+    await addTracksToQueue([track]);
     return true;
+  }
+
+  /// Add [tracks] to the user-priority queue segment.
+  ///
+  /// Items are inserted after the currently playing track and after any
+  /// existing user-queued items, keeping app-provided items after them.
+  Future<int> addTracksToQueue(List<jf.Track> tracks) async {
+    if (tracks.isEmpty) return 0;
+    final currentQueue = handler.queue.value;
+    final items = tracks.map(_toMediaItem).toList();
+    if (currentQueue.isEmpty) {
+      await handler.loadQueue(items, initialIndex: 0, autoPlay: false);
+    } else {
+      await handler.insertUserQueuedItems(items);
+    }
+    return tracks.length;
   }
 
   MediaItem _toMediaItem(jf.Track t, {String? contextId}) {
