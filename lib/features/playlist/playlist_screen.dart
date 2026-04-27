@@ -82,23 +82,23 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                 color: AppColors.like,
               ),
               title: const Text('Add to liked songs'),
-              onTap: () => Navigator.of(sheetContext)
-                  .pop(_SelectionBulkAction.addToLiked),
+              onTap: () => Navigator.of(
+                sheetContext,
+              ).pop(_SelectionBulkAction.addToLiked),
             ),
             ListTile(
-              leading: const Icon(
-                Icons.playlist_add,
-                color: AppColors.primary,
-              ),
+              leading: const Icon(Icons.playlist_add, color: AppColors.primary),
               title: const Text('Add to another playlist'),
-              onTap: () => Navigator.of(sheetContext)
-                  .pop(_SelectionBulkAction.addToPlaylist),
+              onTap: () => Navigator.of(
+                sheetContext,
+              ).pop(_SelectionBulkAction.addToPlaylist),
             ),
             ListTile(
               leading: const Icon(Icons.remove_circle_outline),
               title: const Text('Remove from this playlist'),
-              onTap: () => Navigator.of(sheetContext)
-                  .pop(_SelectionBulkAction.removeFromPlaylist),
+              onTap: () => Navigator.of(
+                sheetContext,
+              ).pop(_SelectionBulkAction.removeFromPlaylist),
             ),
             const SizedBox(height: 8),
           ],
@@ -109,11 +109,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
     final ids = Set<String>.from(_selectedTrackIds);
     switch (action) {
       case _SelectionBulkAction.addToLiked:
-        await _bulkAddToLikedSongs(
-          context,
-          ids,
-          onDone: _clearSelection,
-        );
+        await _bulkAddToLikedSongs(context, ids, onDone: _clearSelection);
       case _SelectionBulkAction.addToPlaylist:
         await _showBulkAddToPlaylistDialog(
           context,
@@ -144,8 +140,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
     ref.listen(playlistProvider(playlistId), (prev, next) {
       if (prev?.value == null && next.value != null) {
         final prefs = ref.read(downloadPreferencesProvider);
-        if (prefs.autoDownload &&
-            prefs.isPlaylistSubscribed(next.value!.id)) {
+        if (prefs.autoDownload && prefs.isPlaylistSubscribed(next.value!.id)) {
           ref
               .read(downloadManagerProvider.notifier)
               .enqueuePlaylist(next.value!);
@@ -160,82 +155,90 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
         _clearSelection();
       },
       child: Scaffold(
-      appBar: _inSelection
-          ? AppBar(
-              leading: IconButton(
-                tooltip: 'Cancel',
-                icon: const Icon(Icons.close),
-                onPressed: _clearSelection,
-              ),
-              title: Text('${_selectedTrackIds.length} selected'),
-              actions: [
-                IconButton(
-                  tooltip: 'More',
-                  icon: const Icon(Icons.more_vert),
-                  onPressed: () => _showSelectionActionsMenu(
-                    context,
-                    playlistId: playlistId,
-                  ),
+        appBar: _inSelection
+            ? AppBar(
+                leading: IconButton(
+                  tooltip: 'Cancel',
+                  icon: const Icon(Icons.close),
+                  onPressed: _clearSelection,
                 ),
-              ],
-            )
-          : AppBar(
-              title: const Text('Playlist'),
-              actions: [
-                if (canDelete)
+                title: Text('${_selectedTrackIds.length} selected'),
+                actions: [
                   IconButton(
-                    tooltip: 'Delete playlist',
-                    icon: const Icon(Icons.delete_outline),
-                    onPressed: () => _confirmDelete(context, ref, playlist),
+                    tooltip: 'More',
+                    icon: const Icon(Icons.more_vert),
+                    onPressed: () => _showSelectionActionsMenu(
+                      context,
+                      playlistId: playlistId,
+                    ),
                   ),
-              ],
-            ),
-      bottomNavigationBar: const MiniPlayerSlot(withTopDivider: true),
-      body: async.when(
-        loading: () {
-          final offlinePlaylist = _buildOfflinePlaylist(playlistId, downloads);
-          if (offlinePlaylist != null) {
-            return _PlaylistView(
-              playlist: offlinePlaylist,
-              selectedTrackIds: _emptySelection,
-              inSelection: false,
-              onLongPress: (_) {},
-              onToggleSelected: (_) {},
+                ],
+              )
+            : AppBar(
+                title: const Text('Playlist'),
+                actions: [
+                  if (canDelete)
+                    IconButton(
+                      tooltip: 'Delete playlist',
+                      icon: const Icon(Icons.delete_outline),
+                      onPressed: () => _confirmDelete(context, ref, playlist),
+                    ),
+                ],
+              ),
+        bottomNavigationBar: const MiniPlayerSlot(withTopDivider: true),
+        body: async.when(
+          loading: () {
+            final offlinePlaylist = _buildOfflinePlaylist(
+              playlistId,
+              downloads,
             );
-          }
-          return const _PlaylistLoading();
-        },
-        error: (e, _) {
-          final offlinePlaylist = _buildOfflinePlaylist(playlistId, downloads);
-          if (offlinePlaylist != null) {
-            return _PlaylistView(
-              playlist: offlinePlaylist,
-              selectedTrackIds: _emptySelection,
-              inSelection: false,
-              onLongPress: (_) {},
-              onToggleSelected: (_) {},
+            if (offlinePlaylist != null) {
+              return _PlaylistView(
+                playlist: offlinePlaylist,
+                selectedTrackIds: _emptySelection,
+                inSelection: false,
+                onLongPress: (_) {},
+                onToggleSelected: (_) {},
+              );
+            }
+            return const _PlaylistLoading();
+          },
+          error: (e, _) {
+            final offlinePlaylist = _buildOfflinePlaylist(
+              playlistId,
+              downloads,
             );
-          }
-          return ErrorStateView(
-            title: "Couldn't load this playlist",
-            message: e.toString(),
-            onRetry: () => ref.invalidate(playlistProvider(playlistId)),
-          );
-        },
-        data: (playlist) => _PlaylistView(
-          playlist: playlist,
-          selectedTrackIds: _selectedTrackIds,
-          inSelection: _inSelection,
-          onLongPress: _onLongPressStartSelection,
-          onToggleSelected: _toggleTrackSelected,
+            if (offlinePlaylist != null) {
+              return _PlaylistView(
+                playlist: offlinePlaylist,
+                selectedTrackIds: _emptySelection,
+                inSelection: false,
+                onLongPress: (_) {},
+                onToggleSelected: (_) {},
+              );
+            }
+            return ErrorStateView(
+              title: "Couldn't load this playlist",
+              message: e.toString(),
+              onRetry: () => ref.invalidate(playlistProvider(playlistId)),
+            );
+          },
+          data: (playlist) => _PlaylistView(
+            playlist: playlist,
+            selectedTrackIds: _selectedTrackIds,
+            inSelection: _inSelection,
+            onLongPress: _onLongPressStartSelection,
+            onToggleSelected: _toggleTrackSelected,
+          ),
         ),
       ),
-    ),
     );
   }
 
   static PlaylistDetail? _buildOfflinePlaylist(
-      String playlistId, DownloadsState downloads) {
+    String playlistId,
+    DownloadsState downloads,
+  ) {
     final saved = downloads.playlists[playlistId];
     if (saved == null) return null;
     final tracks = saved.trackIds
@@ -332,10 +335,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
     final liked = await repo.likedSongsPlaylist();
     var lists = await repo.playlists();
     lists = lists
-        .where(
-          (p) =>
-              p.id != currentPlaylistId && p.id != (liked?.id),
-        )
+        .where((p) => p.id != currentPlaylistId && p.id != (liked?.id))
         .toList();
     if (!context.mounted) return;
 
@@ -372,7 +372,11 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                     Icons.queue_music_rounded,
                     color: AppColors.primary,
                   ),
-                  title: Text(p.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+                  title: Text(
+                    p.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   onTap: () => Navigator.of(sheetContext).pop(p),
                 ),
               ),
@@ -397,13 +401,9 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
         ref.invalidate(nowPlayingFavoriteProvider);
       }
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Added to "${chosen.name}"',
-            ),
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Added to "${chosen.name}"')));
         onDone();
       }
     } catch (e) {
@@ -473,9 +473,9 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not remove: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Could not remove: $e')));
       }
     }
   }
@@ -498,35 +498,38 @@ class _PlaylistView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-      children: [
-        _PlaylistHeader(playlist: playlist),
-        const SizedBox(height: 16),
-        _ActionRow(playlist: playlist, selectionActive: inSelection),
-        const SizedBox(height: 8),
-        if (playlist.tracks.isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 24),
-            child: Text(
-              'No songs in this playlist yet.',
-              style: TextStyle(color: AppColors.textSecondary),
-            ),
-          )
-        else
-          ...playlist.tracks.asMap().entries.map(
-                (entry) => _PlaylistTrackTile(
-                  track: entry.value,
-                  index: entry.key,
-                  allTracks: playlist.tracks,
-                  contextId: playlist.id,
-                  inSelection: inSelection,
-                  isSelected: selectedTrackIds.contains(entry.value.id),
-                  onLongPress: () => onLongPress(entry.value.id),
-                  onToggleSelected: () => onToggleSelected(entry.value.id),
-                ),
+    return RefreshIndicator(
+      onRefresh: () async => ref.refresh(playlistProvider(playlist.id).future),
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+        children: [
+          _PlaylistHeader(playlist: playlist),
+          const SizedBox(height: 16),
+          _ActionRow(playlist: playlist, selectionActive: inSelection),
+          const SizedBox(height: 8),
+          if (playlist.tracks.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: Text(
+                'No songs in this playlist yet.',
+                style: TextStyle(color: AppColors.textSecondary),
               ),
-      ],
+            )
+          else
+            ...playlist.tracks.asMap().entries.map(
+              (entry) => _PlaylistTrackTile(
+                track: entry.value,
+                index: entry.key,
+                allTracks: playlist.tracks,
+                contextId: playlist.id,
+                inSelection: inSelection,
+                isSelected: selectedTrackIds.contains(entry.value.id),
+                onLongPress: () => onLongPress(entry.value.id),
+                onToggleSelected: () => onToggleSelected(entry.value.id),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
@@ -555,7 +558,10 @@ class _PlaylistHeader extends ConsumerWidget {
               const SizedBox(height: 6),
               Text(
                 '${playlist.tracks.length} songs · ${formatLongDuration(playlist.totalDuration)}',
-                style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 13,
+                ),
               ),
             ],
           ),
@@ -660,8 +666,10 @@ class _ActionRow extends ConsumerWidget {
     final controller = ref.read(playerControllerProvider);
     final playbackState = ref.watch(playbackStateProvider).value;
     final currentMediaItem = ref.watch(currentMediaItemProvider).value;
-    final shuffleEnabled = ref.watch(playerShuffleEnabledProvider).value ?? false;
-    final isPlaylistPlaying = playbackState?.playing == true &&
+    final shuffleEnabled =
+        ref.watch(playerShuffleEnabledProvider).value ?? false;
+    final isPlaylistPlaying =
+        playbackState?.playing == true &&
         (currentMediaItem?.extras?['contextId'] as String?) == playlist.id;
     final enabled = playlist.tracks.isNotEmpty && !selectionActive;
 
@@ -692,11 +700,11 @@ class _ActionRow extends ConsumerWidget {
               tooltip: 'Shuffle',
               icon: Icon(
                 Icons.shuffle,
-                color: shuffleEnabled ? AppColors.primary : AppColors.textPrimary,
+                color: shuffleEnabled
+                    ? AppColors.primary
+                    : AppColors.textPrimary,
               ),
-              onPressed: enabled
-                  ? () => controller.toggleShuffle()
-                  : null,
+              onPressed: enabled ? () => controller.toggleShuffle() : null,
             ),
             PlaylistDownloadButton(playlist: playlist),
             IconButton(
@@ -706,28 +714,30 @@ class _ActionRow extends ConsumerWidget {
                   ? () async {
                       final action =
                           await showModalBottomSheet<_PlaylistCollectionAction>(
-                        context: context,
-                        showDragHandle: true,
-                        builder: (sheetContext) => SafeArea(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              ListTile(
-                                leading: const Icon(Icons.playlist_add),
-                                title: const Text('Add to playlist'),
-                                onTap: () => Navigator.of(sheetContext)
-                                    .pop(_PlaylistCollectionAction.addToPlaylist),
+                            context: context,
+                            showDragHandle: true,
+                            builder: (sheetContext) => SafeArea(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  ListTile(
+                                    leading: const Icon(Icons.playlist_add),
+                                    title: const Text('Add to playlist'),
+                                    onTap: () => Navigator.of(sheetContext).pop(
+                                      _PlaylistCollectionAction.addToPlaylist,
+                                    ),
+                                  ),
+                                  ListTile(
+                                    leading: const Icon(Icons.add_to_queue),
+                                    title: const Text('Add to queue'),
+                                    onTap: () => Navigator.of(
+                                      sheetContext,
+                                    ).pop(_PlaylistCollectionAction.addToQueue),
+                                  ),
+                                ],
                               ),
-                              ListTile(
-                                leading: const Icon(Icons.add_to_queue),
-                                title: const Text('Add to queue'),
-                                onTap: () => Navigator.of(sheetContext)
-                                    .pop(_PlaylistCollectionAction.addToQueue),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
+                            ),
+                          );
                       if (action == null || !context.mounted) return;
                       switch (action) {
                         case _PlaylistCollectionAction.addToPlaylist:
@@ -737,8 +747,9 @@ class _ActionRow extends ConsumerWidget {
                             trackIds: playlist.tracks.map((t) => t.id).toList(),
                           );
                         case _PlaylistCollectionAction.addToQueue:
-                          final added = await controller
-                              .addTracksToQueue(playlist.tracks);
+                          final added = await controller.addTracksToQueue(
+                            playlist.tracks,
+                          );
                           if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
@@ -796,17 +807,16 @@ class _PlaylistTrackTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final showAlbumLine = MediaQuery.sizeOf(context).width >=
-        _kPlaylistShowAlbumWidthBreakpoint;
+    final showAlbumLine =
+        MediaQuery.sizeOf(context).width >= _kPlaylistShowAlbumWidthBreakpoint;
     final hasAlbum =
-        showAlbumLine &&
-        track.albumName != null &&
-        track.albumName!.isNotEmpty;
+        showAlbumLine && track.albumName != null && track.albumName!.isNotEmpty;
     final current = ref.watch(currentMediaItemProvider).value;
     final isCurrent =
         current != null && current.extras?['jellyfinId'] == track.id;
-    final isDownloaded =
-        ref.watch(downloadManagerProvider).isDownloaded(track.id);
+    final isDownloaded = ref
+        .watch(downloadManagerProvider)
+        .isDownloaded(track.id);
     return ListTile(
       dense: true,
       visualDensity: VisualDensity.compact,
@@ -863,8 +873,8 @@ class _PlaylistTrackTile extends ConsumerWidget {
             onTap: inSelection
                 ? null
                 : (track.artistId == null || track.artistId!.isEmpty
-                    ? null
-                    : () => context.push('/artist/${track.artistId}')),
+                      ? null
+                      : () => context.push('/artist/${track.artistId}')),
             child: Text(
               track.artistName,
               maxLines: 1,
@@ -873,8 +883,8 @@ class _PlaylistTrackTile extends ConsumerWidget {
                 color: inSelection
                     ? AppColors.textSecondary
                     : (track.artistId == null || track.artistId!.isEmpty
-                        ? AppColors.textSecondary
-                        : AppColors.primary),
+                          ? AppColors.textSecondary
+                          : AppColors.primary),
                 fontSize: 12,
               ),
             ),
@@ -885,8 +895,8 @@ class _PlaylistTrackTile extends ConsumerWidget {
               onTap: inSelection
                   ? null
                   : (track.albumId == null || track.albumId!.isEmpty
-                      ? null
-                      : () => context.push('/album/${track.albumId}')),
+                        ? null
+                        : () => context.push('/album/${track.albumId}')),
               child: Text(
                 track.albumName!,
                 maxLines: 1,
@@ -895,8 +905,8 @@ class _PlaylistTrackTile extends ConsumerWidget {
                   color: inSelection
                       ? AppColors.textTertiary
                       : (track.albumId == null || track.albumId!.isEmpty
-                          ? AppColors.textSecondary
-                          : AppColors.primary),
+                            ? AppColors.textSecondary
+                            : AppColors.primary),
                   fontSize: 12,
                 ),
               ),
@@ -912,8 +922,11 @@ class _PlaylistTrackTile extends ConsumerWidget {
                 if (isDownloaded)
                   const Padding(
                     padding: EdgeInsets.only(right: 4),
-                    child: Icon(Icons.download_for_offline,
-                        size: 14, color: AppColors.primary),
+                    child: Icon(
+                      Icons.download_for_offline,
+                      size: 14,
+                      color: AppColors.primary,
+                    ),
                   ),
                 PlayingTrackDuration(
                   jellyfinTrackId: track.id,
