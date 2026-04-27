@@ -529,10 +529,7 @@ class _ArtistResults extends ConsumerWidget {
     final async = ref.watch(_mbArtistSearchProvider(query));
     return async.when(
       loading: () => const SliverToBoxAdapter(
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 16),
-          child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-        ),
+        child: _SearchListSkeleton(rows: 4, leadingShape: _LeadingShape.circle),
       ),
       error: (e, _) => SliverToBoxAdapter(
         child: Padding(
@@ -591,10 +588,7 @@ class _ReleaseResults extends ConsumerWidget {
 
     return async.when(
       loading: () => const SliverToBoxAdapter(
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 16),
-          child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-        ),
+        child: _SearchListSkeleton(rows: 4, leadingShape: _LeadingShape.square),
       ),
       error: (e, _) => SliverToBoxAdapter(
         child: Padding(
@@ -851,6 +845,49 @@ class _InLidarrBadge extends StatelessWidget {
           fontWeight: FontWeight.w700,
           color: AppColors.primary,
           letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+}
+
+
+enum _LeadingShape { square, circle }
+
+class _SearchListSkeleton extends StatelessWidget {
+  const _SearchListSkeleton({required this.rows, required this.leadingShape});
+
+  final int rows;
+  final _LeadingShape leadingShape;
+
+  @override
+  Widget build(BuildContext context) {
+    return Skeleton.group(
+      child: Column(
+        children: List.generate(
+          rows,
+          (_) => Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                if (leadingShape == _LeadingShape.circle)
+                  Skeleton.circle(size: 52)
+                else
+                  Skeleton.box(width: 52, height: 52, radius: 6),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Skeleton.line(width: 180, height: 14),
+                      const SizedBox(height: 8),
+                      Skeleton.line(width: 100, height: 10),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
