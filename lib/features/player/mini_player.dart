@@ -18,13 +18,12 @@ class MiniPlayer extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final mediaItem = ref.watch(currentMediaItemProvider).value;
+    final mediaItem = ref.watch(effectiveMediaItemProvider);
     if (mediaItem == null) return const SizedBox.shrink();
 
-    final state = ref.watch(playbackStateProvider).value;
-    final playing = state?.playing ?? false;
-    final position = ref.watch(positionProvider).value ?? Duration.zero;
-    final duration = mediaItem.duration ?? Duration.zero;
+    final playing = ref.watch(effectivePlayingProvider);
+    final position = ref.watch(effectivePositionProvider);
+    final duration = ref.watch(effectiveDurationProvider);
     final progress = duration.inMilliseconds == 0
         ? 0.0
         : (position.inMilliseconds / duration.inMilliseconds).clamp(0.0, 1.0);

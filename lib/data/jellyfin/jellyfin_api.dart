@@ -24,6 +24,10 @@ class JellyfinApi {
 
   Dio get dio => _dio;
 
+  /// Device id this app reports to Jellyfin in the `Authorization` header.
+  /// Used to identify (and filter out) our own session in `/Sessions` listings.
+  String get deviceId => _deviceId;
+
   JellyfinSession? _session;
 
   void bind(JellyfinSession session) {

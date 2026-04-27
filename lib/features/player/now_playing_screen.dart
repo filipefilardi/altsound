@@ -13,6 +13,8 @@ import 'package:just_audio/just_audio.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_gradients.dart';
 import '../../core/utils/format.dart';
+import '../remote/remote_player_controller.dart';
+import '../remote/remote_sessions_sheet.dart';
 import 'audio_player_handler.dart';
 import 'current_track_playlist_presence.dart';
 import 'player_providers.dart';
@@ -50,8 +52,8 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final mediaItem = ref.watch(currentMediaItemProvider).value;
-    final state = ref.watch(playbackStateProvider).value;
+    final mediaItem = ref.watch(effectiveMediaItemProvider);
+    final playing = ref.watch(effectivePlayingProvider);
     final artistId = mediaItem?.extras?['artistId'] as String?;
     final albumId = mediaItem?.extras?['albumId'] as String?;
 
@@ -152,7 +154,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                     const SizedBox(height: 12),
                     const _Scrubber(),
                     const SizedBox(height: 16),
-                    _MainControls(playing: state?.playing ?? false),
+                    _MainControls(playing: playing),
                     const SizedBox(height: 24),
                   ],
                 ),
@@ -311,7 +313,7 @@ class _BlurredBackdrop extends StatelessWidget {
   }
 }
 
-class _TopBar extends StatelessWidget {
+class _TopBar extends ConsumerWidget {
   const _TopBar({
     required this.album,
     required this.albumId,
@@ -322,7 +324,15 @@ class _TopBar extends StatelessWidget {
   final VoidCallback onQueue;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final remoteId = ref.watch(activeRemoteSessionIdProvider);
+    final remoteSession = remoteId == null
+        ? null
+        : ref.watch(activeRemoteSessionProvider).value;
+    final castConnected = remoteId != null;
+    final castLabel = castConnected
+        ? 'PLAYING ON ${remoteSession?.deviceName.toUpperCase() ?? 'REMOTE'}'
+        : 'PLAYING FROM ALBUM';
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Row(
@@ -336,12 +346,16 @@ class _TopBar extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'PLAYING FROM ALBUM',
+                  castLabel,
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
                         fontSize: 10,
                         letterSpacing: 1.6,
-                        color: AppColors.textSecondary,
+                        color: castConnected
+                            ? AppColors.primary
+                            : AppColors.textSecondary,
                       ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
                 InkWell(
@@ -365,6 +379,15 @@ class _TopBar extends StatelessWidget {
             ),
           ),
           IconButton(
+            icon: Icon(
+              castConnected ? Icons.cast_connected : Icons.cast,
+              size: 22,
+              color: castConnected ? AppColors.primary : null,
+            ),
+            onPressed: () => showRemoteSessionsSheet(context),
+            tooltip: 'Play on…',
+          ),
+          IconButton(
             icon: const Icon(Icons.queue_music, size: 24),
             onPressed: onQueue,
             tooltip: 'Up next',
@@ -381,6 +404,7 @@ class _SecondaryControls extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isRemote = ref.watch(activeRemoteSessionIdProvider) != null;
     final loop = ref.watch(playerLoopModeProvider).when(
           data: (v) => v,
           error: (_, __) => LoopMode.off,
@@ -403,7 +427,7 @@ class _SecondaryControls extends ConsumerWidget {
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         IconButton(
-          onPressed: () => controller.toggleShuffle(),
+          onPressed: isRemote ? null : () => controller.toggleShuffle(),
           icon: Icon(
             Icons.shuffle,
             color: shuffled ? AppColors.primary : AppColors.textSecondary,
@@ -412,7 +436,7 @@ class _SecondaryControls extends ConsumerWidget {
           tooltip: 'Shuffle',
         ),
         IconButton(
-          onPressed: () => controller.cycleRepeatMode(),
+          onPressed: isRemote ? null : () => controller.cycleRepeatMode(),
           icon: Icon(
             loop == LoopMode.one ? Icons.repeat_one : Icons.repeat,
             color:
@@ -422,7 +446,7 @@ class _SecondaryControls extends ConsumerWidget {
           tooltip: 'Repeat',
         ),
         IconButton(
-          onPressed: offline
+          onPressed: offline || isRemote
               ? null
               : () => unawaited(
                     _onPlaylistTap(
@@ -459,9 +483,8 @@ class _Scrubber extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final position = ref.watch(positionProvider).value ?? Duration.zero;
-    final duration =
-        ref.watch(currentMediaItemProvider).value?.duration ?? Duration.zero;
+    final position = ref.watch(effectivePositionProvider);
+    final duration = ref.watch(effectiveDurationProvider);
 
     final clamped = position > duration ? duration : position;
     final maxMs = duration.inMilliseconds.toDouble().clamp(1.0, double.infinity);
