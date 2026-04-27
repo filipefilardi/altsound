@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../data/downloads/download_manager.dart';
 import '../../data/lidarr/lidarr_config.dart';
+import '../../data/local/offline_mode.dart';
 import '../auth/auth_controller.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -15,6 +16,7 @@ class SettingsScreen extends ConsumerWidget {
     final auth = ref.watch(authControllerProvider);
     final downloads = ref.watch(downloadManagerProvider);
     final lidarr = ref.watch(lidarrConfigProvider);
+    final offlineMode = ref.watch(offlineModeProvider);
 
     final session = auth is AuthAuthenticated ? auth.session : null;
 
@@ -56,6 +58,18 @@ class SettingsScreen extends ConsumerWidget {
             trailing:
                 const Icon(Icons.chevron_right, color: AppColors.textSecondary),
             onTap: () => context.push('/discover'),
+          ),
+          const _SectionLabel('Offline'),
+          SwitchListTile(
+            secondary: const Icon(Icons.wifi_off_outlined),
+            title: const Text('Offline mode'),
+            subtitle: const Text(
+              'Use only downloaded music; skip server requests',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+            value: offlineMode,
+            onChanged: (v) =>
+                ref.read(offlineModeProvider.notifier).set(v),
           ),
           const _SectionLabel('Storage'),
           ListTile(

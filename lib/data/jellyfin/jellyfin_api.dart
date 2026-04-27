@@ -11,7 +11,12 @@ const _appVersion = '0.1.0';
 
 class JellyfinApi {
   JellyfinApi({Dio? dio, String? deviceId})
-      : _dio = dio ?? Dio(),
+      : _dio = dio ??
+            Dio(BaseOptions(
+              connectTimeout: const Duration(seconds: 5),
+              receiveTimeout: const Duration(seconds: 10),
+              sendTimeout: const Duration(seconds: 10),
+            )),
         _deviceId = deviceId ?? const Uuid().v4();
 
   final Dio _dio;
