@@ -79,8 +79,7 @@ class AlbumScreen extends ConsumerWidget {
     );
   }
 
-  static Album? _buildOfflineAlbum(
-      String albumId, DownloadsState downloads) {
+  static Album? _buildOfflineAlbum(String albumId, DownloadsState downloads) {
     final tracks = downloads.tracks.values
         .where((t) => t.albumId == albumId)
         .toList();
@@ -161,22 +160,28 @@ class _AlbumViewState extends ConsumerState<_AlbumView> {
 
   Future<void> _extractPalette() async {
     final repo = ref.read(jellyfinRepositoryProvider);
-    final url = repo.imageUrl(widget.album.id,
-        imageTag: widget.album.imageTag, size: 200);
+    final url = repo.imageUrl(
+      widget.album.id,
+      imageTag: widget.album.imageTag,
+      size: 200,
+    );
     try {
       final palette = await PaletteGenerator.fromImageProvider(
         CachedNetworkImageProvider(url),
         size: const Size(200, 200),
         maximumColorCount: 8,
       );
-      final c = palette.dominantColor?.color ??
+      final c =
+          palette.dominantColor?.color ??
           palette.vibrantColor?.color ??
           palette.darkVibrantColor?.color;
       if (c != null && mounted) {
-        setState(() => _backdrop = Color.alphaBlend(
-              c.withValues(alpha: 0.55),
-              AppColors.background,
-            ));
+        setState(
+          () => _backdrop = Color.alphaBlend(
+            c.withValues(alpha: 0.55),
+            AppColors.background,
+          ),
+        );
       }
     } catch (_) {
       // ignore palette failures
@@ -187,143 +192,152 @@ class _AlbumViewState extends ConsumerState<_AlbumView> {
   Widget build(BuildContext context) {
     final album = widget.album;
     final repo = ref.read(jellyfinRepositoryProvider);
-    final imageUrl =
-        repo.imageUrl(album.id, imageTag: album.imageTag, size: 600);
+    final imageUrl = repo.imageUrl(
+      album.id,
+      imageTag: album.imageTag,
+      size: 600,
+    );
 
-    return CustomScrollView(
-      slivers: [
-        SliverAppBar(
-          expandedHeight: 380,
-          pinned: true,
-          stretch: true,
-          backgroundColor: _backdrop,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => context.pop(),
-          ),
-          flexibleSpace: FlexibleSpaceBar(
-            background: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    _backdrop,
-                    Color.alphaBlend(
-                      _backdrop.withValues(alpha: 0.5),
+    return RefreshIndicator(
+      onRefresh: () async => ref.refresh(albumProvider(album.id).future),
+      child: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 380,
+            pinned: true,
+            stretch: true,
+            backgroundColor: _backdrop,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () => context.pop(),
+            ),
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      _backdrop,
+                      Color.alphaBlend(
+                        _backdrop.withValues(alpha: 0.5),
+                        AppColors.background,
+                      ),
                       AppColors.background,
-                    ),
-                    AppColors.background,
-                  ],
-                  stops: const [0.0, 0.6, 1.0],
+                    ],
+                    stops: const [0.0, 0.6, 1.0],
+                  ),
                 ),
-              ),
-              child: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      DecoratedBox(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.5),
-                              blurRadius: 28,
-                              offset: const Offset(0, 12),
-                              spreadRadius: -6,
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.5),
+                                blurRadius: 28,
+                                offset: const Offset(0, 12),
+                                spreadRadius: -6,
+                              ),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: CachedNetworkImage(
+                              imageUrl: imageUrl,
+                              width: 220,
+                              height: 220,
+                              fit: BoxFit.cover,
+                              placeholder: (_, __) =>
+                                  const _ArtFallback(size: 220),
+                              errorWidget: (_, __, ___) =>
+                                  const _ArtFallback(size: 220),
                             ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          album.name,
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.headlineMedium,
+                        ),
+                        const SizedBox(height: 4),
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 4,
+                          children: [
+                            InkWell(
+                              onTap:
+                                  album.artistId == null ||
+                                      album.artistId!.isEmpty
+                                  ? null
+                                  : () => context.push(
+                                      '/artist/${album.artistId}',
+                                    ),
+                              child: Text(
+                                album.artistName,
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(
+                                      color:
+                                          album.artistId == null ||
+                                              album.artistId!.isEmpty
+                                          ? AppColors.textSecondary
+                                          : AppColors.primary,
+                                    ),
+                              ),
+                            ),
+                            if (album.year != null)
+                              Text(
+                                '• ${album.year}',
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            if (album.tracks.isNotEmpty)
+                              Text(
+                                '• ${album.tracks.length} tracks',
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
                           ],
                         ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: CachedNetworkImage(
-                            imageUrl: imageUrl,
-                            width: 220,
-                            height: 220,
-                            fit: BoxFit.cover,
-                            placeholder: (_, __) =>
-                                const _ArtFallback(size: 220),
-                            errorWidget: (_, __, ___) =>
-                                const _ArtFallback(size: 220),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        album.name,
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.headlineMedium,
-                      ),
-                      const SizedBox(height: 4),
-                      Wrap(
-                        alignment: WrapAlignment.center,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        spacing: 4,
-                        children: [
-                          InkWell(
-                            onTap: album.artistId == null || album.artistId!.isEmpty
-                                ? null
-                                : () => context.push('/artist/${album.artistId}'),
-                            child: Text(
-                              album.artistName,
-                              style:
-                                  Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                        color: album.artistId == null ||
-                                                album.artistId!.isEmpty
-                                            ? AppColors.textSecondary
-                                            : AppColors.primary,
-                                      ),
-                            ),
-                          ),
-                          if (album.year != null)
-                            Text(
-                              '• ${album.year}',
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                          if (album.tracks.isNotEmpty)
-                            Text(
-                              '• ${album.tracks.length} tracks',
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                        ],
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
-        SliverPersistentHeader(
-          pinned: true,
-          delegate: _ActionBarDelegate(
-            child: _ActionBar(album: album),
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _ActionBarDelegate(child: _ActionBar(album: album)),
           ),
-        ),
-        SliverList.builder(
-          itemCount: album.tracks.length,
-          itemBuilder: (_, i) {
-            final track = album.tracks[i];
-            return _TrackTile(
-              track: track,
-              index: i,
-              onTap: () => ref
-                  .read(playerControllerProvider)
-                  .playTracks(
-                    album.tracks,
-                    startIndex: i,
-                    contextId: album.id,
-                    selectedTrack: true,
-                  ),
-            );
-          },
-        ),
-        const SliverToBoxAdapter(child: SizedBox(height: 32)),
-      ],
+          SliverList.builder(
+            itemCount: album.tracks.length,
+            itemBuilder: (_, i) {
+              final track = album.tracks[i];
+              return _TrackTile(
+                track: track,
+                index: i,
+                onTap: () => ref
+                    .read(playerControllerProvider)
+                    .playTracks(
+                      album.tracks,
+                      startIndex: i,
+                      contextId: album.id,
+                      selectedTrack: true,
+                    ),
+              );
+            },
+          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 32)),
+        ],
+      ),
     );
   }
 }
@@ -338,11 +352,12 @@ class _ActionBarDelegate extends SliverPersistentHeaderDelegate {
   double get maxExtent => 72;
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return Container(
-      color: AppColors.background,
-      child: child,
-    );
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return Container(color: AppColors.background, child: child);
   }
 
   @override
@@ -358,8 +373,10 @@ class _ActionBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final playbackState = ref.watch(playbackStateProvider).value;
     final currentMediaItem = ref.watch(currentMediaItemProvider).value;
-    final shuffleEnabled = ref.watch(playerShuffleEnabledProvider).value ?? false;
-    final isAlbumPlaying = playbackState?.playing == true &&
+    final shuffleEnabled =
+        ref.watch(playerShuffleEnabledProvider).value ?? false;
+    final isAlbumPlaying =
+        playbackState?.playing == true &&
         (currentMediaItem?.extras?['contextId'] as String?) == album.id;
 
     return Padding(
@@ -375,10 +392,7 @@ class _ActionBar extends ConsumerWidget {
                       controller.togglePlay();
                       return;
                     }
-                    controller.playTracks(
-                      album.tracks,
-                      contextId: album.id,
-                    );
+                    controller.playTracks(album.tracks, contextId: album.id);
                   },
             icon: isAlbumPlaying ? Icons.pause : Icons.play_arrow,
             tooltip: isAlbumPlaying ? 'Pause' : 'Play',
@@ -401,29 +415,32 @@ class _ActionBar extends ConsumerWidget {
             onPressed: album.tracks.isEmpty
                 ? null
                 : () async {
-                    final action = await showModalBottomSheet<_CollectionAction>(
-                      context: context,
-                      showDragHandle: true,
-                      builder: (sheetContext) => SafeArea(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            ListTile(
-                              leading: const Icon(Icons.playlist_add),
-                              title: const Text('Add to playlist'),
-                              onTap: () => Navigator.of(sheetContext)
-                                  .pop(_CollectionAction.addToPlaylist),
+                    final action =
+                        await showModalBottomSheet<_CollectionAction>(
+                          context: context,
+                          showDragHandle: true,
+                          builder: (sheetContext) => SafeArea(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ListTile(
+                                  leading: const Icon(Icons.playlist_add),
+                                  title: const Text('Add to playlist'),
+                                  onTap: () => Navigator.of(
+                                    sheetContext,
+                                  ).pop(_CollectionAction.addToPlaylist),
+                                ),
+                                ListTile(
+                                  leading: const Icon(Icons.add_to_queue),
+                                  title: const Text('Add to queue'),
+                                  onTap: () => Navigator.of(
+                                    sheetContext,
+                                  ).pop(_CollectionAction.addToQueue),
+                                ),
+                              ],
                             ),
-                            ListTile(
-                              leading: const Icon(Icons.add_to_queue),
-                              title: const Text('Add to queue'),
-                              onTap: () => Navigator.of(sheetContext)
-                                  .pop(_CollectionAction.addToQueue),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
+                          ),
+                        );
                     if (action == null || !context.mounted) return;
                     final controller = ref.read(playerControllerProvider);
                     switch (action) {
@@ -434,7 +451,9 @@ class _ActionBar extends ConsumerWidget {
                           trackIds: album.tracks.map((t) => t.id).toList(),
                         );
                       case _CollectionAction.addToQueue:
-                        final added = await controller.addTracksToQueue(album.tracks);
+                        final added = await controller.addTracksToQueue(
+                          album.tracks,
+                        );
                         if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
@@ -475,8 +494,9 @@ class _TrackTile extends ConsumerWidget {
     final current = ref.watch(currentMediaItemProvider).value;
     final isCurrent =
         current != null && current.extras?['jellyfinId'] == track.id;
-    final isDownloaded =
-        ref.watch(downloadManagerProvider).isDownloaded(track.id);
+    final isDownloaded = ref
+        .watch(downloadManagerProvider)
+        .isDownloaded(track.id);
 
     return ListTile(
       onTap: onTap,
@@ -508,8 +528,11 @@ class _TrackTile extends ConsumerWidget {
           if (isDownloaded)
             const Padding(
               padding: EdgeInsets.only(right: 4),
-              child: Icon(Icons.download_for_offline,
-                  size: 14, color: AppColors.primary),
+              child: Icon(
+                Icons.download_for_offline,
+                size: 14,
+                color: AppColors.primary,
+              ),
             ),
           PlayingTrackDuration(
             jellyfinTrackId: track.id,
