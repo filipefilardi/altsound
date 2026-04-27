@@ -43,10 +43,7 @@ class ArtistScreen extends ConsumerWidget {
               Positioned(
                 top: 8,
                 left: 8,
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () => context.pop(),
-                ),
+                child: BackButton(onPressed: () => context.pop()),
               ),
               ErrorStateView(
                 title: "Couldn't load this artist",
@@ -84,10 +81,7 @@ class _ArtistView extends ConsumerWidget {
             expandedHeight: 300,
             pinned: true,
             stretch: true,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () => context.pop(),
-            ),
+            leading: BackButton(onPressed: () => context.pop()),
             title: Text(artist.name),
             flexibleSpace: FlexibleSpaceBar(
               stretchModes: const [StretchMode.zoomBackground],
