@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../data/downloads/download_manager.dart';
 import '../../../data/downloads/download_preferences.dart';
 import '../../../data/jellyfin/models/media_item.dart';
+import 'wifi_required_dialog.dart';
 
 class PlaylistDownloadButton extends ConsumerWidget {
   const PlaylistDownloadButton({required this.playlist, super.key});
@@ -37,32 +37,6 @@ class PlaylistDownloadButton extends ConsumerWidget {
           .read(downloadPreferencesProvider.notifier)
           .unsubscribePlaylist(playlist.id);
     }
-  }
-
-  void _showWifiOnlyDialog(BuildContext context) {
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('WiFi required'),
-        content: const Text(
-          'WiFi-only downloads is enabled and you\'re not on WiFi. '
-          'Connect to WiFi or turn off this setting to download.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              context.push('/settings/downloads');
-            },
-            child: const Text('Open settings'),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -123,7 +97,7 @@ class PlaylistDownloadButton extends ConsumerWidget {
       return IconButton(
         tooltip: 'Waiting for WiFi — tap to change settings',
         icon: const Icon(Icons.wifi_off_rounded, color: AppColors.textSecondary),
-        onPressed: () => _showWifiOnlyDialog(context),
+        onPressed: () => showWifiRequiredDialog(context),
       );
     }
 
@@ -136,7 +110,7 @@ class PlaylistDownloadButton extends ConsumerWidget {
             .canDownloadNow();
         if (!context.mounted) return;
         if (!canDownload) {
-          _showWifiOnlyDialog(context);
+          showWifiRequiredDialog(context);
           return;
         }
         manager.enqueuePlaylist(playlist);
