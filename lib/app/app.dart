@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/theme/app_theme.dart';
 import '../data/jellyfin/scrobbler.dart';
+import '../data/last_played/last_played_controller.dart';
 import '../features/auth/auth_controller.dart';
 import '../features/player/player_providers.dart';
 import 'router.dart';
@@ -38,6 +39,8 @@ class _JellymusicAppState extends ConsumerState<JellymusicApp> {
 
     if (auth is AuthAuthenticated) {
       _ensureScrobbler();
+      // Eagerly attach the local last-played listener.
+      ref.read(lastPlayedProvider);
     }
 
     return MaterialApp.router(
