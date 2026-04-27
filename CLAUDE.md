@@ -46,12 +46,18 @@ GoRouter with an auth redirect guard (`authControllerProvider`). The bottom nav 
 
 ### UI conventions
 
-- Theme is defined in `AppTheme.dark()` (`lib/core/theme/`). Always use `AppColors` constants — never hardcode colours.
+- Theme is defined in `AppTheme.dark()` (`lib/core/theme/`). Always use `AppColors` constants — never hardcode colours. Notable tokens: `AppColors.onAccent` (foreground on the accent gradient, e.g. play-pill icon) and `AppColors.like` (heart/favorite red — distinct from `AppColors.error`).
 - Typography uses Inter (body) and Fraunces (display/headlines) via `google_fonts`.
 - Bottom sheets use `showDragHandle: true`; the theme sets `surfaceElevated` background and 24 px top radius automatically.
 - Section headers in lists use `Theme.of(context).textTheme.labelLarge` (11 px, 700 weight, 1.4 letter-spacing, uppercased).
 - Skeleton loading uses `Skeleton.group` / `Skeleton.line` from `lib/core/widgets/skeleton.dart`.
 - Empty / error states use `EmptyState` and `ErrorStateView` from `lib/core/widgets/`.
+- Spacing: **16 px** is the default horizontal padding for cards, list tiles, and inner layouts. **20 px** is used for top-level/tab-root horizontal padding (home, settings, sheet content). **32 px** is reserved for empty-state padding (`EdgeInsets.all(32)`). Avoid mixing 24 px horizontal — it's reserved for section vertical breaks.
+- Back buttons use `BackButton(onPressed: () => context.pop())` — never a raw `IconButton(Icons.arrow_back)`. `BackButton` resolves to the iOS chevron on Apple platforms automatically.
+- Artwork that may be local (downloaded) or remote uses `LocalOrNetworkImage` from `lib/core/widgets/`.
+- Accent play/pause circle uses the shared `PlayPill` widget (`lib/core/widgets/play_pill.dart`).
+- Album / artist / playlist download buttons share `CollectionDownloadButton` (`lib/features/downloads/widgets/`); the WiFi-required prompt is `showWifiRequiredDialog(context)` from the same folder.
+- Detail screens (album / artist / playlist) wrap their scrollable in a `RefreshIndicator` whose `onRefresh` calls `ref.refresh(provider(id).future)`.
 
 ### Search results ordering
 
