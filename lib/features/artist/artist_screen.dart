@@ -13,6 +13,7 @@ import '../../data/jellyfin/models/media_item.dart';
 import '../../data/musicbrainz/wikipedia_repository.dart';
 import '../player/widgets/mini_player_slot.dart';
 import '../player/player_providers.dart';
+import '../player/widgets/add_track_to_playlist_sheet.dart';
 import '../player/widgets/playing_track_leading.dart';
 import '../player/widgets/track_more_menu_button.dart';
 
@@ -361,10 +362,64 @@ class _ArtistActionRow extends ConsumerWidget {
               ? () => ref.read(playerControllerProvider).toggleShuffle()
               : null,
         ),
+        IconButton(
+          tooltip: 'More actions',
+          icon: const Icon(Icons.more_vert),
+          onPressed: hasTracks
+              ? () async {
+                  final action = await showModalBottomSheet<_ArtistCollectionAction>(
+                    context: context,
+                    showDragHandle: true,
+                    builder: (sheetContext) => SafeArea(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ListTile(
+                            leading: const Icon(Icons.playlist_add),
+                            title: const Text('Add to playlist'),
+                            onTap: () => Navigator.of(sheetContext)
+                                .pop(_ArtistCollectionAction.addToPlaylist),
+                          ),
+                          ListTile(
+                            leading: const Icon(Icons.add_to_queue),
+                            title: const Text('Add to queue'),
+                            onTap: () => Navigator.of(sheetContext)
+                                .pop(_ArtistCollectionAction.addToQueue),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                  if (action == null || !context.mounted) return;
+                  final controller = ref.read(playerControllerProvider);
+                  switch (action) {
+                    case _ArtistCollectionAction.addToPlaylist:
+                      await openAddTracksToPlaylistFlow(
+                        context,
+                        ref,
+                        trackIds: artist.popularTracks.map((t) => t.id).toList(),
+                      );
+                    case _ArtistCollectionAction.addToQueue:
+                      final added =
+                          await controller.addTracksToQueue(artist.popularTracks);
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Added $added song${added == 1 ? '' : 's'} to queue',
+                          ),
+                        ),
+                      );
+                  }
+                }
+              : null,
+        ),
       ],
     );
   }
 }
+
+enum _ArtistCollectionAction { addToPlaylist, addToQueue }
 
 class _PlayPill extends StatelessWidget {
   const _PlayPill({

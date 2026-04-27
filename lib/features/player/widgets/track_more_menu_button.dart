@@ -88,14 +88,10 @@ class TrackMoreMenuButton extends ConsumerWidget {
           );
         }
       case _TrackAction.addToQueue:
-        final added =
-            await ref.read(playerControllerProvider).addToQueue(track);
+        await ref.read(playerControllerProvider).addToQueue(track);
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content:
-                  Text(added ? 'Added to queue' : 'Already in queue'),
-            ),
+            const SnackBar(content: Text('Added to queue')),
           );
         }
       case _TrackAction.goToAlbum:
