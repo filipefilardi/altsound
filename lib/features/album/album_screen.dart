@@ -60,10 +60,7 @@ class AlbumScreen extends ConsumerWidget {
                 Positioned(
                   top: 8,
                   left: 8,
-                  child: IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    onPressed: () => context.pop(),
-                  ),
+                  child: BackButton(onPressed: () => context.pop()),
                 ),
                 ErrorStateView(
                   title: "Couldn't load this album",
@@ -207,10 +204,7 @@ class _AlbumViewState extends ConsumerState<_AlbumView> {
             pinned: true,
             stretch: true,
             backgroundColor: _backdrop,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () => context.pop(),
-            ),
+            leading: BackButton(onPressed: () => context.pop()),
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
                 decoration: BoxDecoration(
