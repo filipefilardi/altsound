@@ -1,11 +1,13 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../data/jellyfin/jellyfin_repository.dart';
-import '../../data/jellyfin/models/media_item.dart';
+import '../../data/last_played/last_played_controller.dart';
+import '../../data/last_played/last_played_record.dart';
 import '../../data/local/connectivity_provider.dart';
 import '../auth/auth_controller.dart';
 import '../downloads/offline_library_view.dart';
@@ -30,6 +32,10 @@ class HomeScreen extends ConsumerWidget {
               sliver: SliverToBoxAdapter(
                 child: _Greeting(username: username),
               ),
+            ),
+            const SliverPadding(
+              padding: EdgeInsets.fromLTRB(20, 8, 20, 8),
+              sliver: SliverToBoxAdapter(child: _ResumeCard()),
             ),
             const SliverFillRemaining(
               child: OfflineLibraryView(),
@@ -59,13 +65,9 @@ class HomeScreen extends ConsumerWidget {
                 child: _Greeting(username: username),
               ),
             ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-              sliver: SliverToBoxAdapter(
-                child: _ResumeCard(
-                  recents: ref.watch(recentlyPlayedProvider),
-                ),
-              ),
+            const SliverPadding(
+              padding: EdgeInsets.fromLTRB(20, 8, 20, 8),
+              sliver: SliverToBoxAdapter(child: _ResumeCard()),
             ),
             SliverList.list(children: [
               const SizedBox(height: 8),
@@ -141,20 +143,17 @@ class _Greeting extends StatelessWidget {
 }
 
 class _ResumeCard extends ConsumerWidget {
-  const _ResumeCard({required this.recents});
-  final AsyncValue<List<BrowseItem>> recents;
+  const _ResumeCard();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final item = recents.value?.firstOrNull;
-    if (item == null) return const SizedBox.shrink();
+    final record = ref.watch(lastPlayedProvider);
+    if (record == null) return const SizedBox.shrink();
 
-    final repo = ref.read(jellyfinRepositoryProvider);
-    final imageUrl = repo.imageUrl(item.id, imageTag: item.imageTag, size: 300);
-
+    final albumId = record.albumId;
     return InkWell(
       borderRadius: BorderRadius.circular(16),
-      onTap: () => context.push('/album/${item.id}'),
+      onTap: albumId == null ? null : () => context.push('/album/$albumId'),
       child: Container(
         height: 96,
         decoration: BoxDecoration(
@@ -162,55 +161,111 @@ class _ResumeCard extends ConsumerWidget {
           color: AppColors.surfaceElevated,
         ),
         clipBehavior: Clip.antiAlias,
-        child: Row(
+        child: Column(
           children: [
-            SizedBox(
-              width: 96,
-              height: 96,
-              child: CachedNetworkImage(
-                imageUrl: imageUrl,
-                fit: BoxFit.cover,
-                errorWidget: (_, __, ___) => const ColoredBox(
-                  color: AppColors.surface,
-                  child: Icon(Icons.album,
-                      color: AppColors.textTertiary, size: 32),
-                ),
-              ),
-            ),
-            const SizedBox(width: 14),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
+              child: Row(
                 children: [
-                  Text(
-                    'PICK UP WHERE YOU LEFT OFF',
-                    style: Theme.of(context).textTheme.labelLarge,
+                  SizedBox(
+                    width: 92,
+                    height: 92,
+                    child: _ResumeArtwork(imageUrl: record.imageUrl),
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    item.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleMedium,
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'PICK UP WHERE YOU LEFT OFF',
+                          style: Theme.of(context).textTheme.labelLarge,
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          record.trackName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        Text(
+                          _resumeSubtitle(record),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ],
+                    ),
                   ),
-                  if (item.subtitle != null)
-                    Text(
-                      item.subtitle!,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodyMedium,
+                  if (albumId != null)
+                    const Padding(
+                      padding: EdgeInsets.only(right: 12),
+                      child: Icon(Icons.chevron_right,
+                          color: AppColors.textSecondary),
                     ),
                 ],
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.only(right: 12),
-              child: Icon(Icons.chevron_right, color: AppColors.textSecondary),
-            ),
+            if (record.durationMs > 0)
+              LinearProgressIndicator(
+                value: record.progress,
+                minHeight: 2,
+                backgroundColor: AppColors.surface,
+                color: AppColors.primary,
+              ),
           ],
         ),
       ),
+    );
+  }
+
+  String _resumeSubtitle(LastPlayedRecord r) {
+    final parts = <String>[
+      if (r.artistName.isNotEmpty) r.artistName,
+      if (r.albumName != null && r.albumName!.isNotEmpty) r.albumName!,
+    ];
+    return parts.join(' · ');
+  }
+}
+
+class _ResumeArtwork extends StatelessWidget {
+  const _ResumeArtwork({required this.imageUrl});
+  final String? imageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final url = imageUrl;
+    if (url == null || url.isEmpty) return const _ResumeArtFallback();
+
+    if (url.startsWith('file://')) {
+      try {
+        final path = Uri.parse(url).toFilePath();
+        return Image.file(
+          File(path),
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => const _ResumeArtFallback(),
+        );
+      } catch (_) {
+        return const _ResumeArtFallback();
+      }
+    }
+
+    return CachedNetworkImage(
+      imageUrl: url,
+      fit: BoxFit.cover,
+      errorWidget: (_, __, ___) => const _ResumeArtFallback(),
+    );
+  }
+}
+
+class _ResumeArtFallback extends StatelessWidget {
+  const _ResumeArtFallback();
+
+  @override
+  Widget build(BuildContext context) {
+    return const ColoredBox(
+      color: AppColors.surface,
+      child: Icon(Icons.album, color: AppColors.textTertiary, size: 32),
     );
   }
 }
