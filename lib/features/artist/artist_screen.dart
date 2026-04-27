@@ -11,6 +11,7 @@ import '../../data/downloads/download_manager.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
 import '../../data/jellyfin/models/media_item.dart';
 import '../../data/musicbrainz/wikipedia_repository.dart';
+import '../downloads/widgets/artist_download_button.dart';
 import '../player/widgets/mini_player_slot.dart';
 import '../player/player_providers.dart';
 import '../player/widgets/add_track_to_playlist_sheet.dart';
@@ -362,6 +363,7 @@ class _ArtistActionRow extends ConsumerWidget {
               ? () => ref.read(playerControllerProvider).toggleShuffle()
               : null,
         ),
+        ArtistDownloadButton(artist: artist),
         IconButton(
           tooltip: 'More actions',
           icon: const Icon(Icons.more_vert),
