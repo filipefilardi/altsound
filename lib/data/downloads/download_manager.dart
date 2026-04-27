@@ -60,7 +60,11 @@ final downloadManagerProvider =
     NotifierProvider<DownloadManager, DownloadsState>(DownloadManager.new);
 
 class DownloadManager extends Notifier<DownloadsState> {
-  late final Dio _dio = Dio();
+  // No receiveTimeout — file downloads can take a while. connectTimeout still
+  // applies so we fail fast when the server is unreachable.
+  late final Dio _dio = Dio(BaseOptions(
+    connectTimeout: const Duration(seconds: 5),
+  ));
   Directory? _dir;
   File? _manifestFile;
   File? _playlistsFile;
