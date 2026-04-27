@@ -15,13 +15,13 @@ import 'mb_release_sheet.dart';
 // ── Providers ────────────────────────────────────────────────────────────────
 
 final _discographyProvider =
-    FutureProvider.family<List<MusicBrainzReleaseGroup>, MusicBrainzArtist>(
+    FutureProvider.autoDispose.family<List<MusicBrainzReleaseGroup>, MusicBrainzArtist>(
   (ref, artist) => ref.read(musicBrainzRepositoryProvider).artistReleaseGroups(artist.id),
 );
 
 /// Set of MusicBrainz release-group IDs already in Lidarr for this artist.
 final _lidarrAlbumStatusProvider =
-    FutureProvider.family<Set<String>, MusicBrainzArtist>(
+    FutureProvider.autoDispose.family<Set<String>, MusicBrainzArtist>(
   (ref, artist) async {
     final repo = ref.watch(lidarrRepositoryProvider);
     if (repo == null) return const {};

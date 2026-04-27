@@ -18,7 +18,8 @@ import '../player/widgets/add_track_to_playlist_sheet.dart';
 import '../player/widgets/playing_track_leading.dart';
 import '../player/widgets/track_more_menu_button.dart';
 
-final artistProvider = FutureProvider.family<Artist, String>((ref, artistId) {
+final artistProvider =
+    FutureProvider.autoDispose.family<Artist, String>((ref, artistId) {
   return ref.read(jellyfinRepositoryProvider).artist(artistId);
 });
 
