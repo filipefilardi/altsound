@@ -5,6 +5,7 @@ import 'package:just_audio/just_audio.dart';
 import '../../data/downloads/download_manager.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
 import '../../data/jellyfin/models/media_item.dart' as jf;
+import '../remote/remote_player_controller.dart';
 import 'audio_player_handler.dart';
 
 final audioHandlerProvider = Provider<JellymusicAudioHandler>((ref) {
@@ -27,6 +28,47 @@ final queueProvider = StreamProvider<List<MediaItem>>((ref) {
 
 final positionProvider = StreamProvider<Duration>((ref) {
   return AudioService.position;
+});
+
+/// Currently displayed item — local mediaItem, or a synthesized MediaItem
+/// reflecting the remote session's now-playing.
+final effectiveMediaItemProvider = Provider<MediaItem?>((ref) {
+  final remoteId = ref.watch(activeRemoteSessionIdProvider);
+  if (remoteId == null) return ref.watch(currentMediaItemProvider).value;
+  final session = ref.watch(activeRemoteSessionProvider).value;
+  if (session == null || session.nowPlayingItemId == null) return null;
+  final repo = ref.watch(jellyfinRepositoryProvider);
+  return MediaItem(
+    id: session.nowPlayingItemId!,
+    title: session.nowPlayingTitle ?? '',
+    artist: session.nowPlayingArtist,
+    duration: session.duration,
+    artUri: Uri.parse(repo.imageUrl(session.nowPlayingItemId!, size: 600)),
+    extras: const {'isRemote': true},
+  );
+});
+
+/// Whether playback is currently active (local or remote).
+final effectivePlayingProvider = Provider<bool>((ref) {
+  if (ref.watch(activeRemoteSessionIdProvider) == null) {
+    return ref.watch(playbackStateProvider).value?.playing ?? false;
+  }
+  final session = ref.watch(activeRemoteSessionProvider).value;
+  return session?.hasNowPlaying == true && !session!.isPaused;
+});
+
+final effectivePositionProvider = Provider<Duration>((ref) {
+  if (ref.watch(activeRemoteSessionIdProvider) == null) {
+    return ref.watch(positionProvider).value ?? Duration.zero;
+  }
+  return ref.watch(activeRemoteSessionProvider).value?.position ?? Duration.zero;
+});
+
+final effectiveDurationProvider = Provider<Duration>((ref) {
+  if (ref.watch(activeRemoteSessionIdProvider) == null) {
+    return ref.watch(currentMediaItemProvider).value?.duration ?? Duration.zero;
+  }
+  return ref.watch(activeRemoteSessionProvider).value?.duration ?? Duration.zero;
 });
 
 /// App mixer volume 0.0–1.0 (from [AudioPlayer]).
@@ -56,6 +98,7 @@ final userQueuedIdsProvider = StreamProvider<Set<String>>((ref) {
 
 final playerControllerProvider = Provider<PlayerController>((ref) {
   return PlayerController(
+    ref: ref,
     handler: ref.watch(audioHandlerProvider),
     repo: ref.watch(jellyfinRepositoryProvider),
     downloads: ref.watch(downloadManagerProvider.notifier),
@@ -64,14 +107,20 @@ final playerControllerProvider = Provider<PlayerController>((ref) {
 
 class PlayerController {
   PlayerController({
+    required this.ref,
     required this.handler,
     required this.repo,
     required this.downloads,
   });
 
+  final Ref ref;
   final JellymusicAudioHandler handler;
   final JellyfinRepository repo;
   final DownloadManager downloads;
+
+  String? get _remoteId => ref.read(activeRemoteSessionIdProvider);
+  bool get isRemote => _remoteId != null;
+  RemotePlayerController get _remote => ref.read(remotePlayerControllerProvider);
 
   /// Load [tracks] and play from [startIndex] onwards.
   ///
@@ -86,6 +135,13 @@ class PlayerController {
     bool selectedTrack = false,
   }) async {
     if (tracks.isEmpty) return;
+
+    if (isRemote) {
+      // Local handler must be silent while remote is playing.
+      if (handler.playbackState.value.playing) await handler.pause();
+      await _remote.playTracks(tracks, startIndex: startIndex);
+      return;
+    }
 
     // Resume without reloading if we're already in this context.
     if (startIndex == 0 && contextId != null) {
@@ -109,6 +165,7 @@ class PlayerController {
   }
 
   Future<void> togglePlay() async {
+    if (isRemote) return _remote.togglePlay();
     final playing = handler.playbackState.value.playing;
     if (playing) {
       await handler.pause();
@@ -117,20 +174,37 @@ class PlayerController {
     }
   }
 
-  Future<void> stop() => handler.stop();
+  Future<void> stop() => isRemote ? _remote.stop() : handler.stop();
 
-  Future<void> next() => handler.skipToNext();
-  Future<void> previous() => handler.skipToPrevious();
-  Future<void> seek(Duration p) => handler.seek(p);
+  Future<void> next() => isRemote ? _remote.next() : handler.skipToNext();
+  Future<void> previous() =>
+      isRemote ? _remote.previous() : handler.skipToPrevious();
+  Future<void> seek(Duration p) =>
+      isRemote ? _remote.seek(p) : handler.seek(p);
   Future<void> skipToIndex(int i) => handler.skipToQueueItem(i);
   Future<void> reorderQueue(int oldIndex, int newIndex) =>
       handler.reorderQueue(oldIndex, newIndex);
 
-  Future<void> setVolume(double v) => handler.setAppVolume(v);
+  Future<void> setVolume(double v) =>
+      isRemote ? _remote.setVolume(v) : handler.setAppVolume(v);
 
-  Future<void> toggleMute() => handler.toggleAppMute();
+  Future<void> toggleMute() async {
+    if (isRemote) {
+      // Best effort: read last known mute from session stream cache; default
+      // to "muting" since we have no synchronous access here.
+      final session = ref.read(activeRemoteSessionProvider).value;
+      await _remote.setMuted(!(session?.isMuted ?? false));
+      return;
+    }
+    await handler.toggleAppMute();
+  }
 
-  bool get isEffectivelyMuted => handler.isEffectivelyMuted;
+  bool get isEffectivelyMuted {
+    if (isRemote) {
+      return ref.read(activeRemoteSessionProvider).value?.isMuted ?? false;
+    }
+    return handler.isEffectivelyMuted;
+  }
 
   Future<void> cycleRepeatMode() => handler.cycleLoopMode();
 
@@ -138,6 +212,7 @@ class PlayerController {
 
   /// Insert [track] immediately after the current track.
   Future<void> playNext(jf.Track track) async {
+    if (isRemote) return _remote.playNext(track);
     final item = _toMediaItem(track);
     if (handler.queue.value.isEmpty) {
       await handler.loadQueue([item], initialIndex: 0, autoPlay: false);
@@ -158,6 +233,12 @@ class PlayerController {
   /// existing user-queued items, keeping app-provided items after them.
   Future<int> addTracksToQueue(List<jf.Track> tracks) async {
     if (tracks.isEmpty) return 0;
+    if (isRemote) {
+      for (final t in tracks) {
+        await _remote.addToQueue(t);
+      }
+      return tracks.length;
+    }
     final currentQueue = handler.queue.value;
     final items = tracks.map(_toMediaItem).toList();
     if (currentQueue.isEmpty) {
