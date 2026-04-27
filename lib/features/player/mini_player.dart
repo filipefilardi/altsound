@@ -30,7 +30,6 @@ class MiniPlayer extends ConsumerWidget {
         : (position.inMilliseconds / duration.inMilliseconds).clamp(0.0, 1.0);
     final controller = ref.read(playerControllerProvider);
     final artistId = mediaItem.extras?['artistId'] as String?;
-    final offline = mediaItem.extras?['isOffline'] == true;
     final presenceAsync = ref.watch(currentTrackPlaylistPresenceProvider);
     final saved = switch (presenceAsync) {
       AsyncData(:final value) => value.isSaved,
@@ -129,21 +128,20 @@ class MiniPlayer extends ConsumerWidget {
                                 ],
                               ),
                             ),
-                            if (!offline)
-                              _RoundIcon(
-                                icon: saved
-                                    ? Icons.playlist_add_check
-                                    : Icons.playlist_add,
-                                iconColor: saved ? AppColors.primary : null,
-                                onTap: () => unawaited(
-                                  _onMiniPlayerPlaylistTap(
-                                    context,
-                                    ref,
-                                    trackId: mediaItem.id,
-                                    saved: saved,
-                                  ),
+                            _RoundIcon(
+                              icon: saved
+                                  ? Icons.playlist_add_check
+                                  : Icons.playlist_add,
+                              iconColor: saved ? AppColors.primary : null,
+                              onTap: () => unawaited(
+                                _onMiniPlayerPlaylistTap(
+                                  context,
+                                  ref,
+                                  trackId: mediaItem.id,
+                                  saved: saved,
                                 ),
                               ),
+                            ),
                             _RoundIcon(
                               icon: playing ? Icons.pause : Icons.play_arrow,
                               onTap: controller.togglePlay,
