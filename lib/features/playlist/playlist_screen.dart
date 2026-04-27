@@ -79,7 +79,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
             ListTile(
               leading: const Icon(
                 Icons.favorite_rounded,
-                color: Color(0xFFE5635A),
+                color: AppColors.like,
               ),
               title: const Text('Add to liked songs'),
               onTap: () => Navigator.of(sheetContext)
@@ -361,7 +361,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                 ListTile(
                   leading: const Icon(
                     Icons.favorite_rounded,
-                    color: Color(0xFFE5635A),
+                    color: AppColors.like,
                   ),
                   title: const Text('Liked songs'),
                   onTap: () => Navigator.of(sheetContext).pop(liked),

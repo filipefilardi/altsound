@@ -235,7 +235,7 @@ class _ManageTrackPlaylistsSheetState
               if (widget.likedPlaylistId != null)
                 _PlaylistToggleRow(
                   icon: Icons.favorite_rounded,
-                  iconColor: const Color(0xFFE5635A),
+                  iconColor: AppColors.like,
                   title: 'Liked songs',
                   selected: _playlistIdsContainingTrack.contains(widget.likedPlaylistId),
                   onTap: () => unawaited(
