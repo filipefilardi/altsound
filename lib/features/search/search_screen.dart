@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/skeleton.dart';
 import '../../data/downloads/download_manager.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
 import '../../data/jellyfin/models/media_item.dart';
@@ -96,8 +97,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     future: _future,
                     builder: (context, snap) {
                       if (snap.connectionState == ConnectionState.waiting) {
-                        return const Center(
-                            child: CircularProgressIndicator());
+                        return const _SearchResultsSkeleton();
                       }
                       if (snap.hasError) {
                         return _MessageState(
@@ -456,6 +456,39 @@ class _SectionHeader extends StatelessWidget {
       child: Text(
         label.toUpperCase(),
         style: Theme.of(context).textTheme.labelLarge,
+      ),
+    );
+  }
+}
+
+class _SearchResultsSkeleton extends StatelessWidget {
+  const _SearchResultsSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Skeleton.group(
+      child: ListView.builder(
+        padding: const EdgeInsets.only(top: 8),
+        itemCount: 8,
+        itemBuilder: (_, __) => Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              Skeleton.box(width: 52, height: 52, radius: 6),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Skeleton.line(width: 180, height: 14),
+                    const SizedBox(height: 8),
+                    Skeleton.line(width: 100, height: 10),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
