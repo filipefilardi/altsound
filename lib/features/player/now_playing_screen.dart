@@ -571,7 +571,7 @@ class _PlayPauseButton extends StatelessWidget {
           child: Center(
             child: Icon(
               playing ? Icons.pause : Icons.play_arrow,
-              color: const Color(0xFF1A0F05),
+              color: AppColors.onAccent,
               size: 36,
             ),
           ),

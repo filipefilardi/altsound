@@ -498,7 +498,7 @@ class _NoResults extends StatelessWidget {
           ? null
           : ElevatedButton.icon(
               onPressed: onDiscover,
-              icon: const Icon(Icons.travel_explore, color: Color(0xFF1A0F05)),
+              icon: const Icon(Icons.travel_explore, color: AppColors.onAccent),
               label: Text('REQUEST "$term" VIA LIDARR'),
             ),
     );

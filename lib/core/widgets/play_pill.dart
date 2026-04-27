@@ -49,7 +49,7 @@ class PlayPill extends StatelessWidget {
               child: SizedBox(
                 width: 56,
                 height: 56,
-                child: Icon(icon, color: const Color(0xFF1A0F05), size: 30),
+                child: Icon(icon, color: AppColors.onAccent, size: 30),
               ),
             ),
           ),
