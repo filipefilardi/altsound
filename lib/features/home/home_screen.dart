@@ -31,20 +31,6 @@ class HomeScreen extends ConsumerWidget {
                 child: _Greeting(username: username),
               ),
             ),
-            const SliverPadding(
-              padding: EdgeInsets.fromLTRB(20, 20, 20, 8),
-              sliver: SliverToBoxAdapter(
-                child: Text(
-                  'DOWNLOADED ALBUMS',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.4,
-                  ),
-                ),
-              ),
-            ),
             const SliverFillRemaining(
               child: OfflineLibraryView(),
             ),
