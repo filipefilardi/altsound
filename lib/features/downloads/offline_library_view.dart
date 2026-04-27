@@ -1,9 +1,9 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/local_or_network_image.dart';
 import '../../data/downloads/download_manager.dart';
 import '../../data/downloads/downloaded_playlist.dart';
 import '../../data/downloads/downloaded_track.dart';
@@ -65,10 +65,12 @@ class OfflineLibraryView extends ConsumerWidget {
           final trackCount = p.trackIds
               .where((id) => downloads.tracks.containsKey(id))
               .length;
-          final imageUrl =
-              repo.imageUrl(p.id, imageTag: p.imageTag, size: 200);
+          final localArt = _firstLocalArtwork(
+            p.trackIds.map((id) => downloads.tracks[id]).whereType<DownloadedTrack>(),
+          );
           return _ContentTile(
-            imageUrl: imageUrl,
+            imageSource: localArt ??
+                repo.imageUrl(p.id, imageTag: p.imageTag, size: 200),
             title: p.name,
             subtitle: '$trackCount songs downloaded',
             isRound: false,
@@ -77,10 +79,10 @@ class OfflineLibraryView extends ConsumerWidget {
         }
 
         final a = item.album!;
-        final imageUrl =
-            repo.imageUrl(a.imageItemId, imageTag: a.imageTag, size: 200);
+        final localArt = _firstLocalArtwork(a.tracks);
         return _ContentTile(
-          imageUrl: imageUrl,
+          imageSource: localArt ??
+              repo.imageUrl(a.imageItemId, imageTag: a.imageTag, size: 200),
           title: a.albumName,
           subtitle: '${a.artistName} · ${a.trackCount} songs',
           isRound: false,
@@ -88,6 +90,15 @@ class OfflineLibraryView extends ConsumerWidget {
         );
       },
     );
+  }
+
+  /// Returns the first non-null artwork path among [tracks], or null.
+  String? _firstLocalArtwork(Iterable<DownloadedTrack> tracks) {
+    for (final t in tracks) {
+      final p = t.artworkPath;
+      if (p != null && p.isNotEmpty) return p;
+    }
+    return null;
   }
 
   List<_AlbumGroup> _groupAlbums(List<DownloadedTrack> tracks) {
@@ -144,14 +155,14 @@ class _OfflineItem {
 
 class _ContentTile extends StatelessWidget {
   const _ContentTile({
-    required this.imageUrl,
+    required this.imageSource,
     required this.title,
     required this.subtitle,
     required this.isRound,
     required this.onTap,
   });
 
-  final String imageUrl;
+  final String imageSource;
   final String title;
   final String subtitle;
   final bool isRound;
@@ -167,12 +178,11 @@ class _ContentTile extends StatelessWidget {
         child: SizedBox(
           width: 52,
           height: 52,
-          child: CachedNetworkImage(
-            imageUrl: imageUrl,
-            fit: BoxFit.cover,
-            placeholder: (_, __) =>
+          child: LocalOrNetworkImage(
+            source: imageSource,
+            placeholderBuilder: (_) =>
                 const ColoredBox(color: AppColors.surfaceElevated),
-            errorWidget: (_, __, ___) => const ColoredBox(
+            errorBuilder: (_) => const ColoredBox(
               color: AppColors.surfaceElevated,
               child:
                   Icon(Icons.album, color: AppColors.textTertiary, size: 24),

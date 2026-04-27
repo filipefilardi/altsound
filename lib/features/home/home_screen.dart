@@ -1,11 +1,9 @@
-import 'dart:io';
-
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/local_or_network_image.dart';
 import '../../data/last_played/last_played_controller.dart';
 import '../../data/last_played/last_played_record.dart';
 import '../../data/local/connectivity_provider.dart';
@@ -169,7 +167,10 @@ class _ResumeCard extends ConsumerWidget {
                   SizedBox(
                     width: 92,
                     height: 92,
-                    child: _ResumeArtwork(imageUrl: record.imageUrl),
+                    child: LocalOrNetworkImage(
+                      source: record.imageUrl,
+                      errorBuilder: (_) => const _ResumeArtFallback(),
+                    ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -225,36 +226,6 @@ class _ResumeCard extends ConsumerWidget {
       if (r.albumName != null && r.albumName!.isNotEmpty) r.albumName!,
     ];
     return parts.join(' · ');
-  }
-}
-
-class _ResumeArtwork extends StatelessWidget {
-  const _ResumeArtwork({required this.imageUrl});
-  final String? imageUrl;
-
-  @override
-  Widget build(BuildContext context) {
-    final url = imageUrl;
-    if (url == null || url.isEmpty) return const _ResumeArtFallback();
-
-    if (url.startsWith('file://')) {
-      try {
-        final path = Uri.parse(url).toFilePath();
-        return Image.file(
-          File(path),
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => const _ResumeArtFallback(),
-        );
-      } catch (_) {
-        return const _ResumeArtFallback();
-      }
-    }
-
-    return CachedNetworkImage(
-      imageUrl: url,
-      fit: BoxFit.cover,
-      errorWidget: (_, __, ___) => const _ResumeArtFallback(),
-    );
   }
 }
 
