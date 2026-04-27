@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/local_or_network_image.dart';
 import '../../data/downloads/download_manager.dart';
 import '../../data/downloads/downloaded_playlist.dart';
@@ -25,7 +26,12 @@ class OfflineLibraryView extends ConsumerWidget {
       });
 
     if (albums.isEmpty && playlists.isEmpty) {
-      return const Center(child: _EmptyOffline());
+      return const EmptyState(
+        icon: Icons.wifi_off_rounded,
+        title: "You're offline",
+        message:
+            'No downloaded songs yet.\nDownload albums or playlists while online to listen anywhere.',
+      );
     }
 
     final repo = ref.watch(jellyfinRepositoryProvider);
@@ -210,29 +216,3 @@ class _ContentTile extends StatelessWidget {
   }
 }
 
-class _EmptyOffline extends StatelessWidget {
-  const _EmptyOffline();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.wifi_off_rounded,
-              size: 56, color: AppColors.textTertiary),
-          const SizedBox(height: 20),
-          Text("You're offline",
-              style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 8),
-          const Text(
-            'No downloaded songs yet.\nDownload albums or playlists while online to listen anywhere.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: AppColors.textSecondary),
-          ),
-        ],
-      ),
-    );
-  }
-}

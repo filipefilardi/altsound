@@ -100,8 +100,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                         return const _SearchResultsSkeleton();
                       }
                       if (snap.hasError) {
-                        return _MessageState(
-                            message: 'Search failed: ${snap.error}');
+                        return EmptyState(
+                          icon: Icons.error_outline,
+                          title: 'Search failed',
+                          message: '${snap.error}',
+                        );
                       }
                       final results = snap.data ?? const [];
                       if (results.isEmpty) {
@@ -538,21 +541,3 @@ class _NoResults extends StatelessWidget {
   }
 }
 
-class _MessageState extends StatelessWidget {
-  const _MessageState({required this.message});
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Text(
-          message,
-          textAlign: TextAlign.center,
-          style: const TextStyle(color: AppColors.textSecondary),
-        ),
-      ),
-    );
-  }
-}
