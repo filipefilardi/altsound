@@ -81,9 +81,10 @@ class JellymusicAudioHandler extends BaseAudioHandler with SeekHandler {
   }
 
   /// Toggle shuffle. Physically reorders the queue so the display reflects
-  /// the change immediately. When enabling, remaining tracks are randomized.
-  /// When disabling, the original load order is restored.
-  /// Uses moveAudioSource to avoid audio interruption.
+  /// the change immediately. Only items that were *not* added manually by
+  /// the user ("Add to queue" / "Play next") get reordered — user-queued
+  /// items keep their slot positions. Uses moveAudioSource to avoid audio
+  /// interruption.
   Future<void> toggleShuffle() async {
     final currentIdx = _player.currentIndex ?? 0;
     final currentQueue = List<MediaItem>.from(queue.value);
@@ -94,28 +95,46 @@ class JellymusicAudioHandler extends BaseAudioHandler with SeekHandler {
     }
 
     final wasEnabled = _player.shuffleModeEnabled;
-    final currentItem = currentQueue[currentIdx];
+    final tail = currentQueue.sublist(currentIdx + 1);
+    final userIds = _userQueuedIds.value;
 
-    final List<MediaItem> newTail;
+    // Tail slots occupied by non-user items — these are the ones we reorder.
+    final nonUserPositions = <int>[];
+    final nonUserItems = <MediaItem>[];
+    for (var i = 0; i < tail.length; i++) {
+      final id = tail[i].extras?['jellyfinId'] as String?;
+      if (id != null && userIds.contains(id)) continue;
+      nonUserPositions.add(i);
+      nonUserItems.add(tail[i]);
+    }
 
+    if (nonUserItems.isEmpty) {
+      await _player.setShuffleModeEnabled(!wasEnabled);
+      return;
+    }
+
+    final List<MediaItem> reordered;
     if (!wasEnabled) {
-      newTail = List<MediaItem>.from(currentQueue.sublist(currentIdx + 1))
-        ..shuffle(Random());
+      reordered = List<MediaItem>.from(nonUserItems)..shuffle(Random());
     } else {
-      final currentId = currentItem.extras?['jellyfinId'] as String?;
-      final origIdx = _originalItems.indexWhere(
-        (m) => (m.extras?['jellyfinId'] as String?) == currentId,
-      );
-      final restOriginal =
-          origIdx >= 0 ? _originalItems.sublist(origIdx + 1) : <MediaItem>[];
-      final originalIds = _originalItems
-          .map((m) => m.extras?['jellyfinId'] as String?)
-          .toSet();
-      final userItems = currentQueue
-          .skip(currentIdx + 1)
-          .where((m) => !originalIds.contains(m.extras?['jellyfinId'] as String?))
-          .toList();
-      newTail = [...restOriginal, ...userItems];
+      final origIndexById = <String, int>{};
+      for (var i = 0; i < _originalItems.length; i++) {
+        final id = _originalItems[i].extras?['jellyfinId'] as String?;
+        if (id != null) origIndexById[id] = i;
+      }
+      reordered = List<MediaItem>.from(nonUserItems)
+        ..sort((a, b) {
+          final ai = origIndexById[a.extras?['jellyfinId'] as String?] ??
+              _originalItems.length;
+          final bi = origIndexById[b.extras?['jellyfinId'] as String?] ??
+              _originalItems.length;
+          return ai.compareTo(bi);
+        });
+    }
+
+    final newTail = List<MediaItem>.from(tail);
+    for (var i = 0; i < nonUserPositions.length; i++) {
+      newTail[nonUserPositions[i]] = reordered[i];
     }
 
     await _rearrangeAfter(currentIdx, newTail);
