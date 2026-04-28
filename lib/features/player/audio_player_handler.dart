@@ -11,7 +11,8 @@ class PlayerError {
 }
 
 class JellymusicAudioHandler extends BaseAudioHandler with SeekHandler {
-  JellymusicAudioHandler() {
+  JellymusicAudioHandler({bool gaplessPlayback = true})
+      : _player = AudioPlayer(useLazyPreparation: !gaplessPlayback) {
     _player.playbackEventStream.listen(
       (_) => _syncPlaybackState(),
       onError: (Object e, StackTrace st) => _emitError(e),
@@ -27,7 +28,7 @@ class JellymusicAudioHandler extends BaseAudioHandler with SeekHandler {
     _player.shuffleModeEnabledStream.listen((_) => _syncPlaybackState());
   }
 
-  final AudioPlayer _player = AudioPlayer();
+  final AudioPlayer _player;
   final _errors = PublishSubject<PlayerError>();
   final _userQueuedIds = BehaviorSubject<Set<String>>.seeded(const {});
 

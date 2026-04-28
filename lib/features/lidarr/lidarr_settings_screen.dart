@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_gradients.dart';
 import '../../data/lidarr/lidarr_config.dart';
 import '../../data/lidarr/lidarr_repository.dart';
 
@@ -90,8 +91,8 @@ class _LidarrSettingsScreenState extends ConsumerState<LidarrSettingsScreen> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
-    final testedCurrentValues =
-        _testResult == true && _lastSuccessfulTestSignature == _connectionSignature();
+    final testedCurrentValues = _testResult == true &&
+        _lastSuccessfulTestSignature == _connectionSignature();
     if (!testedCurrentValues) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -116,72 +117,125 @@ class _LidarrSettingsScreenState extends ConsumerState<LidarrSettingsScreen> {
     );
   }
 
-  Future<void> _disconnect() async {
+  Future<void> _confirmDisconnect() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Disconnect Lidarr?'),
+        content: const Text(
+          'AltSound will no longer be able to request new music until you reconnect.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text(
+              'Disconnect',
+              style: TextStyle(color: AppColors.error),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
     await ref.read(lidarrConfigProvider.notifier).clear();
     if (!mounted) return;
     setState(() {
       _urlCtrl.clear();
       _keyCtrl.clear();
       _testResult = null;
+      _error = null;
+      _lastSuccessfulTestSignature = null;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final config = ref.watch(lidarrConfigProvider);
+    final connected = config != null;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Lidarr')),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const _Header(),
+                const _Hero(),
                 const SizedBox(height: 24),
-                TextFormField(
-                  controller: _urlCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Lidarr URL',
-                    hintText: 'https://lidarr.example.com',
-                    prefixIcon: Icon(Icons.dns_outlined),
+                if (connected) ...[
+                  _ConnectedBanner(
+                    url: config.url,
+                    onDisconnect:
+                        (_saving || _testing) ? null : _confirmDisconnect,
                   ),
-                  autocorrect: false,
-                  keyboardType: TextInputType.url,
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Required' : null,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _keyCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'API Key',
-                    prefixIcon: Icon(Icons.vpn_key_outlined),
-                  ),
-                  autocorrect: false,
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Required' : null,
+                  const SizedBox(height: 24),
+                ],
+                _SectionLabel(connected ? 'Update connection' : 'Connection'),
+                const SizedBox(height: 10),
+                _FormCard(
+                  children: [
+                    TextFormField(
+                      controller: _urlCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Lidarr URL',
+                        hintText: 'https://lidarr.example.com',
+                        prefixIcon: Icon(Icons.dns_outlined),
+                      ),
+                      autocorrect: false,
+                      keyboardType: TextInputType.url,
+                      validator: (v) =>
+                          (v == null || v.trim().isEmpty) ? 'Required' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _keyCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'API key',
+                        prefixIcon: Icon(Icons.vpn_key_outlined),
+                      ),
+                      autocorrect: false,
+                      obscureText: true,
+                      validator: (v) =>
+                          (v == null || v.trim().isEmpty) ? 'Required' : null,
+                    ),
+                  ],
                 ),
                 if (_error != null) ...[
-                  const SizedBox(height: 12),
-                  Text(_error!,
-                      style: const TextStyle(color: AppColors.error)),
-                ],
-                if (_testResult == true) ...[
-                  const SizedBox(height: 12),
-                  const Row(
-                    children: [
-                      Icon(Icons.check_circle, color: AppColors.primary),
-                      SizedBox(width: 8),
-                      Text('Connected'),
-                    ],
+                  const SizedBox(height: 16),
+                  _StatusRow(
+                    icon: Icons.error_outline,
+                    color: AppColors.error,
+                    message: _error!,
                   ),
                 ],
-                const SizedBox(height: 32),
+                if (_testResult == true) ...[
+                  const SizedBox(height: 16),
+                  const _StatusRow(
+                    icon: Icons.check_circle_outline,
+                    color: Color(0xFF66CC8A),
+                    message: 'Connection looks good.',
+                  ),
+                ],
+                const SizedBox(height: 24),
                 OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 52),
+                    shape: const StadiumBorder(),
+                    side: const BorderSide(color: AppColors.divider),
+                    foregroundColor: AppColors.textPrimary,
+                    textStyle: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.4,
+                    ),
+                  ),
                   onPressed: (_saving || _testing) ? null : _testConnection,
                   icon: _testing
                       ? const SizedBox(
@@ -189,8 +243,8 @@ class _LidarrSettingsScreenState extends ConsumerState<LidarrSettingsScreen> {
                           height: 16,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.wifi_tethering),
-                  label: Text(_testing ? 'TESTING...' : 'TEST CONNECTION'),
+                      : const Icon(Icons.wifi_tethering, size: 20),
+                  label: Text(_testing ? 'Testing…' : 'Test connection'),
                 ),
                 const SizedBox(height: 12),
                 ElevatedButton(
@@ -200,20 +254,12 @@ class _LidarrSettingsScreenState extends ConsumerState<LidarrSettingsScreen> {
                           width: 20,
                           height: 20,
                           child: CircularProgressIndicator(
-                              strokeWidth: 2.5, color: Colors.black),
+                            strokeWidth: 2.5,
+                            color: AppColors.onAccent,
+                          ),
                         )
-                      : Text(config == null
-                          ? 'CONNECT LIDARR'
-                          : 'UPDATE CONNECTION'),
+                      : Text(connected ? 'Update connection' : 'Connect'),
                 ),
-                if (config != null) ...[
-                  const SizedBox(height: 8),
-                  TextButton(
-                    onPressed: (_saving || _testing) ? null : _disconnect,
-                    child: const Text('Disconnect Lidarr',
-                        style: TextStyle(color: AppColors.error)),
-                  ),
-                ],
               ],
             ),
           ),
@@ -223,19 +269,201 @@ class _LidarrSettingsScreenState extends ConsumerState<LidarrSettingsScreen> {
   }
 }
 
-class _Header extends StatelessWidget {
-  const _Header();
+// ---------------------------------------------------------------------------
+// Hero
+// ---------------------------------------------------------------------------
+
+class _Hero extends StatelessWidget {
+  const _Hero();
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceElevated,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: const BoxDecoration(
+              gradient: AppGradients.accent,
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: const Icon(
+              Icons.travel_explore_outlined,
+              color: AppColors.onAccent,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Discover new music',
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Connect Lidarr to search for artists and albums. Requests download to your server, then appear in your library after import.',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                    height: 1.45,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Connected banner
+// ---------------------------------------------------------------------------
+
+class _ConnectedBanner extends StatelessWidget {
+  const _ConnectedBanner({required this.url, required this.onDisconnect});
+
+  final String url;
+  final VoidCallback? onDisconnect;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceElevated,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFF66CC8A).withValues(alpha: 0.35),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: const BoxDecoration(
+              color: Color(0xFF66CC8A),
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Connected',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  url,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: onDisconnect,
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.error,
+              textStyle: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+            ),
+            child: const Text('Disconnect'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Form card + helpers
+// ---------------------------------------------------------------------------
+
+class _FormCard extends StatelessWidget {
+  const _FormCard({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceElevated,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
+      ),
+    );
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4),
+      child: Text(
+        text.toUpperCase(),
+        style: Theme.of(context).textTheme.labelLarge,
+      ),
+    );
+  }
+}
+
+class _StatusRow extends StatelessWidget {
+  const _StatusRow({
+    required this.icon,
+    required this.color,
+    required this.message,
+  });
+
+  final IconData icon;
+  final Color color;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
       children: [
-        Text('Connect Lidarr',
-            style: Theme.of(context).textTheme.headlineMedium),
-        const SizedBox(height: 8),
-        const Text(
-          'Search for new artists and albums. AltSound will ask Lidarr to download them, then they\'ll appear in your library after Lidarr imports them.',
-          style: TextStyle(color: AppColors.textSecondary),
+        Icon(icon, color: color, size: 18),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            message,
+            style: TextStyle(color: color, fontSize: 13),
+          ),
         ),
       ],
     );
