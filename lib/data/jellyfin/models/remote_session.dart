@@ -5,6 +5,7 @@ class RemoteSession {
     required this.deviceId,
     required this.deviceName,
     required this.client,
+    required this.userId,
     required this.userName,
     required this.supportsRemoteControl,
     required this.supportedCommands,
@@ -22,6 +23,7 @@ class RemoteSession {
   final String deviceId;
   final String deviceName;
   final String client;
+  final String userId;
   final String userName;
   final bool supportsRemoteControl;
   final Set<String> supportedCommands;
@@ -57,6 +59,7 @@ class RemoteSession {
       deviceId: json['DeviceId'] as String? ?? '',
       deviceName: json['DeviceName'] as String? ?? 'Unknown device',
       client: json['Client'] as String? ?? '',
+      userId: json['UserId'] as String? ?? '',
       userName: json['UserName'] as String? ?? '',
       supportsRemoteControl:
           (json['SupportsRemoteControl'] as bool?) ?? false,

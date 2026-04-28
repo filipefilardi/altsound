@@ -15,18 +15,26 @@ class RemoteSessionsRepository {
 
   final JellyfinApi _api;
 
-  /// Other sessions on the same server that accept remote control.
-  /// The current device is filtered out so users don't see themselves.
+  /// Other sessions on the same server that accept remote control **and are
+  /// logged in as the current user**. The server's `ControllableByUserId`
+  /// query is advisory (admins see everything, and shared-server permissions
+  /// can be loose), so we additionally enforce a client-side `UserId` match.
+  /// The current device is also filtered out.
   Future<List<RemoteSession>> list() async {
+    final ownUserId = _api.session?.userId;
+    if (ownUserId == null) return const [];
     final res = await _api.dio.get<List<dynamic>>(
       '/Sessions',
-      queryParameters: {'ControllableByUserId': _api.session?.userId},
+      queryParameters: {'ControllableByUserId': ownUserId},
     );
     final raw = (res.data ?? const []).cast<Map<String, dynamic>>();
     final ownDeviceId = _api.deviceId;
     return raw
         .map(RemoteSession.fromJson)
-        .where((s) => s.supportsRemoteControl && s.deviceId != ownDeviceId)
+        .where((s) =>
+            s.supportsRemoteControl &&
+            s.deviceId != ownDeviceId &&
+            s.userId == ownUserId)
         .toList();
   }
 
