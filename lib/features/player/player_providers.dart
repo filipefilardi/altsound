@@ -5,6 +5,7 @@ import 'package:just_audio/just_audio.dart';
 import '../../data/downloads/download_manager.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
 import '../../data/jellyfin/models/media_item.dart' as jf;
+import '../../data/local/playback_preferences.dart';
 import '../remote/remote_player_controller.dart';
 import 'audio_player_handler.dart';
 
@@ -257,8 +258,15 @@ class PlayerController {
         : (localArtPath != null
             ? Uri.file(localArtPath).toString()
             : repo.imageUrl(t.imageItemId, imageTag: t.imageTag, size: 600));
-    final streamUrl =
-        localPath != null ? Uri.file(localPath).toString() : repo.streamUrl(t.id);
+    final quality = ref.read(playbackPreferencesProvider).streamingQuality;
+    final streamUrl = localPath != null
+        ? Uri.file(localPath).toString()
+        : repo.streamUrl(
+            t.id,
+            maxBitrate: quality == StreamingQuality.original
+                ? null
+                : quality.bitrate,
+          );
     return MediaItem(
       id: t.id,
       title: t.name,

@@ -10,6 +10,12 @@ class _NoSession implements Exception {
   String toString() => 'No active Jellyfin session';
 }
 
+class JellyfinServerInfo {
+  const JellyfinServerInfo({required this.serverName, required this.version});
+  final String serverName;
+  final String version;
+}
+
 final jellyfinRepositoryProvider = Provider<JellyfinRepository>((ref) {
   return JellyfinRepository(ref.watch(jellyfinApiProvider));
 });
@@ -500,13 +506,38 @@ class JellyfinRepository {
     }
   }
 
-  String streamUrl(String trackId) {
+  /// Public server info (no auth required). Returns `null` if the server
+  /// can't be reached or the response isn't shaped as expected.
+  Future<JellyfinServerInfo?> serverInfo() async {
+    final s = _api.session;
+    if (s == null) return null;
+    try {
+      final res = await _api.dio.get<Map<String, dynamic>>(
+        '/System/Info/Public',
+      );
+      final data = res.data;
+      if (data == null) return null;
+      return JellyfinServerInfo(
+        serverName: data['ServerName'] as String? ?? '',
+        version: data['Version'] as String? ?? '',
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Build a Jellyfin stream URL for [trackId].
+  ///
+  /// [maxBitrate] caps transcoding bitrate (in bps). Pass `null` to request
+  /// the source file untouched (no transcoding).
+  String streamUrl(String trackId, {int? maxBitrate = 320000}) {
     final s = _session;
     final params = <String, String>{
       'UserId': s.userId,
       'api_key': s.accessToken,
       'DeviceId': 'jellymusic-${s.userId}',
-      'MaxStreamingBitrate': '320000',
+      if (maxBitrate != null && maxBitrate > 0)
+        'MaxStreamingBitrate': maxBitrate.toString(),
       // Keep stream progressive (non-HLS) so ExoPlayer/just_audio can parse it
       // through AudioSource.uri without playlist-specific handling.
       'Static': 'true',
