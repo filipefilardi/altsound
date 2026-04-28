@@ -333,66 +333,90 @@ class _TopBar extends ConsumerWidget {
     final castLabel = castConnected
         ? 'PLAYING ON ${remoteSession?.deviceName.toUpperCase() ?? 'REMOTE'}'
         : 'PLAYING FROM ALBUM';
+    // Reserve symmetric space on both sides so the centered text is not
+    // pushed off-center by the icon row. Right side has two icons (~96 px),
+    // left has one (~48 px) — pad the text by the larger value on each side.
+    const sideReserve = 96.0;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.keyboard_arrow_down, size: 30),
-            onPressed: () => context.pop(),
-          ),
-          Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  castLabel,
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        fontSize: 10,
-                        letterSpacing: 1.6,
-                        color: castConnected
-                            ? AppColors.primary
-                            : AppColors.textSecondary,
+      child: SizedBox(
+        height: 48,
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: sideReserve),
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        castLabel,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                              fontSize: 10,
+                              letterSpacing: 1.6,
+                              color: castConnected
+                                  ? AppColors.primary
+                                  : AppColors.textSecondary,
+                            ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                InkWell(
-                  onTap: albumId == null || albumId!.isEmpty || album.isEmpty
-                      ? null
-                      : () => context.push('/album/$albumId'),
-                  child: Text(
-                    album,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: albumId == null || albumId!.isEmpty || album.isEmpty
-                          ? AppColors.textPrimary
-                          : AppColors.primary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
+                      const SizedBox(height: 2),
+                      InkWell(
+                        onTap: albumId == null || albumId!.isEmpty || album.isEmpty
+                            ? null
+                            : () => context.push('/album/$albumId'),
+                        child: Text(
+                          album,
+                          maxLines: 1,
+                          textAlign: TextAlign.center,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: albumId == null || albumId!.isEmpty || album.isEmpty
+                                ? AppColors.textPrimary
+                                : AppColors.primary,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
+                ),
+              ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.keyboard_arrow_down, size: 30),
+                  onPressed: () => context.pop(),
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        castConnected ? Icons.cast_connected : Icons.cast,
+                        size: 22,
+                        color: castConnected ? AppColors.primary : null,
+                      ),
+                      onPressed: () => showRemoteSessionsSheet(context),
+                      tooltip: 'Play on…',
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.queue_music, size: 24),
+                      onPressed: onQueue,
+                      tooltip: 'Up next',
+                    ),
+                  ],
                 ),
               ],
             ),
-          ),
-          IconButton(
-            icon: Icon(
-              castConnected ? Icons.cast_connected : Icons.cast,
-              size: 22,
-              color: castConnected ? AppColors.primary : null,
-            ),
-            onPressed: () => showRemoteSessionsSheet(context),
-            tooltip: 'Play on…',
-          ),
-          IconButton(
-            icon: const Icon(Icons.queue_music, size: 24),
-            onPressed: onQueue,
-            tooltip: 'Up next',
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
