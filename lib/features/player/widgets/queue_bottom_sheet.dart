@@ -2,6 +2,7 @@ import 'package:audio_service/audio_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:just_audio/just_audio.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../player_providers.dart';
@@ -40,6 +41,7 @@ class _QueueSheetState extends ConsumerState<_QueueSheet> {
     final queueAsync = ref.watch(queueProvider);
     final stateAsync = ref.watch(playbackStateProvider);
     final userQueuedIds = ref.watch(userQueuedIdsProvider).value ?? const <String>{};
+    final loopMode = ref.watch(playerLoopModeProvider).value ?? LoopMode.off;
     final fullQueue = queueAsync.value ?? const <MediaItem>[];
     final absoluteIndex = stateAsync.value?.queueIndex;
 
@@ -56,7 +58,7 @@ class _QueueSheetState extends ConsumerState<_QueueSheet> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _Header(total: queue.length),
+            _Header(total: queue.length, loopMode: loopMode),
             Expanded(
               child: queue.isEmpty
                   ? const Center(
@@ -87,6 +89,7 @@ class _QueueSheetState extends ConsumerState<_QueueSheet> {
                           index: i,
                           isCurrent: isCurrent,
                           isUserQueued: isUserQueued,
+                          loopMode: loopMode,
                           onTap: () {
                             ref
                                 .read(playerControllerProvider)
@@ -105,8 +108,9 @@ class _QueueSheetState extends ConsumerState<_QueueSheet> {
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.total});
+  const _Header({required this.total, required this.loopMode});
   final int total;
+  final LoopMode loopMode;
 
   @override
   Widget build(BuildContext context) {
@@ -132,6 +136,46 @@ class _Header extends StatelessWidget {
                     ),
               ),
             ),
+          const Spacer(),
+          if (loopMode != LoopMode.off)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 2),
+              child: _RepeatBadge(loopMode: loopMode),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RepeatBadge extends StatelessWidget {
+  const _RepeatBadge({required this.loopMode});
+  final LoopMode loopMode;
+
+  @override
+  Widget build(BuildContext context) {
+    final isOne = loopMode == LoopMode.one;
+    final label = isOne ? 'Repeat track' : 'Repeat queue';
+    final icon = isOne ? Icons.repeat_one : Icons.repeat;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: AppColors.primary),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: AppColors.primary,
+                  letterSpacing: 0.6,
+                  fontSize: 11,
+                ),
+          ),
         ],
       ),
     );
@@ -145,6 +189,7 @@ class _QueueRow extends StatelessWidget {
     required this.index,
     required this.isCurrent,
     required this.isUserQueued,
+    required this.loopMode,
     required this.onTap,
   });
 
@@ -152,6 +197,7 @@ class _QueueRow extends StatelessWidget {
   final int index;
   final bool isCurrent;
   final bool isUserQueued;
+  final LoopMode loopMode;
   final VoidCallback onTap;
 
   @override
@@ -194,16 +240,16 @@ class _QueueRow extends StatelessWidget {
                 ],
               ),
             ),
-            if (isCurrent)
+            if (isCurrent && loopMode == LoopMode.one)
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 8),
                 child: Icon(
-                  Icons.equalizer,
+                  Icons.repeat_one,
                   color: AppColors.primary,
                   size: 18,
                 ),
               )
-            else if (isUserQueued)
+            else if (!isCurrent && isUserQueued)
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 8),
                 child: Icon(
