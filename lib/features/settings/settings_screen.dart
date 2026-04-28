@@ -66,8 +66,6 @@ class SettingsScreen extends ConsumerWidget {
           const _LibraryGroup(),
           const SizedBox(height: 24),
           const _StorageGroup(),
-          const SizedBox(height: 24),
-          const _AboutGroup(),
           const SizedBox(height: 28),
           const _SignOutTile(),
           const SizedBox(height: 28),
@@ -214,7 +212,6 @@ Future<void> _showAccountSheet(
     builder: (_) => Consumer(
       builder: (context, ref, _) {
         final info = ref.watch(_serverInfoProvider);
-        final pkg = ref.watch(_packageInfoProvider);
         String infoValue(String? Function(JellyfinServerInfo i) extract) {
           return info.when(
             data: (i) => i == null ? 'Unreachable' : (extract(i) ?? '—'),
@@ -244,14 +241,6 @@ Future<void> _showAccountSheet(
                 _DetailRow(
                   label: 'Server version',
                   value: infoValue((i) => i.version),
-                ),
-                _DetailRow(
-                  label: 'App version',
-                  value: pkg.when(
-                    data: (p) => '${p.version} (${p.buildNumber})',
-                    loading: () => '…',
-                    error: (_, __) => '—',
-                  ),
                 ),
               ],
             ),
@@ -427,32 +416,6 @@ class _StorageGroup extends ConsumerWidget {
               const SnackBar(content: Text('Image cache cleared')),
             );
           },
-        ),
-      ],
-    );
-  }
-}
-
-class _AboutGroup extends ConsumerWidget {
-  const _AboutGroup();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final pkg = ref.watch(_packageInfoProvider);
-    return _SettingsGroup(
-      label: 'About',
-      children: [
-        ListTile(
-          leading: const Icon(Icons.info_outline),
-          title: const Text('Version'),
-          subtitle: Text(
-            pkg.when(
-              data: (p) => '${p.version} (${p.buildNumber})',
-              loading: () => '…',
-              error: (_, __) => '—',
-            ),
-            style: const TextStyle(color: AppColors.textSecondary),
-          ),
         ),
       ],
     );
