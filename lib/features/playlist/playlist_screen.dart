@@ -825,16 +825,21 @@ class _PlaylistTrackTile extends ConsumerWidget {
       onTap: () {
         if (inSelection) {
           onToggleSelected();
-        } else {
-          ref
-              .read(playerControllerProvider)
-              .playTracks(
-                allTracks,
-                startIndex: index,
-                contextId: contextId,
-                selectedTrack: true,
-              );
+          return;
         }
+        final isCurrentInContext = current != null &&
+            current.extras?['jellyfinId'] == track.id &&
+            current.extras?['contextId'] == contextId;
+        if (isCurrentInContext) {
+          context.push('/now-playing');
+          return;
+        }
+        ref.read(playerControllerProvider).playTracks(
+              allTracks,
+              startIndex: index,
+              contextId: contextId,
+              selectedTrack: true,
+            );
       },
       selected: isSelected,
       selectedTileColor: AppColors.primary.withValues(alpha: 0.08),

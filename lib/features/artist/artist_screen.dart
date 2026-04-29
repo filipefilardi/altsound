@@ -579,14 +579,21 @@ class _PopularTrackTile extends ConsumerWidget {
           TrackMoreMenuButton(track: track),
         ],
       ),
-      onTap: () => ref
-          .read(playerControllerProvider)
-          .playTracks(
-            allTracks,
-            startIndex: index - 1,
-            contextId: contextId,
-            selectedTrack: true,
-          ),
+      onTap: () {
+        final isCurrentInContext = current != null &&
+            current.extras?['jellyfinId'] == track.id &&
+            current.extras?['contextId'] == contextId;
+        if (isCurrentInContext) {
+          context.push('/now-playing');
+          return;
+        }
+        ref.read(playerControllerProvider).playTracks(
+              allTracks,
+              startIndex: index - 1,
+              contextId: contextId,
+              selectedTrack: true,
+            );
+      },
     );
   }
 }

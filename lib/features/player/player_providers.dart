@@ -144,12 +144,31 @@ class PlayerController {
       return;
     }
 
-    // Resume without reloading if we're already in this context.
-    if (startIndex == 0 && contextId != null) {
+    // Play-all / shuffle-all path: resume without reloading if we're already
+    // in this context. Safe because the caller has no specific target track.
+    if (!selectedTrack && startIndex == 0 && contextId != null) {
       final current = handler.mediaItem.value;
       if ((current?.extras?['contextId'] as String?) == contextId) {
         if (!handler.playbackState.value.playing) await handler.play();
         return;
+      }
+    }
+
+    // Specific track tapped — try to jump within the existing queue first.
+    if (selectedTrack && contextId != null) {
+      final current = handler.mediaItem.value;
+      final sameContext =
+          (current?.extras?['contextId'] as String?) == contextId;
+      if (sameContext) {
+        final target = tracks[startIndex];
+        final q = handler.queue.value;
+        final idxInQueue = q.indexWhere(
+          (m) => (m.extras?['jellyfinId'] as String?) == target.id,
+        );
+        if (idxInQueue >= 0) {
+          await handler.skipToQueueItem(idxInQueue);
+          return;
+        }
       }
     }
 

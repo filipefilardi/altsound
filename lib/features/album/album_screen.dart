@@ -318,14 +318,23 @@ class _AlbumViewState extends ConsumerState<_AlbumView> {
               return _TrackTile(
                 track: track,
                 index: i,
-                onTap: () => ref
-                    .read(playerControllerProvider)
-                    .playTracks(
-                      album.tracks,
-                      startIndex: i,
-                      contextId: album.id,
-                      selectedTrack: true,
-                    ),
+                onTap: () {
+                  final current =
+                      ref.read(currentMediaItemProvider).value;
+                  final isCurrentInContext = current != null &&
+                      current.extras?['jellyfinId'] == track.id &&
+                      current.extras?['contextId'] == album.id;
+                  if (isCurrentInContext) {
+                    context.push('/now-playing');
+                    return;
+                  }
+                  ref.read(playerControllerProvider).playTracks(
+                        album.tracks,
+                        startIndex: i,
+                        contextId: album.id,
+                        selectedTrack: true,
+                      );
+                },
               );
             },
           ),
