@@ -47,6 +47,10 @@ class JellymusicAudioHandler extends BaseAudioHandler with SeekHandler {
   /// non-muted level after explicit user volume changes.
   double _volumeBeforeMute = 1.0;
 
+  /// Past this point, "previous" jumps to the start of the current track
+  /// instead of the queue item before it (common music-player behaviour).
+  static const _skipPreviousRestartThreshold = Duration(seconds: 3);
+
   AudioPlayer get player => _player;
 
   /// Effective mute: player volume is essentially 0.
@@ -290,6 +294,24 @@ class JellymusicAudioHandler extends BaseAudioHandler with SeekHandler {
     );
   }
 
+  /// When [LoopMode.one] is active, just_audio reports `nextIndex` /
+  /// `previousIndex` as the **current** index so skips only restart the same
+  /// track. Users still expect hardware / UI next & previous to move in the
+  /// queue (repeat-one should only affect automatic replay at track end).
+  Future<void> _runSkipIgnoringRepeatOne(Future<void> Function() skip) async {
+    final saved = _player.loopMode;
+    if (saved == LoopMode.one) {
+      await _player.setLoopMode(LoopMode.off);
+    }
+    try {
+      await skip();
+    } finally {
+      if (saved == LoopMode.one) {
+        await _player.setLoopMode(LoopMode.one);
+      }
+    }
+  }
+
   @override
   Future<void> play() => _player.play();
 
@@ -300,10 +322,17 @@ class JellymusicAudioHandler extends BaseAudioHandler with SeekHandler {
   Future<void> seek(Duration position) => _player.seek(position);
 
   @override
-  Future<void> skipToNext() => _player.seekToNext();
+  Future<void> skipToNext() =>
+      _runSkipIgnoringRepeatOne(() => _player.seekToNext());
 
   @override
-  Future<void> skipToPrevious() => _player.seekToPrevious();
+  Future<void> skipToPrevious() async {
+    if (_player.position > _skipPreviousRestartThreshold) {
+      await _player.seek(Duration.zero);
+      return;
+    }
+    await _runSkipIgnoringRepeatOne(() => _player.seekToPrevious());
+  }
 
   @override
   Future<void> skipToQueueItem(int index) async {
