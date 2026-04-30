@@ -21,15 +21,16 @@ class LidarrArtistResult {
 
   factory LidarrArtistResult.fromJson(Map<String, dynamic> json) {
     final rawImages = json['images'] as List?;
-    final images = rawImages
+    final images =
+        rawImages
             ?.whereType<Map>()
             .map((img) => img.map((k, v) => MapEntry('$k', v)))
             .toList() ??
         const <Map<String, dynamic>>[];
     final coverImage = images.cast<Map<String, dynamic>?>().firstWhere(
-          (img) => img?['coverType'] == 'poster',
-          orElse: () => images.isEmpty ? null : images.first,
-        );
+      (img) => img?['coverType'] == 'poster',
+      orElse: () => images.isEmpty ? null : images.first,
+    );
     final remoteCover = coverImage?['remoteUrl'] as String?;
 
     final rawStats = json['statistics'];
@@ -39,7 +40,8 @@ class LidarrArtistResult {
 
     return LidarrArtistResult(
       foreignArtistId: json['foreignArtistId'] as String? ?? '',
-      name: json['artistName'] as String? ??
+      name:
+          json['artistName'] as String? ??
           json['artist'] as String? ??
           json['name'] as String? ??
           'Unknown artist',
@@ -103,47 +105,92 @@ class LidarrDefaults {
 
 class LidarrAlbumResult {
   const LidarrAlbumResult({
+    required this.id,
+    required this.artistId,
     required this.foreignAlbumId,
     required this.title,
     required this.artistName,
     required this.releaseDate,
     required this.albumType,
     required this.imageUrl,
+    required this.monitored,
+    required this.trackFileCount,
+    required this.sizeOnDisk,
     required this.raw,
   });
 
+  final int? id;
+  final int? artistId;
   final String foreignAlbumId;
   final String title;
   final String artistName;
   final String? releaseDate;
   final String? albumType;
   final String? imageUrl;
+  final bool monitored;
+  final int trackFileCount;
+  final int sizeOnDisk;
   final Map<String, dynamic> raw;
+
+  bool get hasFiles => trackFileCount > 0 || sizeOnDisk > 0;
+
+  factory LidarrAlbumResult.musicBrainzRelease({
+    required String foreignAlbumId,
+    required String title,
+    required String artistName,
+  }) {
+    return LidarrAlbumResult(
+      id: null,
+      artistId: null,
+      foreignAlbumId: foreignAlbumId,
+      title: title,
+      artistName: artistName,
+      releaseDate: null,
+      albumType: null,
+      imageUrl: null,
+      monitored: false,
+      trackFileCount: 0,
+      sizeOnDisk: 0,
+      raw: const {},
+    );
+  }
 
   factory LidarrAlbumResult.fromJson(Map<String, dynamic> json) {
     final rawImages = json['images'] as List?;
-    final images = rawImages
+    final images =
+        rawImages
             ?.whereType<Map>()
             .map((img) => img.map((k, v) => MapEntry('$k', v)))
             .toList() ??
         const <Map<String, dynamic>>[];
     final coverImage = images.cast<Map<String, dynamic>?>().firstWhere(
-          (img) => img?['coverType'] == 'cover',
-          orElse: () => images.isEmpty ? null : images.first,
-        );
+      (img) => img?['coverType'] == 'cover',
+      orElse: () => images.isEmpty ? null : images.first,
+    );
 
     final nestedArtist = json['artist'] as Map?;
-    final artistName = json['artistName'] as String? ??
-        nestedArtist?.map((k, v) => MapEntry('$k', v))['artistName'] as String? ??
+    final artistName =
+        json['artistName'] as String? ??
+        nestedArtist?.map((k, v) => MapEntry('$k', v))['artistName']
+            as String? ??
         'Unknown artist';
+    final rawStats = json['statistics'];
+    final stats = rawStats is Map
+        ? rawStats.map((k, v) => MapEntry('$k', v))
+        : <String, dynamic>{};
 
     return LidarrAlbumResult(
+      id: (json['id'] as num?)?.toInt(),
+      artistId: (json['artistId'] as num?)?.toInt(),
       foreignAlbumId: json['foreignAlbumId'] as String? ?? '',
       title: json['title'] as String? ?? 'Untitled album',
       artistName: artistName,
       releaseDate: json['releaseDate'] as String?,
       albumType: json['albumType'] as String?,
       imageUrl: coverImage?['remoteUrl'] as String?,
+      monitored: json['monitored'] as bool? ?? false,
+      trackFileCount: (stats['trackFileCount'] as num?)?.toInt() ?? 0,
+      sizeOnDisk: (stats['sizeOnDisk'] as num?)?.toInt() ?? 0,
       raw: json,
     );
   }

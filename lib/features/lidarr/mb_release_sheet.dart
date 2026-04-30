@@ -7,10 +7,11 @@ import '../../core/widgets/skeleton.dart';
 import '../../data/lidarr/lidarr_repository.dart';
 import '../../data/musicbrainz/musicbrainz_repository.dart';
 
-final _releaseTracksProvider =
-    FutureProvider.autoDispose.family<List<MusicBrainzTrack>, String>(
-  (ref, mbid) => ref.read(musicBrainzRepositoryProvider).releaseGroupTracks(mbid),
-);
+final _releaseTracksProvider = FutureProvider.autoDispose
+    .family<List<MusicBrainzTrack>, String>(
+      (ref, mbid) =>
+          ref.read(musicBrainzRepositoryProvider).releaseGroupTracks(mbid),
+    );
 
 /// Shows the track listing for a [MusicBrainzReleaseGroup] in a bottom sheet.
 /// Pass [isInLidarr] so the request button can be shown or hidden.
@@ -39,7 +40,8 @@ class _MbReleaseSheetState extends ConsumerState<MbReleaseSheet> {
     if (repo == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('Configure Lidarr in Settings to request albums.')),
+          content: Text('Configure Lidarr in Settings to request albums.'),
+        ),
       );
       return;
     }
@@ -47,20 +49,21 @@ class _MbReleaseSheetState extends ConsumerState<MbReleaseSheet> {
     try {
       final lidarrArtists = await repo.searchArtists(widget.artist.name);
       final lidarrArtist =
-          lidarrArtists.where((a) => a.foreignArtistId == widget.artist.id).firstOrNull ??
-              lidarrArtists.firstOrNull;
-      if (lidarrArtist == null) throw Exception('Artist not found in Lidarr catalog');
-
-      final lidarrAlbums = await repo.artistAlbums(
-        artistName: widget.artist.name,
-        foreignArtistId: lidarrArtist.foreignArtistId,
-      );
-      final lidarrAlbum =
-          lidarrAlbums.where((a) => a.foreignAlbumId == widget.release.id).firstOrNull;
-      if (lidarrAlbum == null) throw Exception('Album not found in Lidarr catalog');
+          lidarrArtists
+              .where((a) => a.foreignArtistId == widget.artist.id)
+              .firstOrNull ??
+          lidarrArtists.firstOrNull;
+      if (lidarrArtist == null)
+        throw Exception('Artist not found in Lidarr catalog');
 
       final defaults = await repo.defaults();
-      await repo.addAlbum(lidarrArtist, lidarrAlbum, defaults: defaults);
+      await repo.addMusicBrainzAlbum(
+        lidarrArtist,
+        foreignAlbumId: widget.release.id,
+        title: widget.release.title,
+        artistName: widget.artist.name,
+        defaults: defaults,
+      );
 
       if (!mounted) return;
       setState(() {
@@ -68,14 +71,16 @@ class _MbReleaseSheetState extends ConsumerState<MbReleaseSheet> {
         _requested = true;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Requested "${widget.release.title}" via Lidarr')),
+        SnackBar(
+          content: Text('Requested "${widget.release.title}" via Lidarr'),
+        ),
       );
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
@@ -110,8 +115,11 @@ class _MbReleaseSheetState extends ConsumerState<MbReleaseSheet> {
                           Container(color: AppColors.surfaceElevated),
                       errorWidget: (_, __, ___) => Container(
                         color: AppColors.surfaceElevated,
-                        child: const Icon(Icons.album,
-                            color: AppColors.textTertiary, size: 28),
+                        child: const Icon(
+                          Icons.album,
+                          color: AppColors.textTertiary,
+                          size: 28,
+                        ),
                       ),
                     ),
                   ),
@@ -132,7 +140,9 @@ class _MbReleaseSheetState extends ConsumerState<MbReleaseSheet> {
                         Text(
                           r.year,
                           style: const TextStyle(
-                              color: AppColors.textSecondary, fontSize: 13),
+                            color: AppColors.textSecondary,
+                            fontSize: 13,
+                          ),
                         ),
                       ],
                       if (r.primaryType != null) ...[
@@ -140,7 +150,9 @@ class _MbReleaseSheetState extends ConsumerState<MbReleaseSheet> {
                         Text(
                           r.primaryType!,
                           style: const TextStyle(
-                              color: AppColors.textTertiary, fontSize: 12),
+                            color: AppColors.textTertiary,
+                            fontSize: 12,
+                          ),
                         ),
                       ],
                     ],
@@ -192,13 +204,14 @@ class _MbReleaseSheetState extends ConsumerState<MbReleaseSheet> {
                 }
 
                 // Group by disc if multi-disc.
-                final multiDisc =
-                    tracks.any((t) => t.discNumber > 1);
+                final multiDisc = tracks.any((t) => t.discNumber > 1);
 
                 return ListView.builder(
                   controller: scrollController,
                   padding: const EdgeInsets.only(bottom: 24),
-                  itemCount: tracks.length + (multiDisc ? _discHeaderCount(tracks) : 0),
+                  itemCount:
+                      tracks.length +
+                      (multiDisc ? _discHeaderCount(tracks) : 0),
                   itemBuilder: (_, i) {
                     if (!multiDisc) {
                       return _TrackRow(track: tracks[i]);
@@ -275,12 +288,10 @@ class _MbReleaseSheetState extends ConsumerState<MbReleaseSheet> {
 }
 
 class _DiscItem {
-  _DiscItem.header(this.discNumber)
-      : isHeader = true,
-        track = null;
+  _DiscItem.header(this.discNumber) : isHeader = true, track = null;
   _DiscItem.track(this.track)
-      : isHeader = false,
-        discNumber = track!.discNumber;
+    : isHeader = false,
+      discNumber = track!.discNumber;
 
   final bool isHeader;
   final int discNumber;
@@ -301,8 +312,7 @@ class _TrackRow extends StatelessWidget {
         child: Text(
           track.number,
           textAlign: TextAlign.right,
-          style: const TextStyle(
-              color: AppColors.textTertiary, fontSize: 13),
+          style: const TextStyle(color: AppColors.textTertiary, fontSize: 13),
         ),
       ),
       title: Text(
@@ -315,7 +325,9 @@ class _TrackRow extends StatelessWidget {
           ? Text(
               track.formattedDuration,
               style: const TextStyle(
-                  color: AppColors.textSecondary, fontSize: 12),
+                color: AppColors.textSecondary,
+                fontSize: 12,
+              ),
             )
           : null,
     );

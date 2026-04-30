@@ -10,15 +10,15 @@ import '../../data/lidarr/models/lidarr_models.dart';
 
 final lidarrArtistAlbumsProvider = FutureProvider.family
     .autoDispose<List<LidarrAlbumResult>, LidarrArtistResult>((ref, artist) {
-  final repo = ref.watch(lidarrRepositoryProvider);
-  if (repo == null) {
-    throw const LidarrException('Lidarr is not connected.');
-  }
-  return repo.artistAlbums(
-    artistName: artist.name,
-    foreignArtistId: artist.foreignArtistId,
-  );
-});
+      final repo = ref.watch(lidarrRepositoryProvider);
+      if (repo == null) {
+        throw const LidarrException('Lidarr is not connected.');
+      }
+      return repo.artistAlbums(
+        artistName: artist.name,
+        foreignArtistId: artist.foreignArtistId,
+      );
+    });
 
 class LidarrArtistScreen extends ConsumerWidget {
   const LidarrArtistScreen({required this.artist, super.key});
@@ -94,27 +94,38 @@ class _AlbumRequestTileState extends ConsumerState<_AlbumRequestTile> {
       final defaults = await repo.defaults();
       await repo.addAlbum(widget.artist, widget.album, defaults: defaults);
       if (!mounted) return;
+      ref.invalidate(lidarrAlbumsByForeignIdProvider);
       setState(() {
         _busy = false;
         _requested = true;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Requested "${widget.album.title}" via Lidarr.')),
+        SnackBar(
+          content: Text('Requested "${widget.album.title}" via Lidarr.'),
+        ),
       );
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lidarr error: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Lidarr error: $e')));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final album = widget.album;
+    final hasFiles = ref
+        .watch(lidarrAlbumsByForeignIdProvider)
+        .when(
+          data: (albums) => albums[album.foreignAlbumId]?.hasFiles ?? false,
+          error: (_, __) => false,
+          loading: () => false,
+        );
     final subtitle = [
-      if (album.albumType != null && album.albumType!.isNotEmpty) album.albumType!,
+      if (album.albumType != null && album.albumType!.isNotEmpty)
+        album.albumType!,
       if (album.releaseDate != null && album.releaseDate!.isNotEmpty)
         album.releaseDate!.split('T').first,
     ].join(' • ');
@@ -132,7 +143,11 @@ class _AlbumRequestTileState extends ConsumerState<_AlbumRequestTile> {
             placeholder: (_, __) => Container(color: AppColors.surfaceElevated),
             errorWidget: (_, __, ___) => Container(
               color: AppColors.surfaceElevated,
-              child: const Icon(Icons.album, color: AppColors.textTertiary, size: 20),
+              child: const Icon(
+                Icons.album,
+                color: AppColors.textTertiary,
+                size: 20,
+              ),
             ),
           ),
         ),
@@ -146,21 +161,21 @@ class _AlbumRequestTileState extends ConsumerState<_AlbumRequestTile> {
       subtitle: subtitle.isNotEmpty
           ? Text(
               subtitle,
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 12,
+              ),
             )
           : null,
-      trailing: _requested
+      trailing: hasFiles || _requested
           ? const Icon(Icons.check, color: AppColors.primary)
           : _busy
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2.5),
-                )
-              : TextButton(
-                  onPressed: _request,
-                  child: const Text('REQUEST'),
-                ),
+          ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2.5),
+            )
+          : TextButton(onPressed: _request, child: const Text('REQUEST')),
     );
   }
 }

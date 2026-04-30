@@ -14,35 +14,32 @@ import 'mb_release_sheet.dart';
 
 // ── Providers ────────────────────────────────────────────────────────────────
 
-final _discographyProvider =
-    FutureProvider.autoDispose.family<List<MusicBrainzReleaseGroup>, MusicBrainzArtist>(
-  (ref, artist) => ref.read(musicBrainzRepositoryProvider).artistReleaseGroups(artist.id),
-);
-
-/// Set of MusicBrainz release-group IDs already in Lidarr for this artist.
-final _lidarrAlbumStatusProvider =
-    FutureProvider.autoDispose.family<Set<String>, MusicBrainzArtist>(
-  (ref, artist) async {
-    final repo = ref.watch(lidarrRepositoryProvider);
-    if (repo == null) return const {};
-
-    final monitored = await repo.monitoredArtists();
-    final lidarrArtist =
-        monitored.where((a) => a.foreignArtistId == artist.id).firstOrNull;
-    if (lidarrArtist == null) return const {};
-
-    final albums = await repo.artistAlbums(
-      artistName: artist.name,
-      foreignArtistId: lidarrArtist.foreignArtistId,
+final _discographyProvider = FutureProvider.autoDispose
+    .family<List<MusicBrainzReleaseGroup>, MusicBrainzArtist>(
+      (ref, artist) => ref
+          .read(musicBrainzRepositoryProvider)
+          .artistReleaseGroups(artist.id),
     );
-    return {
-      for (final a in albums)
-        if ((a.raw['id'] as int?) != null) a.foreignAlbumId,
-    };
-  },
-);
 
-const _typeOrder = ['Album', 'EP', 'Single', 'Live', 'Compilation', 'Remix', 'Other'];
+/// MusicBrainz release-group IDs that already have files in Lidarr.
+final _lidarrAlbumStatusProvider = FutureProvider.autoDispose
+    .family<Set<String>, MusicBrainzArtist>((ref, artist) async {
+      final albums = await ref.watch(lidarrAlbumsByForeignIdProvider.future);
+      return {
+        for (final entry in albums.entries)
+          if (entry.value.hasFiles) entry.key,
+      };
+    });
+
+const _typeOrder = [
+  'Album',
+  'EP',
+  'Single',
+  'Live',
+  'Compilation',
+  'Remix',
+  'Other',
+];
 
 int _typeIndex(String? type) {
   final i = _typeOrder.indexOf(type ?? 'Other');
@@ -83,7 +80,10 @@ class _MbArtistScreenState extends ConsumerState<MbArtistScreen>
         title: Text(widget.artist.name),
         bottom: TabBar(
           controller: _tabs,
-          tabs: const [Tab(text: 'OVERVIEW'), Tab(text: 'DISCOGRAPHY')],
+          tabs: const [
+            Tab(text: 'OVERVIEW'),
+            Tab(text: 'DISCOGRAPHY'),
+          ],
         ),
       ),
       body: TabBarView(
@@ -113,14 +113,20 @@ class _OverviewTabState extends ConsumerState<_OverviewTab> {
 
   @override
   Widget build(BuildContext context) {
-    final inLidarr = ref.watch(_lidarrAlbumStatusProvider(widget.artist)).when(
+    final inLidarr = ref
+        .watch(_lidarrAlbumStatusProvider(widget.artist))
+        .when(
           data: (v) => v,
           error: (_, __) => const <String>{},
           loading: () => const <String>{},
         );
 
-    final topAlbumsAsync = ref.watch(artistTopReleasesProvider(widget.artist.id));
-    final topSongsAsync = ref.watch(artistTopRecordingsProvider(widget.artist.id));
+    final topAlbumsAsync = ref.watch(
+      artistTopReleasesProvider(widget.artist.id),
+    );
+    final topSongsAsync = ref.watch(
+      artistTopRecordingsProvider(widget.artist.id),
+    );
     final discoAsync = ref.watch(_discographyProvider(widget.artist));
     final bioAsync = ref.watch(artistBioProvider(widget.artist.name));
 
@@ -161,22 +167,26 @@ class _OverviewTabState extends ConsumerState<_OverviewTab> {
                   title: r.title,
                   coverArtUrl: r.coverArtUrl,
                   listenCount: r.listenCount,
-                  isInLidarr: r.releaseGroupMbid != null &&
+                  isInLidarr:
+                      r.releaseGroupMbid != null &&
                       inLidarr.contains(r.releaseGroupMbid),
                   onTap: r.releaseGroupMbid == null
                       ? null
                       : () => _openSheet(
-                            context,
-                            MusicBrainzReleaseGroup(
-                                id: r.releaseGroupMbid!, title: r.title),
-                            inLidarr.contains(r.releaseGroupMbid),
+                          context,
+                          MusicBrainzReleaseGroup(
+                            id: r.releaseGroupMbid!,
+                            title: r.title,
                           ),
+                          inLidarr.contains(r.releaseGroupMbid),
+                        ),
                 ),
               if (releases.length > 5)
                 _SeeMoreButton(
                   expanded: _albumsExpanded,
                   total: releases.length,
-                  onTap: () => setState(() => _albumsExpanded = !_albumsExpanded),
+                  onTap: () =>
+                      setState(() => _albumsExpanded = !_albumsExpanded),
                 ),
             ],
           );
@@ -278,17 +288,17 @@ class _OverviewTabState extends ConsumerState<_OverviewTab> {
   }
 
   Widget _miniSkeleton(int count) => Skeleton.group(
-        child: Column(
-          children: [
-            for (int i = 0; i < count; i++)
-              ListTile(
-                leading: Skeleton.box(width: 48, height: 48),
-                title: Skeleton.line(height: 13),
-                subtitle: Skeleton.line(width: 80, height: 11),
-              ),
-          ],
-        ),
-      );
+    child: Column(
+      children: [
+        for (int i = 0; i < count; i++)
+          ListTile(
+            leading: Skeleton.box(width: 48, height: 48),
+            title: Skeleton.line(height: 13),
+            subtitle: Skeleton.line(width: 80, height: 11),
+          ),
+      ],
+    ),
+  );
 }
 
 // ── Discography tab ───────────────────────────────────────────────────────────
@@ -300,7 +310,9 @@ class _DiscographyTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final discoAsync = ref.watch(_discographyProvider(artist));
-    final inLidarr = ref.watch(_lidarrAlbumStatusProvider(artist)).when(
+    final inLidarr = ref
+        .watch(_lidarrAlbumStatusProvider(artist))
+        .when(
           data: (v) => v,
           error: (_, __) => const <String>{},
           loading: () => const <String>{},
@@ -393,17 +405,25 @@ class _ArtistHeader extends ConsumerWidget {
                 ),
                 if (meta.isNotEmpty) ...[
                   const SizedBox(height: 2),
-                  Text(meta,
-                      style: const TextStyle(
-                          color: AppColors.textSecondary, fontSize: 13)),
+                  Text(
+                    meta,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 13,
+                    ),
+                  ),
                 ],
                 if (artist.disambiguation != null) ...[
                   const SizedBox(height: 2),
-                  Text(artist.disambiguation!,
-                      style: const TextStyle(
-                          color: AppColors.textTertiary, fontSize: 12),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis),
+                  Text(
+                    artist.disambiguation!,
+                    style: const TextStyle(
+                      color: AppColors.textTertiary,
+                      fontSize: 12,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ],
               ],
             ),
@@ -449,18 +469,18 @@ class _ArtistInitial extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        color: AppColors.surfaceElevated,
-        child: Center(
-          child: Text(
-            name.isNotEmpty ? name[0].toUpperCase() : '?',
-            style: const TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.w700,
-              color: AppColors.accent,
-            ),
-          ),
+    color: AppColors.surfaceElevated,
+    child: Center(
+      child: Text(
+        name.isNotEmpty ? name[0].toUpperCase() : '?',
+        style: const TextStyle(
+          fontSize: 32,
+          fontWeight: FontWeight.w700,
+          color: AppColors.accent,
         ),
-      );
+      ),
+    ),
+  );
 }
 
 // ── Shared section header ─────────────────────────────────────────────────────
@@ -471,16 +491,19 @@ class _GroupHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(16, 20, 16, 4),
-        child: Text(label, style: Theme.of(context).textTheme.labelLarge),
-      );
+    padding: const EdgeInsets.fromLTRB(16, 20, 16, 4),
+    child: Text(label, style: Theme.of(context).textTheme.labelLarge),
+  );
 }
 
 // ── See more button ───────────────────────────────────────────────────────────
 
 class _SeeMoreButton extends StatelessWidget {
-  const _SeeMoreButton(
-      {required this.expanded, required this.total, required this.onTap});
+  const _SeeMoreButton({
+    required this.expanded,
+    required this.total,
+    required this.onTap,
+  });
   final bool expanded;
   final int total;
   final VoidCallback onTap;
@@ -541,8 +564,11 @@ class _LbAlbumTile extends StatelessWidget {
           child: coverArtUrl == null
               ? Container(
                   color: AppColors.surfaceElevated,
-                  child: const Icon(Icons.album,
-                      color: AppColors.textTertiary, size: 20),
+                  child: const Icon(
+                    Icons.album,
+                    color: AppColors.textTertiary,
+                    size: 20,
+                  ),
                 )
               : CachedNetworkImage(
                   imageUrl: coverArtUrl!,
@@ -551,8 +577,11 @@ class _LbAlbumTile extends StatelessWidget {
                       Container(color: AppColors.surfaceElevated),
                   errorWidget: (_, __, ___) => Container(
                     color: AppColors.surfaceElevated,
-                    child: const Icon(Icons.album,
-                        color: AppColors.textTertiary, size: 20),
+                    child: const Icon(
+                      Icons.album,
+                      color: AppColors.textTertiary,
+                      size: 20,
+                    ),
                   ),
                 ),
         ),
@@ -561,10 +590,15 @@ class _LbAlbumTile extends StatelessWidget {
       subtitle: listenCount != null
           ? Text(
               _formatListens(listenCount!),
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 12,
+              ),
             )
           : null,
-      trailing: isInLidarr ? _InLidarrBadge() : const Icon(Icons.chevron_right, color: AppColors.textTertiary),
+      trailing: isInLidarr
+          ? _InLidarrBadge()
+          : const Icon(Icons.chevron_right, color: AppColors.textTertiary),
     );
   }
 }
@@ -589,8 +623,11 @@ class _LbSongTile extends StatelessWidget {
         height: 48,
         child: Icon(Icons.music_note, color: AppColors.textTertiary),
       ),
-      title: Text(recording.trackName,
-          maxLines: 1, overflow: TextOverflow.ellipsis),
+      title: Text(
+        recording.trackName,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
       subtitle: Text(
         sub,
         maxLines: 1,
@@ -627,7 +664,8 @@ class _ReleaseRowState extends ConsumerState<_ReleaseRow> {
     if (repo == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('Configure Lidarr in Settings to request albums.')),
+          content: Text('Configure Lidarr in Settings to request albums.'),
+        ),
       );
       return;
     }
@@ -635,20 +673,21 @@ class _ReleaseRowState extends ConsumerState<_ReleaseRow> {
     try {
       final lidarrArtists = await repo.searchArtists(widget.artist.name);
       final lidarrArtist =
-          lidarrArtists.where((a) => a.foreignArtistId == widget.artist.id).firstOrNull ??
-              lidarrArtists.firstOrNull;
-      if (lidarrArtist == null) throw Exception('Artist not found in Lidarr catalog');
-
-      final lidarrAlbums = await repo.artistAlbums(
-        artistName: widget.artist.name,
-        foreignArtistId: lidarrArtist.foreignArtistId,
-      );
-      final lidarrAlbum =
-          lidarrAlbums.where((a) => a.foreignAlbumId == widget.release.id).firstOrNull;
-      if (lidarrAlbum == null) throw Exception('Album not found in Lidarr catalog');
+          lidarrArtists
+              .where((a) => a.foreignArtistId == widget.artist.id)
+              .firstOrNull ??
+          lidarrArtists.firstOrNull;
+      if (lidarrArtist == null)
+        throw Exception('Artist not found in Lidarr catalog');
 
       final defaults = await repo.defaults();
-      await repo.addAlbum(lidarrArtist, lidarrAlbum, defaults: defaults);
+      await repo.addMusicBrainzAlbum(
+        lidarrArtist,
+        foreignAlbumId: widget.release.id,
+        title: widget.release.title,
+        artistName: widget.artist.name,
+        defaults: defaults,
+      );
 
       if (!mounted) return;
       setState(() {
@@ -657,14 +696,15 @@ class _ReleaseRowState extends ConsumerState<_ReleaseRow> {
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text('Requested "${widget.release.title}" via Lidarr')),
+          content: Text('Requested "${widget.release.title}" via Lidarr'),
+        ),
       );
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
@@ -689,7 +729,10 @@ class _ReleaseRowState extends ConsumerState<_ReleaseRow> {
     if (widget.isInLidarr) {
       trailing = _InLidarrBadge();
     } else if (_requested) {
-      trailing = const Icon(Icons.check_circle_outline, color: AppColors.primary);
+      trailing = const Icon(
+        Icons.check_circle_outline,
+        color: AppColors.primary,
+      );
     } else if (_busy) {
       trailing = const SizedBox(
         width: 20,
@@ -722,17 +765,24 @@ class _ReleaseRowState extends ConsumerState<_ReleaseRow> {
             placeholder: (_, __) => Container(color: AppColors.surfaceElevated),
             errorWidget: (_, __, ___) => Container(
               color: AppColors.surfaceElevated,
-              child: const Icon(Icons.album,
-                  color: AppColors.textTertiary, size: 20),
+              child: const Icon(
+                Icons.album,
+                color: AppColors.textTertiary,
+                size: 20,
+              ),
             ),
           ),
         ),
       ),
       title: Text(r.title, maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: r.year.isNotEmpty
-          ? Text(r.year,
+          ? Text(
+              r.year,
               style: const TextStyle(
-                  color: AppColors.textSecondary, fontSize: 12))
+                color: AppColors.textSecondary,
+                fontSize: 12,
+              ),
+            )
           : null,
       trailing: trailing,
     );
@@ -744,22 +794,22 @@ class _ReleaseRowState extends ConsumerState<_ReleaseRow> {
 class _InLidarrBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-        decoration: BoxDecoration(
-          color: AppColors.primary.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(4),
-          border: Border.all(color: AppColors.primary.withValues(alpha: 0.4)),
-        ),
-        child: const Text(
-          'IN LIDARR',
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
-            color: AppColors.primary,
-            letterSpacing: 0.5,
-          ),
-        ),
-      );
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+    decoration: BoxDecoration(
+      color: AppColors.primary.withValues(alpha: 0.15),
+      borderRadius: BorderRadius.circular(4),
+      border: Border.all(color: AppColors.primary.withValues(alpha: 0.4)),
+    ),
+    child: const Text(
+      'IN LIDARR',
+      style: TextStyle(
+        fontSize: 10,
+        fontWeight: FontWeight.w700,
+        color: AppColors.primary,
+        letterSpacing: 0.5,
+      ),
+    ),
+  );
 }
 
 String _formatListens(int count) {
@@ -773,33 +823,33 @@ class _DiscographySkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Skeleton.group(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            Skeleton.line(width: 60, height: 11),
-            const SizedBox(height: 12),
-            for (int i = 0; i < 8; i++) ...[
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Row(
-                  children: [
-                    Skeleton.box(width: 48, height: 48),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Skeleton.line(height: 13),
-                          const SizedBox(height: 6),
-                          Skeleton.line(width: 50, height: 11),
-                        ],
-                      ),
-                    ),
-                  ],
+    child: ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Skeleton.line(width: 60, height: 11),
+        const SizedBox(height: 12),
+        for (int i = 0; i < 8; i++) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Row(
+              children: [
+                Skeleton.box(width: 48, height: 48),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Skeleton.line(height: 13),
+                      const SizedBox(height: 6),
+                      Skeleton.line(width: 50, height: 11),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ],
-        ),
-      );
+              ],
+            ),
+          ),
+        ],
+      ],
+    ),
+  );
 }
