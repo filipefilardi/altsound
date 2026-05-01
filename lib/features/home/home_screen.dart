@@ -174,14 +174,7 @@ class _ResumeCard extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  if (albumId != null)
-                    const Padding(
-                      padding: EdgeInsets.only(right: 12),
-                      child: Icon(
-                        Icons.chevron_right_rounded,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
+                  if (albumId != null) const SizedBox(width: 12),
                 ],
               ),
             ),
