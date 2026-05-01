@@ -5,7 +5,7 @@ import '../theme/app_colors.dart';
 class ArtworkPlaceholder extends StatelessWidget {
   const ArtworkPlaceholder({
     super.key,
-    this.icon = Icons.album,
+    this.icon = Icons.album_rounded,
     this.iconSize = 40,
     this.iconColor = AppColors.textTertiary,
     this.backgroundColor = AppColors.surfaceElevated,

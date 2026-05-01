@@ -137,7 +137,10 @@ class _AccountCard extends ConsumerWidget {
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.textSecondary,
+              ),
             ],
           ),
         ),
@@ -298,20 +301,20 @@ class _PlaybackGroup extends ConsumerWidget {
       label: 'Playback',
       children: [
         ListTile(
-          leading: const Icon(Icons.high_quality_outlined),
+          leading: const Icon(Icons.high_quality_rounded),
           title: const Text('Streaming quality'),
           subtitle: Text(
             prefs.streamingQuality.label,
             style: const TextStyle(color: AppColors.textSecondary),
           ),
           trailing: const Icon(
-            Icons.chevron_right,
+            Icons.chevron_right_rounded,
             color: AppColors.textSecondary,
           ),
           onTap: () => _showStreamingQualitySheet(context),
         ),
         SwitchListTile(
-          secondary: const Icon(Icons.swap_horiz_outlined),
+          secondary: const Icon(Icons.swap_horiz_rounded),
           title: const Text('Gapless playback'),
           subtitle: const Text(
             'Eagerly preload tracks for seamless transitions. Applies on next launch.',
@@ -338,27 +341,27 @@ class _LibraryGroup extends ConsumerWidget {
       label: 'Library',
       children: [
         ListTile(
-          leading: const Icon(Icons.download_outlined),
+          leading: const Icon(Icons.download_rounded),
           title: const Text('Downloads'),
           subtitle: Text(
             '${downloads.tracks.length} tracks · ${_formatBytes(downloads.totalSizeBytes)}',
             style: const TextStyle(color: AppColors.textSecondary),
           ),
           trailing: const Icon(
-            Icons.chevron_right,
+            Icons.chevron_right_rounded,
             color: AppColors.textSecondary,
           ),
           onTap: () => context.push('/downloads'),
         ),
         ListTile(
-          leading: const Icon(Icons.tune_outlined),
+          leading: const Icon(Icons.tune_rounded),
           title: const Text('Download settings'),
           subtitle: const Text(
             'Auto-download, WiFi only',
             style: TextStyle(color: AppColors.textSecondary),
           ),
           trailing: const Icon(
-            Icons.chevron_right,
+            Icons.chevron_right_rounded,
             color: AppColors.textSecondary,
           ),
           onTap: () => context.push('/settings/downloads'),
@@ -378,7 +381,7 @@ class _StorageGroup extends ConsumerWidget {
       label: 'Storage',
       children: [
         ListTile(
-          leading: const Icon(Icons.image_outlined),
+          leading: const Icon(Icons.image_rounded),
           title: const Text('Clear image cache'),
           subtitle: Text(
             size.when(
@@ -417,7 +420,7 @@ class _SignOutTile extends ConsumerWidget {
       borderRadius: BorderRadius.circular(16),
       clipBehavior: Clip.antiAlias,
       child: ListTile(
-        leading: const Icon(Icons.logout, color: AppColors.error),
+        leading: const Icon(Icons.logout_rounded, color: AppColors.error),
         title: const Text('Sign out', style: TextStyle(color: AppColors.error)),
         onTap: () async {
           await ref.read(authControllerProvider.notifier).logout();

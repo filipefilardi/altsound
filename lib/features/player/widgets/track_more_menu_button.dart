@@ -8,17 +8,14 @@ import '../player_providers.dart';
 import 'add_track_to_playlist_sheet.dart';
 
 class TrackMoreMenuButton extends ConsumerWidget {
-  const TrackMoreMenuButton({
-    required this.track,
-    super.key,
-  });
+  const TrackMoreMenuButton({required this.track, super.key});
 
   final Track track;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return IconButton(
-      icon: const Icon(Icons.more_vert, color: AppColors.textSecondary),
+      icon: const Icon(Icons.more_vert_rounded, color: AppColors.textSecondary),
       onPressed: () async {
         final action = await _showActionsBottomSheet(context);
         if (action == null || !context.mounted) return;
@@ -38,31 +35,31 @@ class TrackMoreMenuButton extends ConsumerWidget {
           child: ListView(
             children: [
               ListTile(
-                leading: const Icon(Icons.playlist_add),
+                leading: const Icon(Icons.playlist_add_rounded),
                 title: const Text('Add to playlist'),
                 onTap: () =>
                     Navigator.of(sheetContext).pop(_TrackAction.addToPlaylist),
               ),
               ListTile(
-                leading: const Icon(Icons.queue_music),
+                leading: const Icon(Icons.queue_music_rounded),
                 title: const Text('Play next'),
                 onTap: () =>
                     Navigator.of(sheetContext).pop(_TrackAction.playNext),
               ),
               ListTile(
-                leading: const Icon(Icons.add_to_queue),
+                leading: const Icon(Icons.add_to_queue_rounded),
                 title: const Text('Add to queue'),
                 onTap: () =>
                     Navigator.of(sheetContext).pop(_TrackAction.addToQueue),
               ),
               ListTile(
-                leading: const Icon(Icons.album_outlined),
+                leading: const Icon(Icons.album_rounded),
                 title: const Text('Go to album'),
                 onTap: () =>
                     Navigator.of(sheetContext).pop(_TrackAction.goToAlbum),
               ),
               ListTile(
-                leading: const Icon(Icons.person_outline),
+                leading: const Icon(Icons.person_rounded),
                 title: const Text('Go to artist'),
                 onTap: () =>
                     Navigator.of(sheetContext).pop(_TrackAction.goToArtist),
@@ -83,16 +80,16 @@ class TrackMoreMenuButton extends ConsumerWidget {
       case _TrackAction.playNext:
         await ref.read(playerControllerProvider).playNext(track);
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Playing next')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Playing next')));
         }
       case _TrackAction.addToQueue:
         await ref.read(playerControllerProvider).addToQueue(track);
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Added to queue')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Added to queue')));
         }
       case _TrackAction.goToAlbum:
         if (track.albumId != null && track.albumId!.isNotEmpty) {
@@ -108,10 +105,4 @@ class TrackMoreMenuButton extends ConsumerWidget {
   }
 }
 
-enum _TrackAction {
-  addToPlaylist,
-  playNext,
-  addToQueue,
-  goToAlbum,
-  goToArtist,
-}
+enum _TrackAction { addToPlaylist, playNext, addToQueue, goToAlbum, goToArtist }

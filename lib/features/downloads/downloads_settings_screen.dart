@@ -27,7 +27,7 @@ class DownloadsSettingsScreen extends ConsumerWidget {
         children: [
           const _SectionLabel('Behaviour'),
           SwitchListTile(
-            secondary: const Icon(Icons.sync_outlined),
+            secondary: const Icon(Icons.sync_rounded),
             title: const Text('Auto-download new songs'),
             subtitle: const Text(
               'When you open a downloaded album or playlist, any new tracks are queued automatically.',
@@ -38,7 +38,7 @@ class DownloadsSettingsScreen extends ConsumerWidget {
           ),
           const _SectionLabel('Network'),
           SwitchListTile(
-            secondary: const Icon(Icons.wifi_outlined),
+            secondary: const Icon(Icons.wifi_rounded),
             title: const Text('WiFi only'),
             subtitle: const Text(
               'Pause downloads when not connected to WiFi.',
@@ -49,7 +49,7 @@ class DownloadsSettingsScreen extends ConsumerWidget {
           ),
           const _SectionLabel('Storage'),
           ListTile(
-            leading: const Icon(Icons.bar_chart_outlined),
+            leading: const Icon(Icons.bar_chart_rounded),
             title: const Text('Downloaded tracks'),
             subtitle: Text(
               '${downloads.tracks.length} tracks across $albumCount albums',
@@ -61,7 +61,7 @@ class DownloadsSettingsScreen extends ConsumerWidget {
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.playlist_play_outlined),
+            leading: const Icon(Icons.playlist_play_rounded),
             title: const Text('Saved playlists'),
             subtitle: Text(
               '${downloads.playlists.length} playlists',
@@ -70,7 +70,7 @@ class DownloadsSettingsScreen extends ConsumerWidget {
           ),
           if (downloads.queueLength > 0)
             ListTile(
-              leading: const Icon(Icons.schedule_outlined),
+              leading: const Icon(Icons.schedule_rounded),
               title: const Text('Queued downloads'),
               subtitle: Text(
                 '${downloads.queueLength} tracks waiting',
@@ -78,8 +78,10 @@ class DownloadsSettingsScreen extends ConsumerWidget {
               ),
             ),
           ListTile(
-            leading: const Icon(Icons.delete_forever_outlined,
-                color: AppColors.error),
+            leading: const Icon(
+              Icons.delete_forever_rounded,
+              color: AppColors.error,
+            ),
             title: const Text(
               'Remove all downloads',
               style: TextStyle(color: AppColors.error),
@@ -88,7 +90,8 @@ class DownloadsSettingsScreen extends ConsumerWidget {
               'Delete all downloaded tracks and offline playlists from this device.',
               style: TextStyle(color: AppColors.textSecondary),
             ),
-            enabled: downloads.tracks.isNotEmpty || downloads.playlists.isNotEmpty,
+            enabled:
+                downloads.tracks.isNotEmpty || downloads.playlists.isNotEmpty,
             onTap: () => _confirmRemoveAll(context, manager),
           ),
         ],
@@ -127,9 +130,9 @@ Future<void> _confirmRemoveAll(
   if (confirmed == true) {
     await manager.clearAllDownloads();
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('All downloads removed')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('All downloads removed')));
     }
   }
 }

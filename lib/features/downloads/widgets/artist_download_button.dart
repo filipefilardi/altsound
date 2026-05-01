@@ -31,7 +31,7 @@ class ArtistDownloadButton extends ConsumerWidget {
     final msg = enqueued == 0
         ? 'Nothing to download'
         : 'Downloading $enqueued song${enqueued == 1 ? '' : 's'} from ${artist.name}'
-            '${failed > 0 ? ' ($failed album${failed == 1 ? '' : 's'} failed)' : ''}';
+              '${failed > 0 ? ' ($failed album${failed == 1 ? '' : 's'} failed)' : ''}';
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
@@ -39,8 +39,9 @@ class ArtistDownloadButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final downloads = ref.watch(downloadManagerProvider);
     final manager = ref.read(downloadManagerProvider.notifier);
-    final fetching =
-        ref.watch(artistDownloadFetchesProvider).contains(artist.id);
+    final fetching = ref
+        .watch(artistDownloadFetchesProvider)
+        .contains(artist.id);
 
     if (!manager.supported) return const SizedBox.shrink();
     if (artist.albums.isEmpty) return const SizedBox.shrink();
@@ -79,7 +80,7 @@ class ArtistDownloadButton extends ConsumerWidget {
         width: 40,
         height: 40,
         child: Center(
-          child: Icon(Icons.downloading, color: AppColors.primary),
+          child: Icon(Icons.downloading_rounded, color: AppColors.primary),
         ),
       );
     }
@@ -87,14 +88,17 @@ class ArtistDownloadButton extends ConsumerWidget {
     if (isBlocked) {
       return IconButton(
         tooltip: 'Waiting for WiFi — tap to change settings',
-        icon: const Icon(Icons.wifi_off_rounded, color: AppColors.textSecondary),
+        icon: const Icon(
+          Icons.wifi_off_rounded,
+          color: AppColors.textSecondary,
+        ),
         onPressed: () => showWifiRequiredDialog(context),
       );
     }
 
     return IconButton(
       tooltip: 'Download all songs',
-      icon: const Icon(Icons.download_outlined, color: AppColors.textPrimary),
+      icon: const Icon(Icons.download_rounded, color: AppColors.textPrimary),
       onPressed: () => _onPressed(context, ref),
     );
   }

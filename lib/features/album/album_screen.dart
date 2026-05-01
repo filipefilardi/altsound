@@ -402,14 +402,16 @@ class _ActionBar extends ConsumerWidget {
                     }
                     controller.playTracks(album.tracks, contextId: album.id);
                   },
-            icon: isAlbumPlaying ? Icons.pause : Icons.play_arrow,
+            icon: isAlbumPlaying
+                ? Icons.pause_rounded
+                : Icons.play_arrow_rounded,
             tooltip: isAlbumPlaying ? 'Pause' : 'Play',
           ),
           const SizedBox(width: 12),
           IconButton(
             tooltip: 'Shuffle',
             icon: Icon(
-              Icons.shuffle,
+              Icons.shuffle_rounded,
               color: shuffleEnabled ? AppColors.primary : AppColors.textPrimary,
             ),
             onPressed: album.tracks.isEmpty
@@ -419,7 +421,7 @@ class _ActionBar extends ConsumerWidget {
           AlbumDownloadButton(album: album),
           IconButton(
             tooltip: 'More actions',
-            icon: const Icon(Icons.more_vert),
+            icon: const Icon(Icons.more_vert_rounded),
             onPressed: album.tracks.isEmpty
                 ? null
                 : () async {
@@ -432,14 +434,18 @@ class _ActionBar extends ConsumerWidget {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 ListTile(
-                                  leading: const Icon(Icons.playlist_add),
+                                  leading: const Icon(
+                                    Icons.playlist_add_rounded,
+                                  ),
                                   title: const Text('Add to playlist'),
                                   onTap: () => Navigator.of(
                                     sheetContext,
                                   ).pop(_CollectionAction.addToPlaylist),
                                 ),
                                 ListTile(
-                                  leading: const Icon(Icons.add_to_queue),
+                                  leading: const Icon(
+                                    Icons.add_to_queue_rounded,
+                                  ),
                                   title: const Text('Add to queue'),
                                   onTap: () => Navigator.of(
                                     sheetContext,
@@ -537,7 +543,7 @@ class _TrackTile extends ConsumerWidget {
             const Padding(
               padding: EdgeInsets.only(right: 4),
               child: Icon(
-                Icons.download_for_offline,
+                Icons.download_for_offline_rounded,
                 size: 14,
                 color: AppColors.primary,
               ),
@@ -562,7 +568,11 @@ class _ArtFallback extends StatelessWidget {
       width: size,
       height: size,
       color: AppColors.surfaceElevated,
-      child: const Icon(Icons.album, size: 64, color: AppColors.textTertiary),
+      child: const Icon(
+        Icons.album_rounded,
+        size: 64,
+        color: AppColors.textTertiary,
+      ),
     );
   }
 }

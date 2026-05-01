@@ -258,7 +258,9 @@ class _PopularTracksSectionState extends State<_PopularTracksSection> {
                 child: Row(
                   children: [
                     Icon(
-                      _expanded ? Icons.expand_less : Icons.expand_more,
+                      _expanded
+                          ? Icons.expand_less_rounded
+                          : Icons.expand_more_rounded,
                       size: 18,
                       color: AppColors.primary,
                     ),
@@ -370,14 +372,16 @@ class _ArtistActionRow extends ConsumerWidget {
                   );
                 }
               : null,
-          icon: isArtistPlaying ? Icons.pause : Icons.play_arrow,
+          icon: isArtistPlaying
+              ? Icons.pause_rounded
+              : Icons.play_arrow_rounded,
           tooltip: isArtistPlaying ? 'Pause' : 'Play',
         ),
         const SizedBox(width: 12),
         IconButton(
           tooltip: 'Shuffle',
           icon: Icon(
-            Icons.shuffle,
+            Icons.shuffle_rounded,
             color: shuffleEnabled ? AppColors.primary : AppColors.textPrimary,
           ),
           onPressed: hasTracks
@@ -387,7 +391,7 @@ class _ArtistActionRow extends ConsumerWidget {
         ArtistDownloadButton(artist: artist),
         IconButton(
           tooltip: 'More actions',
-          icon: const Icon(Icons.more_vert),
+          icon: const Icon(Icons.more_vert_rounded),
           onPressed: hasTracks
               ? () async {
                   final action =
@@ -399,14 +403,14 @@ class _ArtistActionRow extends ConsumerWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               ListTile(
-                                leading: const Icon(Icons.playlist_add),
+                                leading: const Icon(Icons.playlist_add_rounded),
                                 title: const Text('Add to playlist'),
                                 onTap: () => Navigator.of(
                                   sheetContext,
                                 ).pop(_ArtistCollectionAction.addToPlaylist),
                               ),
                               ListTile(
-                                leading: const Icon(Icons.add_to_queue),
+                                leading: const Icon(Icons.add_to_queue_rounded),
                                 title: const Text('Add to queue'),
                                 onTap: () => Navigator.of(
                                   sheetContext,
@@ -560,7 +564,7 @@ class _PopularTrackTile extends ConsumerWidget {
             const Padding(
               padding: EdgeInsets.only(right: 4),
               child: Icon(
-                Icons.download_for_offline,
+                Icons.download_for_offline_rounded,
                 size: 14,
                 color: AppColors.primary,
               ),

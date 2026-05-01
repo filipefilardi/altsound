@@ -74,6 +74,7 @@ class _AppShellState extends ConsumerState<AppShell> {
           SafeArea(
             top: false,
             child: NavigationBar(
+              labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
               selectedIndex: widget.navigationShell.currentIndex,
               onDestinationSelected: (i) => widget.navigationShell.goBranch(
                 i,
@@ -81,18 +82,18 @@ class _AppShellState extends ConsumerState<AppShell> {
               ),
               destinations: const [
                 NavigationDestination(
-                  icon: Icon(Icons.home_outlined),
-                  selectedIcon: Icon(Icons.home),
+                  icon: Icon(Icons.home_rounded),
+                  selectedIcon: Icon(Icons.home_rounded),
                   label: 'Home',
                 ),
                 NavigationDestination(
-                  icon: Icon(Icons.search_outlined),
-                  selectedIcon: Icon(Icons.search),
+                  icon: Icon(Icons.search_rounded),
+                  selectedIcon: Icon(Icons.search_rounded),
                   label: 'Search',
                 ),
                 NavigationDestination(
-                  icon: Icon(Icons.library_music_outlined),
-                  selectedIcon: Icon(Icons.library_music),
+                  icon: Icon(Icons.library_music_rounded),
+                  selectedIcon: Icon(Icons.library_music_rounded),
                   label: 'Library',
                 ),
               ],

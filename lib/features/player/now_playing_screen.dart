@@ -58,7 +58,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
       return Scaffold(
         appBar: AppBar(
           leading: IconButton(
-            icon: const Icon(Icons.keyboard_arrow_down),
+            icon: const Icon(Icons.keyboard_arrow_down_rounded),
             onPressed: () => context.pop(),
           ),
         ),
@@ -355,7 +355,7 @@ class _TopBar extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.keyboard_arrow_down, size: 30),
+                  icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 30),
                   onPressed: () => context.pop(),
                 ),
                 Row(
@@ -363,7 +363,9 @@ class _TopBar extends ConsumerWidget {
                   children: [
                     IconButton(
                       icon: Icon(
-                        castConnected ? Icons.cast_connected : Icons.cast,
+                        castConnected
+                            ? Icons.cast_connected_rounded
+                            : Icons.cast_rounded,
                         size: 22,
                         color: castConnected ? AppColors.primary : null,
                       ),
@@ -371,7 +373,7 @@ class _TopBar extends ConsumerWidget {
                       tooltip: 'Play on…',
                     ),
                     IconButton(
-                      icon: const Icon(Icons.queue_music, size: 24),
+                      icon: const Icon(Icons.queue_music_rounded, size: 24),
                       onPressed: onQueue,
                       tooltip: 'Up next',
                     ),
@@ -417,7 +419,7 @@ class _SecondaryControls extends ConsumerWidget {
         IconButton(
           onPressed: isRemote ? null : () => controller.toggleShuffle(),
           icon: Icon(
-            Icons.shuffle,
+            Icons.shuffle_rounded,
             color: shuffled ? AppColors.primary : AppColors.textSecondary,
             size: 22,
           ),
@@ -426,7 +428,9 @@ class _SecondaryControls extends ConsumerWidget {
         IconButton(
           onPressed: isRemote ? null : () => controller.cycleRepeatMode(),
           icon: Icon(
-            loop == LoopMode.one ? Icons.repeat_one : Icons.repeat,
+            loop == LoopMode.one
+                ? Icons.repeat_one_rounded
+                : Icons.repeat_rounded,
             color: loop == LoopMode.off
                 ? AppColors.textSecondary
                 : AppColors.primary,
@@ -446,7 +450,9 @@ class _SecondaryControls extends ConsumerWidget {
                   ),
                 ),
           icon: Icon(
-            saved ? Icons.playlist_add_check : Icons.playlist_add,
+            saved
+                ? Icons.playlist_add_check_rounded
+                : Icons.playlist_add_rounded,
             color: saved ? AppColors.primary : AppColors.textSecondary,
             size: 24,
           ),
@@ -539,7 +545,10 @@ class _MainControls extends ConsumerWidget {
       children: [
         IconButton(
           iconSize: 32,
-          icon: const Icon(Icons.skip_previous, color: AppColors.textPrimary),
+          icon: const Icon(
+            Icons.skip_previous_rounded,
+            color: AppColors.textPrimary,
+          ),
           onPressed: controller.previous,
         ),
         const SizedBox(width: 24),
@@ -547,7 +556,10 @@ class _MainControls extends ConsumerWidget {
         const SizedBox(width: 24),
         IconButton(
           iconSize: 32,
-          icon: const Icon(Icons.skip_next, color: AppColors.textPrimary),
+          icon: const Icon(
+            Icons.skip_next_rounded,
+            color: AppColors.textPrimary,
+          ),
           onPressed: controller.next,
         ),
       ],
@@ -585,7 +597,7 @@ class _PlayPauseButton extends StatelessWidget {
           onTap: onTap,
           child: Center(
             child: Icon(
-              playing ? Icons.pause : Icons.play_arrow,
+              playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
               color: AppColors.onAccent,
               size: 36,
             ),
@@ -617,7 +629,11 @@ class _ErrorBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.error_outline, color: AppColors.error, size: 18),
+          const Icon(
+            Icons.error_outline_rounded,
+            color: AppColors.error,
+            size: 18,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -642,7 +658,7 @@ class _ErrorBanner extends StatelessWidget {
           ),
           IconButton(
             onPressed: onDismiss,
-            icon: const Icon(Icons.close, size: 18),
+            icon: const Icon(Icons.close_rounded, size: 18),
             color: AppColors.textSecondary,
             visualDensity: VisualDensity.compact,
           ),
