@@ -135,9 +135,6 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
   Widget build(BuildContext context) {
     final playlistId = widget.playlistId;
     final async = ref.watch(playlistProvider(playlistId));
-    final playlist = async.value;
-    final canDelete =
-        playlist != null && playlist.name.toLowerCase().trim() != 'liked songs';
     final downloads = ref.watch(downloadManagerProvider);
 
     ref.listen(playlistProvider(playlistId), (prev, next) {
@@ -177,17 +174,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                   ),
                 ],
               )
-            : AppBar(
-                title: const Text('Playlist'),
-                actions: [
-                  if (canDelete)
-                    IconButton(
-                      tooltip: 'Delete playlist',
-                      icon: const Icon(Icons.delete_rounded),
-                      onPressed: () => _confirmDelete(context, ref, playlist),
-                    ),
-                ],
-              ),
+            : AppBar(title: const Text('Playlist')),
         bottomNavigationBar: const MiniPlayerSlot(
           withTopDivider: true,
           reserveSpaceWhenEmpty: true,
@@ -235,6 +222,9 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
             inSelection: _inSelection,
             onLongPress: _onLongPressStartSelection,
             onToggleSelected: _toggleTrackSelected,
+            onDelete: playlist.name.toLowerCase().trim() == 'liked songs'
+                ? null
+                : () => _confirmDelete(context, ref, playlist),
           ),
         ),
       ),
@@ -494,6 +484,7 @@ class _PlaylistView extends ConsumerWidget {
     required this.inSelection,
     required this.onLongPress,
     required this.onToggleSelected,
+    this.onDelete,
   });
 
   final PlaylistDetail playlist;
@@ -501,6 +492,7 @@ class _PlaylistView extends ConsumerWidget {
   final bool inSelection;
   final void Function(String trackId) onLongPress;
   final void Function(String trackId) onToggleSelected;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -511,7 +503,11 @@ class _PlaylistView extends ConsumerWidget {
         children: [
           _PlaylistHeader(playlist: playlist),
           const SizedBox(height: 16),
-          _ActionRow(playlist: playlist, selectionActive: inSelection),
+          _ActionRow(
+            playlist: playlist,
+            selectionActive: inSelection,
+            onDelete: onDelete,
+          ),
           const SizedBox(height: 8),
           if (playlist.tracks.isEmpty)
             const Padding(
@@ -663,9 +659,15 @@ class _PlaylistArtwork extends ConsumerWidget {
 }
 
 class _ActionRow extends ConsumerWidget {
-  const _ActionRow({required this.playlist, this.selectionActive = false});
+  const _ActionRow({
+    required this.playlist,
+    this.selectionActive = false,
+    this.onDelete,
+  });
+
   final PlaylistDetail playlist;
   final bool selectionActive;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -677,7 +679,9 @@ class _ActionRow extends ConsumerWidget {
     final isPlaylistPlaying =
         playbackState?.playing == true &&
         (currentMediaItem?.extras?['contextId'] as String?) == playlist.id;
-    final enabled = playlist.tracks.isNotEmpty && !selectionActive;
+    final hasTracks = playlist.tracks.isNotEmpty;
+    final enabled = hasTracks && !selectionActive;
+    final canOpenMore = !selectionActive && (hasTracks || onDelete != null);
 
     return Opacity(
       opacity: selectionActive ? 0.45 : 1,
@@ -718,7 +722,7 @@ class _ActionRow extends ConsumerWidget {
             IconButton(
               tooltip: 'More actions',
               icon: const Icon(Icons.more_vert_rounded),
-              onPressed: enabled
+              onPressed: canOpenMore
                   ? () async {
                       final action =
                           await showModalBottomSheet<_PlaylistCollectionAction>(
@@ -728,24 +732,43 @@ class _ActionRow extends ConsumerWidget {
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  ListTile(
-                                    leading: const Icon(
-                                      Icons.playlist_add_rounded,
+                                  if (hasTracks) ...[
+                                    ListTile(
+                                      leading: const Icon(
+                                        Icons.playlist_add_rounded,
+                                      ),
+                                      title: const Text('Add to playlist'),
+                                      onTap: () =>
+                                          Navigator.of(sheetContext).pop(
+                                            _PlaylistCollectionAction
+                                                .addToPlaylist,
+                                          ),
                                     ),
-                                    title: const Text('Add to playlist'),
-                                    onTap: () => Navigator.of(sheetContext).pop(
-                                      _PlaylistCollectionAction.addToPlaylist,
+                                    ListTile(
+                                      leading: const Icon(
+                                        Icons.add_to_queue_rounded,
+                                      ),
+                                      title: const Text('Add to queue'),
+                                      onTap: () =>
+                                          Navigator.of(sheetContext).pop(
+                                            _PlaylistCollectionAction
+                                                .addToQueue,
+                                          ),
                                     ),
-                                  ),
-                                  ListTile(
-                                    leading: const Icon(
-                                      Icons.add_to_queue_rounded,
+                                  ],
+                                  if (onDelete != null) ...[
+                                    if (hasTracks) const Divider(height: 1),
+                                    ListTile(
+                                      leading: const Icon(
+                                        Icons.delete_rounded,
+                                        color: AppColors.error,
+                                      ),
+                                      title: const Text('Delete playlist'),
+                                      onTap: () => Navigator.of(
+                                        sheetContext,
+                                      ).pop(_PlaylistCollectionAction.delete),
                                     ),
-                                    title: const Text('Add to queue'),
-                                    onTap: () => Navigator.of(
-                                      sheetContext,
-                                    ).pop(_PlaylistCollectionAction.addToQueue),
-                                  ),
+                                  ],
                                 ],
                               ),
                             ),
@@ -770,6 +793,8 @@ class _ActionRow extends ConsumerWidget {
                               ),
                             ),
                           );
+                        case _PlaylistCollectionAction.delete:
+                          onDelete?.call();
                       }
                     }
                   : null,
@@ -781,7 +806,7 @@ class _ActionRow extends ConsumerWidget {
   }
 }
 
-enum _PlaylistCollectionAction { addToPlaylist, addToQueue }
+enum _PlaylistCollectionAction { addToPlaylist, addToQueue, delete }
 
 class _ArtFallback extends StatelessWidget {
   const _ArtFallback();
