@@ -1,9 +1,6 @@
 import 'dart:async';
-import 'dart:io';
-import 'dart:ui';
 
 import 'package:audio_service/audio_service.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -73,7 +70,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          _BlurredBackdrop(artUri: mediaItem.artUri),
+          const _PlayerBackdrop(),
           SafeArea(
             child: _DismissibleSurface(
               child: Padding(
@@ -109,9 +106,9 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 textAlign: TextAlign.center,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .headlineMedium,
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.headlineMedium,
                               ),
                               const SizedBox(height: 6),
                               InkWell(
@@ -123,12 +120,11 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   textAlign: TextAlign.center,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
+                                  style: Theme.of(context).textTheme.bodyMedium
                                       ?.copyWith(
                                         fontSize: 14,
-                                        color: artistId == null || artistId.isEmpty
+                                        color:
+                                            artistId == null || artistId.isEmpty
                                             ? AppColors.textSecondary
                                             : AppColors.primary,
                                       ),
@@ -242,10 +238,7 @@ class _DismissibleSurfaceState extends State<_DismissibleSurface>
       },
       child: Opacity(
         opacity: 1 - progress * 0.6,
-        child: Transform.translate(
-          offset: Offset(0, _dy),
-          child: widget.child,
-        ),
+        child: Transform.translate(offset: Offset(0, _dy), child: widget.child),
       ),
     );
   }
@@ -269,46 +262,13 @@ class _DragHandle extends StatelessWidget {
   }
 }
 
-class _BlurredBackdrop extends StatelessWidget {
-  const _BlurredBackdrop({required this.artUri});
-  final Uri? artUri;
+class _PlayerBackdrop extends StatelessWidget {
+  const _PlayerBackdrop();
 
   @override
   Widget build(BuildContext context) {
-    if (artUri == null) {
-      return const ColoredBox(color: AppColors.background);
-    }
-    final isLocal = artUri!.scheme == 'file';
-    return Positioned.fill(
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Image(
-            image: isLocal
-                ? FileImage(File(artUri!.toFilePath()))
-                : CachedNetworkImageProvider(artUri!.toString()),
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) =>
-                const ColoredBox(color: AppColors.background),
-          ),
-          BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
-            child: const ColoredBox(color: Color(0x33000000)),
-          ),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  AppColors.background.withValues(alpha: 0.55),
-                  AppColors.background.withValues(alpha: 0.92),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+    return const Positioned.fill(
+      child: DecoratedBox(decoration: BoxDecoration(color: AppColors.surface)),
     );
   }
 }
@@ -354,18 +314,19 @@ class _TopBar extends ConsumerWidget {
                         castLabel,
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                              fontSize: 10,
-                              letterSpacing: 1.6,
-                              color: castConnected
-                                  ? AppColors.primary
-                                  : AppColors.textSecondary,
-                            ),
+                          fontSize: 10,
+                          letterSpacing: 1.6,
+                          color: castConnected
+                              ? AppColors.primary
+                              : AppColors.textSecondary,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 2),
                       InkWell(
-                        onTap: albumId == null || albumId!.isEmpty || album.isEmpty
+                        onTap:
+                            albumId == null || albumId!.isEmpty || album.isEmpty
                             ? null
                             : () => context.push('/album/$albumId'),
                         child: Text(
@@ -374,7 +335,10 @@ class _TopBar extends ConsumerWidget {
                           textAlign: TextAlign.center,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            color: albumId == null || albumId!.isEmpty || album.isEmpty
+                            color:
+                                albumId == null ||
+                                    albumId!.isEmpty ||
+                                    album.isEmpty
                                 ? AppColors.textPrimary
                                 : AppColors.primary,
                             fontSize: 13,
@@ -429,16 +393,16 @@ class _SecondaryControls extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isRemote = ref.watch(activeRemoteSessionIdProvider) != null;
-    final loop = ref.watch(playerLoopModeProvider).when(
+    final loop = ref
+        .watch(playerLoopModeProvider)
+        .when(
           data: (v) => v,
           error: (_, __) => LoopMode.off,
           loading: () => LoopMode.off,
         );
-    final shuffled = ref.watch(playerShuffleEnabledProvider).when(
-          data: (v) => v,
-          error: (_, __) => false,
-          loading: () => false,
-        );
+    final shuffled = ref
+        .watch(playerShuffleEnabledProvider)
+        .when(data: (v) => v, error: (_, __) => false, loading: () => false);
     final controller = ref.read(playerControllerProvider);
     final offline = mediaItem.extras?['isOffline'] == true;
     final presenceAsync = ref.watch(currentTrackPlaylistPresenceProvider);
@@ -463,8 +427,9 @@ class _SecondaryControls extends ConsumerWidget {
           onPressed: isRemote ? null : () => controller.cycleRepeatMode(),
           icon: Icon(
             loop == LoopMode.one ? Icons.repeat_one : Icons.repeat,
-            color:
-                loop == LoopMode.off ? AppColors.textSecondary : AppColors.primary,
+            color: loop == LoopMode.off
+                ? AppColors.textSecondary
+                : AppColors.primary,
             size: 22,
           ),
           tooltip: 'Repeat',
@@ -473,13 +438,13 @@ class _SecondaryControls extends ConsumerWidget {
           onPressed: offline || isRemote
               ? null
               : () => unawaited(
-                    _onPlaylistTap(
-                      context,
-                      ref,
-                      trackId: mediaItem.id,
-                      saved: saved,
-                    ),
+                  _onPlaylistTap(
+                    context,
+                    ref,
+                    trackId: mediaItem.id,
+                    saved: saved,
                   ),
+                ),
           icon: Icon(
             saved ? Icons.playlist_add_check : Icons.playlist_add,
             color: saved ? AppColors.primary : AppColors.textSecondary,
@@ -511,7 +476,10 @@ class _Scrubber extends ConsumerWidget {
     final duration = ref.watch(effectiveDurationProvider);
 
     final clamped = position > duration ? duration : position;
-    final maxMs = duration.inMilliseconds.toDouble().clamp(1.0, double.infinity);
+    final maxMs = duration.inMilliseconds.toDouble().clamp(
+      1.0,
+      double.infinity,
+    );
     final value = clamped.inMilliseconds.toDouble().clamp(0.0, maxMs);
 
     return Column(
@@ -542,14 +510,14 @@ class _Scrubber extends ConsumerWidget {
               Text(
                 formatDuration(clamped),
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
               ),
               Text(
                 formatDuration(duration),
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
               ),
             ],
           ),

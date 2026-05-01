@@ -44,7 +44,7 @@ class MiniPlayer extends ConsumerWidget {
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
-              color: AppColors.surfaceHighlight.withValues(alpha: 0.62),
+              color: AppColors.surfaceElevated,
               border: Border.all(
                 color: AppColors.textPrimary.withValues(alpha: 0.06),
               ),
@@ -109,15 +109,20 @@ class MiniPlayer extends ConsumerWidget {
                                   ),
                                   if (mediaItem.artist != null)
                                     InkWell(
-                                      onTap: artistId == null || artistId.isEmpty
+                                      onTap:
+                                          artistId == null || artistId.isEmpty
                                           ? null
-                                          : () => context.push('/artist/$artistId'),
+                                          : () => context.push(
+                                              '/artist/$artistId',
+                                            ),
                                       child: Text(
                                         mediaItem.artist!,
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: TextStyle(
-                                          color: artistId == null || artistId.isEmpty
+                                          color:
+                                              artistId == null ||
+                                                  artistId.isEmpty
                                               ? AppColors.textSecondary
                                               : AppColors.primary,
                                           fontSize: 12,
@@ -172,11 +177,7 @@ Future<void> _onMiniPlayerPlaylistTap(
 }
 
 class _RoundIcon extends StatelessWidget {
-  const _RoundIcon({
-    required this.icon,
-    required this.onTap,
-    this.iconColor,
-  });
+  const _RoundIcon({required this.icon, required this.onTap, this.iconColor});
   final IconData icon;
   final VoidCallback onTap;
   final Color? iconColor;

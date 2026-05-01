@@ -535,7 +535,7 @@ class _SettingsGroup extends StatelessWidget {
           ),
         ),
         Material(
-          color: AppColors.surfaceElevated,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(16),
           clipBehavior: Clip.antiAlias,
           child: Column(children: tiles),

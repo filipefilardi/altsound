@@ -113,7 +113,7 @@ class _Greeting extends StatelessWidget {
           onPressed: () => context.push('/settings'),
           icon: const Icon(Icons.settings_outlined, size: 20),
           style: IconButton.styleFrom(
-            backgroundColor: AppColors.surfaceElevated,
+            backgroundColor: AppColors.surface,
             foregroundColor: AppColors.textPrimary,
           ),
           tooltip: 'Settings',
@@ -139,7 +139,7 @@ class _ResumeCard extends ConsumerWidget {
         height: 96,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          color: AppColors.surfaceElevated,
+          color: AppColors.surface,
         ),
         clipBehavior: Clip.antiAlias,
         child: Column(
@@ -196,7 +196,7 @@ class _ResumeCard extends ConsumerWidget {
               LinearProgressIndicator(
                 value: record.progress,
                 minHeight: 2,
-                backgroundColor: AppColors.surface,
+                backgroundColor: AppColors.surfaceHighlight,
                 color: AppColors.primary,
               ),
           ],
