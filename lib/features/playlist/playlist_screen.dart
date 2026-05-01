@@ -185,7 +185,10 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                     ),
                 ],
               ),
-        bottomNavigationBar: const MiniPlayerSlot(withTopDivider: true),
+        bottomNavigationBar: const MiniPlayerSlot(
+          withTopDivider: true,
+          reserveSpaceWhenEmpty: true,
+        ),
         body: async.when(
           loading: () {
             final offlinePlaylist = _buildOfflinePlaylist(
@@ -827,14 +830,17 @@ class _PlaylistTrackTile extends ConsumerWidget {
           onToggleSelected();
           return;
         }
-        final isCurrentInContext = current != null &&
+        final isCurrentInContext =
+            current != null &&
             current.extras?['jellyfinId'] == track.id &&
             current.extras?['contextId'] == contextId;
         if (isCurrentInContext) {
           context.push('/now-playing');
           return;
         }
-        ref.read(playerControllerProvider).playTracks(
+        ref
+            .read(playerControllerProvider)
+            .playTracks(
               allTracks,
               startIndex: index,
               contextId: contextId,

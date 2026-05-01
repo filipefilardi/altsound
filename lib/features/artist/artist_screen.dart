@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/artwork_placeholder.dart';
 import '../../core/widgets/play_pill.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/skeleton.dart';
@@ -34,7 +35,10 @@ class ArtistScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(artistProvider(artistId));
     return Scaffold(
-      bottomNavigationBar: const MiniPlayerSlot(withTopDivider: true),
+      bottomNavigationBar: const MiniPlayerSlot(
+        withTopDivider: true,
+        reserveSpaceWhenEmpty: true,
+      ),
       body: async.when(
         loading: () => const _ArtistLoading(),
         error: (e, _) => SafeArea(
@@ -465,30 +469,19 @@ class _AlbumCarouselTile extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
+            AspectRatio(
+              aspectRatio: 1,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: imageUrl == null
-                    ? Container(
-                        color: AppColors.surfaceElevated,
-                        child: const Icon(
-                          Icons.album,
-                          color: AppColors.textTertiary,
-                        ),
-                      )
+                    ? const ArtworkPlaceholder()
                     : CachedNetworkImage(
                         imageUrl: imageUrl,
                         width: double.infinity,
                         fit: BoxFit.cover,
                         placeholder: (_, __) =>
                             Container(color: AppColors.surfaceElevated),
-                        errorWidget: (_, __, ___) => Container(
-                          color: AppColors.surfaceElevated,
-                          child: const Icon(
-                            Icons.album,
-                            color: AppColors.textTertiary,
-                          ),
-                        ),
+                        errorWidget: (_, __, ___) => const ArtworkPlaceholder(),
                       ),
               ),
             ),
