@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/skeleton.dart';
+import '../../data/downloads/download_manager.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
 import '../../data/jellyfin/models/media_item.dart';
 import '../../data/local/connectivity_provider.dart';
@@ -14,9 +15,91 @@ class LibraryScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isOffline = ref.watch(isOfflineProvider);
+    if (isOffline) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Your Library'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.settings_outlined),
+              tooltip: 'Settings',
+              onPressed: () => context.push('/settings'),
+            ),
+          ],
+        ),
+        body: const OfflineLibraryView(),
+      );
+    }
+
     final likedSongsAsync = ref.watch(_likedSongsPlaylistProvider);
     final playlistsAsync = ref.watch(_playlistsProvider);
-    final isOffline = ref.watch(isOfflineProvider);
+    final downloads = ref.watch(downloadManagerProvider);
+    final hasDownloads =
+        downloads.tracks.isNotEmpty || downloads.playlists.isNotEmpty;
+    final onlineLibraryChildren = playlistsAsync.when<List<Widget>>(
+      loading: () => const [_LibraryLoadingRows()],
+      error: (e, _) => [
+        Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(
+            'Could not load playlists: $e',
+            style: const TextStyle(color: AppColors.textSecondary),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ],
+      data: (playlists) {
+        final liked = likedSongsAsync.value;
+        final rest = playlists
+            .where(
+              (p) =>
+                  p.kind == MediaKind.playlist &&
+                  p.id != liked?.id &&
+                  p.name.toLowerCase().trim() != 'liked songs',
+            )
+            .toList();
+        return [
+          _SectionTile(
+            icon: Icons.favorite_rounded,
+            iconColor: AppColors.error,
+            title: 'Liked Songs',
+            subtitle: liked == null
+                ? 'Songs you heart appear here automatically'
+                : 'Open your liked songs playlist',
+            onTap: () async {
+              final playlist = await ref
+                  .read(jellyfinRepositoryProvider)
+                  .likedSongsPlaylist();
+              if (playlist == null) {
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Like any song to create your Liked Songs playlist.',
+                    ),
+                  ),
+                );
+                return;
+              }
+              if (!context.mounted) return;
+              context.push('/playlist/${playlist.id}');
+            },
+          ),
+          _NewPlaylistTile(onTap: () => _createPlaylist(context, ref)),
+          ...rest.map(
+            (playlist) => _SectionTile(
+              icon: Icons.queue_music_outlined,
+              title: playlist.name,
+              subtitle: playlist.childCount != null
+                  ? 'Playlist · ${playlist.childCount} songs'
+                  : 'Playlist',
+              onTap: () => context.push('/playlist/${playlist.id}'),
+            ),
+          ),
+        ];
+      },
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -29,69 +112,20 @@ class LibraryScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: isOffline
-          ? const OfflineLibraryView()
-          : playlistsAsync.when(
-        loading: () => const _LibraryLoading(),
-        error: (e, _) => Center(
-          child: Text(
-            'Could not load playlists: $e',
-            style: const TextStyle(color: AppColors.textSecondary),
-            textAlign: TextAlign.center,
-          ),
-        ),
-        data: (playlists) {
-          final liked = likedSongsAsync.value;
-          final rest = playlists
-              .where((p) =>
-                  p.kind == MediaKind.playlist &&
-                  p.id != liked?.id &&
-                  p.name.toLowerCase().trim() != 'liked songs')
-              .toList();
-          return ListView(
-            padding: const EdgeInsets.only(top: 8, bottom: 96),
-            children: [
-              _SectionTile(
-                icon: Icons.favorite_rounded,
-                iconColor: AppColors.error,
-                title: 'Liked Songs',
-                subtitle: liked == null
-                    ? 'Songs you heart appear here automatically'
-                    : 'Open your liked songs playlist',
-                onTap: () async {
-                  final playlist =
-                      await ref.read(jellyfinRepositoryProvider).likedSongsPlaylist();
-                  if (playlist == null) {
-                    if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Like any song to create your Liked Songs playlist.',
-                        ),
-                      ),
-                    );
-                    return;
-                  }
-                  if (!context.mounted) return;
-                  context.push('/playlist/${playlist.id}');
-                },
-              ),
-              _NewPlaylistTile(
-                onTap: () => _createPlaylist(context, ref),
-              ),
-              ...rest.map(
-                (playlist) => _SectionTile(
-                  icon: Icons.queue_music_outlined,
-                  title: playlist.name,
-                  subtitle: playlist.childCount != null
-                      ? 'Playlist · ${playlist.childCount} songs'
-                      : 'Playlist',
-                  onTap: () => context.push('/playlist/${playlist.id}'),
-                ),
-              ),
-            ],
-          );
-        },
+      body: ListView(
+        padding: const EdgeInsets.only(top: 8, bottom: 96),
+        children: [
+          if (hasDownloads) ...[
+            const _SectionHeader(label: 'Downloaded'),
+            const OfflineLibraryView(
+              showEmptyState: false,
+              scrollable: false,
+              padding: EdgeInsets.zero,
+            ),
+            const _SectionHeader(label: 'Library'),
+          ],
+          ...onlineLibraryChildren,
+        ],
       ),
     );
   }
@@ -126,9 +160,9 @@ class LibraryScreen extends ConsumerWidget {
     await ref.read(jellyfinRepositoryProvider).createPlaylist(playlistName);
     ref.invalidate(_playlistsProvider);
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('"$playlistName" created')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('"$playlistName" created')));
   }
 }
 
@@ -140,14 +174,13 @@ final _playlistsProvider = FutureProvider.autoDispose((ref) {
   return ref.read(jellyfinRepositoryProvider).playlists();
 });
 
-class _LibraryLoading extends StatelessWidget {
-  const _LibraryLoading();
+class _LibraryLoadingRows extends StatelessWidget {
+  const _LibraryLoadingRows();
 
   @override
   Widget build(BuildContext context) {
     return Skeleton.group(
-      child: ListView(
-        padding: const EdgeInsets.only(top: 8),
+      child: Column(
         children: [
           for (int i = 0; i < 6; i++)
             Padding(
@@ -175,6 +208,23 @@ class _LibraryLoading extends StatelessWidget {
   }
 }
 
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 16, 8),
+      child: Text(
+        label.toUpperCase(),
+        style: Theme.of(context).textTheme.labelLarge,
+      ),
+    );
+  }
+}
+
 class _NewPlaylistTile extends StatelessWidget {
   const _NewPlaylistTile({required this.onTap});
 
@@ -191,14 +241,15 @@ class _NewPlaylistTile extends StatelessWidget {
           color: AppColors.primary.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: const Icon(Icons.add_rounded, color: AppColors.primary, size: 24),
+        child: const Icon(
+          Icons.add_rounded,
+          color: AppColors.primary,
+          size: 24,
+        ),
       ),
       title: Text(
         'New Playlist',
-        style: TextStyle(
-          color: AppColors.primary,
-          fontWeight: FontWeight.w600,
-        ),
+        style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600),
       ),
       subtitle: const Text(
         'Create a new playlist',
@@ -240,16 +291,20 @@ class _SectionTile extends StatelessWidget {
         ),
         child: Icon(icon, color: iconColor, size: 22),
       ),
-      title: Text(title,
-          style: const TextStyle(
-              color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
-      subtitle: Text(subtitle,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style:
-              const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-      trailing:
-          const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+      title: Text(
+        title,
+        style: const TextStyle(
+          color: AppColors.textPrimary,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      subtitle: Text(
+        subtitle,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+      ),
+      trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
       onTap: onTap,
     );
   }
