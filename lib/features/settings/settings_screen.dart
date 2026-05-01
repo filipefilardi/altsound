@@ -12,7 +12,6 @@ import '../../core/theme/app_gradients.dart';
 import '../../data/downloads/download_manager.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
 import '../../data/jellyfin/models/jellyfin_session.dart';
-import '../../data/local/offline_mode.dart';
 import '../../data/local/playback_preferences.dart';
 import '../auth/auth_controller.dart';
 
@@ -334,21 +333,10 @@ class _LibraryGroup extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final downloads = ref.watch(downloadManagerProvider);
-    final offlineMode = ref.watch(offlineModeProvider);
 
     return _SettingsGroup(
       label: 'Library',
       children: [
-        SwitchListTile(
-          secondary: const Icon(Icons.wifi_off_outlined),
-          title: const Text('Offline mode'),
-          subtitle: const Text(
-            'Use only downloaded music; skip server requests.',
-            style: TextStyle(color: AppColors.textSecondary),
-          ),
-          value: offlineMode,
-          onChanged: (v) => ref.read(offlineModeProvider.notifier).set(v),
-        ),
         ListTile(
           leading: const Icon(Icons.download_outlined),
           title: const Text('Downloads'),
@@ -482,24 +470,32 @@ Future<void> _showStreamingQualitySheet(BuildContext context) {
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 const SizedBox(height: 8),
-                for (final q in StreamingQuality.values)
-                  RadioListTile<StreamingQuality>(
-                    value: q,
-                    groupValue: current,
-                    title: Text(q.label),
-                    subtitle: Text(
-                      q.subtitle,
-                      style: const TextStyle(color: AppColors.textSecondary),
-                    ),
-                    contentPadding: EdgeInsets.zero,
-                    onChanged: (v) async {
-                      if (v == null) return;
-                      await ref
-                          .read(playbackPreferencesProvider.notifier)
-                          .setStreamingQuality(v);
-                      if (context.mounted) Navigator.of(context).pop();
-                    },
+                RadioGroup<StreamingQuality>(
+                  groupValue: current,
+                  onChanged: (v) async {
+                    if (v == null) return;
+                    await ref
+                        .read(playbackPreferencesProvider.notifier)
+                        .setStreamingQuality(v);
+                    if (context.mounted) Navigator.of(context).pop();
+                  },
+                  child: Column(
+                    children: [
+                      for (final q in StreamingQuality.values)
+                        RadioListTile<StreamingQuality>(
+                          value: q,
+                          title: Text(q.label),
+                          subtitle: Text(
+                            q.subtitle,
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                    ],
                   ),
+                ),
               ],
             ),
           ),
