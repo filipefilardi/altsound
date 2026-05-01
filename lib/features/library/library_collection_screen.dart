@@ -217,10 +217,6 @@ class _CollectionTile extends ConsumerWidget {
         overflow: TextOverflow.ellipsis,
         style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
       ),
-      trailing: const Icon(
-        Icons.chevron_right_rounded,
-        color: AppColors.textSecondary,
-      ),
       onTap: () =>
           context.push(isArtist ? '/artist/${item.id}' : '/album/${item.id}'),
     );

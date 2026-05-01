@@ -137,10 +137,6 @@ class _AccountCard extends ConsumerWidget {
                   ],
                 ),
               ),
-              const Icon(
-                Icons.chevron_right_rounded,
-                color: AppColors.textSecondary,
-              ),
             ],
           ),
         ),
@@ -307,10 +303,6 @@ class _PlaybackGroup extends ConsumerWidget {
             prefs.streamingQuality.label,
             style: const TextStyle(color: AppColors.textSecondary),
           ),
-          trailing: const Icon(
-            Icons.chevron_right_rounded,
-            color: AppColors.textSecondary,
-          ),
           onTap: () => _showStreamingQualitySheet(context),
         ),
         SwitchListTile(
@@ -347,10 +339,6 @@ class _LibraryGroup extends ConsumerWidget {
             '${downloads.tracks.length} tracks · ${_formatBytes(downloads.totalSizeBytes)}',
             style: const TextStyle(color: AppColors.textSecondary),
           ),
-          trailing: const Icon(
-            Icons.chevron_right_rounded,
-            color: AppColors.textSecondary,
-          ),
           onTap: () => context.push('/downloads'),
         ),
         ListTile(
@@ -359,10 +347,6 @@ class _LibraryGroup extends ConsumerWidget {
           subtitle: const Text(
             'Auto-download, WiFi only',
             style: TextStyle(color: AppColors.textSecondary),
-          ),
-          trailing: const Icon(
-            Icons.chevron_right_rounded,
-            color: AppColors.textSecondary,
           ),
           onTap: () => context.push('/settings/downloads'),
         ),
