@@ -33,8 +33,7 @@ class _AppShellState extends ConsumerState<AppShell> {
             content: Text(err.title),
             action: SnackBarAction(
               label: 'Skip',
-              onPressed: () =>
-                  ref.read(playerControllerProvider).next(),
+              onPressed: () => ref.read(playerControllerProvider).next(),
             ),
           ),
         );
@@ -60,7 +59,9 @@ class _AppShellState extends ConsumerState<AppShell> {
             AnimatedSize(
               duration: const Duration(milliseconds: 250),
               curve: Curves.easeInOut,
-              child: isOffline ? const _OfflineBanner() : const SizedBox.shrink(),
+              child: isOffline
+                  ? const _OfflineBanner()
+                  : const SizedBox.shrink(),
             ),
             Expanded(child: widget.navigationShell),
           ],
@@ -69,30 +70,33 @@ class _AppShellState extends ConsumerState<AppShell> {
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const MiniPlayerSlot(),
-          NavigationBar(
-            selectedIndex: widget.navigationShell.currentIndex,
-            onDestinationSelected: (i) => widget.navigationShell.goBranch(
-              i,
-              initialLocation: i == widget.navigationShell.currentIndex,
+          const MiniPlayerSlot(applyBottomSafeArea: false),
+          SafeArea(
+            top: false,
+            child: NavigationBar(
+              selectedIndex: widget.navigationShell.currentIndex,
+              onDestinationSelected: (i) => widget.navigationShell.goBranch(
+                i,
+                initialLocation: i == widget.navigationShell.currentIndex,
+              ),
+              destinations: const [
+                NavigationDestination(
+                  icon: Icon(Icons.home_outlined),
+                  selectedIcon: Icon(Icons.home),
+                  label: 'Home',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.search_outlined),
+                  selectedIcon: Icon(Icons.search),
+                  label: 'Search',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.library_music_outlined),
+                  selectedIcon: Icon(Icons.library_music),
+                  label: 'Library',
+                ),
+              ],
             ),
-            destinations: const [
-              NavigationDestination(
-                icon: Icon(Icons.home_outlined),
-                selectedIcon: Icon(Icons.home),
-                label: 'Home',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.search_outlined),
-                selectedIcon: Icon(Icons.search),
-                label: 'Search',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.library_music_outlined),
-                selectedIcon: Icon(Icons.library_music),
-                label: 'Library',
-              ),
-            ],
           ),
         ],
       ),
@@ -112,7 +116,11 @@ class _OfflineBanner extends StatelessWidget {
       child: const Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.wifi_off_rounded, size: 13, color: AppColors.textSecondary),
+          Icon(
+            Icons.wifi_off_rounded,
+            size: 13,
+            color: AppColors.textSecondary,
+          ),
           SizedBox(width: 6),
           Text(
             'Offline · playing from downloads',
