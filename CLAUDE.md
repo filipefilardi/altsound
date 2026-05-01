@@ -12,7 +12,7 @@ flutter analyze        # Lint
 
 ## Architecture
 
-AltSound is a Flutter music player that streams from a **Jellyfin** server with optional **Lidarr** integration for music discovery.
+AltSound is a Flutter music player that streams from a **Jellyfin** server.
 
 ### Entry point & bootstrapping
 
@@ -21,9 +21,8 @@ AltSound is a Flutter music player that streams from a **Jellyfin** server with 
 ### Data layer (`lib/data/`)
 
 - **`jellyfin/`** — All Jellyfin API calls. `JellyfinApi` is the raw Dio client (session token in header); `JellyfinRepository` is the business-logic layer (search, album/artist/track fetch, stream URL building, playlist management). `AuthRepository` handles login and persists the session via `flutter_secure_storage`. `Scrobbler` listens to audio handler streams and posts playback progress to Jellyfin every 10 s.
-- **`lidarr/`** — Optional integration; `lidarrRepositoryProvider` returns `null` when Lidarr is not configured. `LidarrRepository` handles artist search and per-album requests (`addAlbum` with `monitor: 'specificAlbum'`). Never request a whole artist discography — always use `addAlbum`.
 - **`downloads/`** — `DownloadManager` maintains a download queue and persists a manifest to `documents/downloads/manifest.json`. `PlayerController` checks for a local file path before building a Jellyfin stream URL.
-- **`local/secure_storage.dart`** — Thin wrapper around `flutter_secure_storage`; used for Jellyfin credentials, session, and Lidarr config.
+- **`local/secure_storage.dart`** — Thin wrapper around `flutter_secure_storage`; used for Jellyfin credentials and session data.
 
 ### Player (`lib/features/player/`)
 
@@ -37,12 +36,12 @@ Key stream providers: `currentMediaItemProvider`, `playbackStateProvider`, `queu
 |---|---|
 | `Provider` | Singletons — `jellyfinRepositoryProvider`, `routerProvider` |
 | `NotifierProvider` | Mutable state — `authControllerProvider`, `playerControllerProvider`, `downloadManagerProvider` |
-| `FutureProvider.autoDispose.family` | Per-screen async data — `albumProvider(id)`, `artistProvider(id)`, `lidarrArtistAlbumsProvider(artist)` |
+| `FutureProvider.autoDispose.family` | Per-screen async data — `albumProvider(id)`, `artistProvider(id)` |
 | `StreamProvider` | Audio playback state from `audio_service` |
 
 ### Routing (`lib/app/router.dart`)
 
-GoRouter with an auth redirect guard (`authControllerProvider`). The bottom nav (Home / Search / Library) uses `StatefulShellRoute.indexedStack`. Modal routes (Now Playing, Discover, Downloads) are pushed on the root navigator. Lidarr artist extra payload is passed via `GoRouteState.extra` as `LidarrArtistResult`.
+GoRouter with an auth redirect guard (`authControllerProvider`). The bottom nav (Home / Search / Library) uses `StatefulShellRoute.indexedStack`. Modal routes (Now Playing, Downloads) are pushed on the root navigator.
 
 ### UI conventions
 

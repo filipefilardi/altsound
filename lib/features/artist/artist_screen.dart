@@ -10,7 +10,7 @@ import '../../core/widgets/skeleton.dart';
 import '../../data/downloads/download_manager.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
 import '../../data/jellyfin/models/media_item.dart';
-import '../../data/musicbrainz/wikipedia_repository.dart';
+import '../../data/wikipedia/wikipedia_repository.dart';
 import '../downloads/widgets/artist_download_button.dart';
 import '../player/widgets/mini_player_slot.dart';
 import '../player/player_providers.dart';
@@ -580,14 +580,17 @@ class _PopularTrackTile extends ConsumerWidget {
         ],
       ),
       onTap: () {
-        final isCurrentInContext = current != null &&
+        final isCurrentInContext =
+            current != null &&
             current.extras?['jellyfinId'] == track.id &&
             current.extras?['contextId'] == contextId;
         if (isCurrentInContext) {
           context.push('/now-playing');
           return;
         }
-        ref.read(playerControllerProvider).playTracks(
+        ref
+            .read(playerControllerProvider)
+            .playTracks(
               allTracks,
               startIndex: index - 1,
               contextId: contextId,

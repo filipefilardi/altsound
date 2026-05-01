@@ -6,7 +6,6 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/format.dart';
 import '../player_providers.dart';
 
-
 /// Leading column for track rows: index number, highlighted when playing.
 class PlayingTrackLeading extends ConsumerWidget {
   const PlayingTrackLeading({
@@ -53,7 +52,7 @@ class SearchTrackArtwork extends ConsumerWidget {
     required this.isArtistShape,
   });
 
-  final String imageUrl;
+  final String? imageUrl;
   final String jellyfinTrackId;
   final bool isArtistShape;
 
@@ -64,6 +63,21 @@ class SearchTrackArtwork extends ConsumerWidget {
         current != null && current.extras?['jellyfinId'] == jellyfinTrackId;
 
     final br = BorderRadius.circular(isArtistShape ? 28 : 8);
+    Widget fallback() => Container(
+      color: AppColors.surfaceElevated,
+      child: const Icon(Icons.music_note, color: AppColors.textTertiary),
+    );
+    Widget artwork() {
+      final url = imageUrl;
+      if (url == null || url.isEmpty) return fallback();
+      return CachedNetworkImage(
+        imageUrl: url,
+        fit: BoxFit.cover,
+        placeholder: (_, __) => Container(color: AppColors.surfaceElevated),
+        errorWidget: (_, __, ___) => fallback(),
+      );
+    }
+
     return SizedBox(
       width: 56,
       height: 56,
@@ -79,35 +93,11 @@ class SearchTrackArtwork extends ConsumerWidget {
                   padding: const EdgeInsets.all(2),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(isArtistShape ? 26 : 6),
-                    child: CachedNetworkImage(
-                      imageUrl: imageUrl,
-                      fit: BoxFit.cover,
-                      placeholder: (_, __) =>
-                          Container(color: AppColors.surfaceElevated),
-                      errorWidget: (_, __, ___) => Container(
-                        color: AppColors.surfaceElevated,
-                        child: const Icon(
-                          Icons.music_note,
-                          color: AppColors.textTertiary,
-                        ),
-                      ),
-                    ),
+                    child: artwork(),
                   ),
                 ),
               )
-            : CachedNetworkImage(
-                imageUrl: imageUrl,
-                fit: BoxFit.cover,
-                placeholder: (_, __) =>
-                    Container(color: AppColors.surfaceElevated),
-                errorWidget: (_, __, ___) => Container(
-                  color: AppColors.surfaceElevated,
-                  child: const Icon(
-                    Icons.music_note,
-                    color: AppColors.textTertiary,
-                  ),
-                ),
-              ),
+            : artwork(),
       ),
     );
   }
