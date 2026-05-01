@@ -15,5 +15,10 @@ void main() {
       expect(searchMatches('beyonce deja vu', ['Beyoncé - Déjà Vu']), isTrue);
       expect(searchMatches('rock roll', ['rock`n~roll']), isTrue);
     });
+
+    test('matches lightweight typos', () {
+      expect(searchMatches('beynce', ['Beyoncé']), isTrue);
+      expect(searchMatches('monky business', ['Monkey Business']), isTrue);
+    });
   });
 }

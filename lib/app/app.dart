@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/theme/app_theme.dart';
+import '../data/jellyfin/jellyfin_repository.dart';
 import '../data/jellyfin/scrobbler.dart';
 import '../data/last_played/last_played_controller.dart';
 import '../features/auth/auth_controller.dart';
@@ -17,6 +20,7 @@ class JellymusicApp extends ConsumerStatefulWidget {
 
 class _JellymusicAppState extends ConsumerState<JellymusicApp> {
   bool _scrobblerAttached = false;
+  String? _searchWarmSessionKey;
 
   void _ensureScrobbler() {
     if (_scrobblerAttached) return;
@@ -27,9 +31,15 @@ class _JellymusicAppState extends ConsumerState<JellymusicApp> {
       mediaItemStream: handler.mediaItem.stream,
       playbackStateStream: handler.playbackState.stream,
       position: () => handler.player.position,
-      isOffline: () =>
-          handler.mediaItem.value?.extras?['isOffline'] == true,
+      isOffline: () => handler.mediaItem.value?.extras?['isOffline'] == true,
     );
+  }
+
+  void _ensureSearchWarmup(AuthAuthenticated auth) {
+    final key = '${auth.session.serverId}_${auth.session.userId}';
+    if (_searchWarmSessionKey == key) return;
+    _searchWarmSessionKey = key;
+    unawaited(ref.read(jellyfinRepositoryProvider).warmSearchCatalog());
   }
 
   @override
@@ -39,8 +49,11 @@ class _JellymusicAppState extends ConsumerState<JellymusicApp> {
 
     if (auth is AuthAuthenticated) {
       _ensureScrobbler();
+      _ensureSearchWarmup(auth);
       // Eagerly attach the local last-played listener.
       ref.read(lastPlayedProvider);
+    } else {
+      _searchWarmSessionKey = null;
     }
 
     return MaterialApp.router(
@@ -63,8 +76,6 @@ class _SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: CircularProgressIndicator()),
-    );
+    return const Scaffold(body: Center(child: CircularProgressIndicator()));
   }
 }

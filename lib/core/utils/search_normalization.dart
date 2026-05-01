@@ -36,7 +36,10 @@ bool searchMatches(String query, Iterable<String?> fields) {
     return true;
   }
 
-  return queryTokens.every(normalizedTarget.contains);
+  final targetTokens = normalizedTarget.split(' ');
+  return queryTokens.every(
+    (queryToken) => _tokenMatches(queryToken, targetTokens, normalizedTarget),
+  );
 }
 
 int searchRelevance(String query, Iterable<String?> fields) {
@@ -51,6 +54,7 @@ int searchRelevance(String query, Iterable<String?> fields) {
   if (normalizedFields.isEmpty) return 0;
 
   final compactQuery = normalizedQuery.replaceAll(' ', '');
+  final queryTokens = normalizedQuery.split(' ');
   var score = 0;
   for (var i = 0; i < normalizedFields.length; i++) {
     final field = normalizedFields[i];
@@ -65,8 +69,63 @@ int searchRelevance(String query, Iterable<String?> fields) {
         compactField.contains(compactQuery)) {
       score += 20 * weight;
     }
+    final targetTokens = field.split(' ');
+    final tokenMatches = queryTokens.where(
+      (queryToken) => _tokenMatches(queryToken, targetTokens, field),
+    );
+    score += tokenMatches.length * weight;
   }
   return score;
+}
+
+bool _tokenMatches(
+  String queryToken,
+  List<String> targetTokens,
+  String target,
+) {
+  if (target.contains(queryToken)) return true;
+  if (queryToken.length < 3) return false;
+
+  for (final targetToken in targetTokens) {
+    if (targetToken.isEmpty) continue;
+    if (targetToken == queryToken ||
+        targetToken.startsWith(queryToken) ||
+        targetToken.contains(queryToken)) {
+      return true;
+    }
+    if (queryToken.length >= 4 &&
+        targetToken.length >= 4 &&
+        _levenshteinDistance(queryToken, targetToken) <=
+            _maxFuzzyDistance(queryToken.length)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+int _maxFuzzyDistance(int length) => length >= 8 ? 2 : 1;
+
+int _levenshteinDistance(String a, String b) {
+  if (a == b) return 0;
+  if (a.isEmpty) return b.length;
+  if (b.isEmpty) return a.length;
+
+  var previous = List<int>.generate(b.length + 1, (i) => i);
+  for (var i = 0; i < a.length; i++) {
+    final current = List<int>.filled(b.length + 1, 0);
+    current[0] = i + 1;
+    for (var j = 0; j < b.length; j++) {
+      final insertion = current[j] + 1;
+      final deletion = previous[j + 1] + 1;
+      final substitution =
+          previous[j] + (a.codeUnitAt(i) == b.codeUnitAt(j) ? 0 : 1);
+      current[j + 1] = insertion < deletion
+          ? (insertion < substitution ? insertion : substitution)
+          : (deletion < substitution ? deletion : substitution);
+    }
+    previous = current;
+  }
+  return previous[b.length];
 }
 
 bool _isAsciiLetterOrDigit(int rune) =>

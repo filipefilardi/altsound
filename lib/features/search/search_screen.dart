@@ -51,7 +51,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   Future<List<BrowseItem>> _search(String term) async {
     final downloads = ref.read(downloadManagerProvider);
     final localResults = _searchDownloads(downloads, term);
-    if (ref.read(isOfflineProvider)) return localResults;
+    if (ref.read(isOfflineProvider)) {
+      final indexedResults = await ref
+          .read(jellyfinRepositoryProvider)
+          .searchCached(term);
+      return _mergeResults(indexedResults, localResults);
+    }
 
     try {
       final remoteResults = await ref
@@ -224,11 +229,27 @@ class _ResultTile extends ConsumerWidget {
   }
 
   Future<void> _onTap(BuildContext context, WidgetRef ref) async {
+    final isOffline = ref.read(isOfflineProvider);
+    final downloads = ref.read(downloadManagerProvider);
     switch (item.kind) {
       case MediaKind.album:
+        if (isOffline && !_hasDownloadedAlbum(item.id, downloads)) {
+          _showOfflineUnavailable(
+            context,
+            'Download this album to open it offline.',
+          );
+          return;
+        }
         context.push('/album/${item.id}');
       case MediaKind.track:
-        final downloaded = ref.read(downloadManagerProvider).tracks[item.id];
+        final downloaded = downloads.tracks[item.id];
+        if (isOffline && downloaded == null) {
+          _showOfflineUnavailable(
+            context,
+            'Download this song to play it offline.',
+          );
+          return;
+        }
         final track =
             downloaded?.toTrack() ??
             await ref.read(jellyfinRepositoryProvider).track(item.id);
@@ -236,8 +257,22 @@ class _ResultTile extends ConsumerWidget {
           track,
         ], selectedTrack: true);
       case MediaKind.artist:
+        if (isOffline) {
+          _showOfflineUnavailable(
+            context,
+            'Artist pages need the server. Download albums or playlists to open them offline.',
+          );
+          return;
+        }
         context.push('/artist/${item.id}');
       case MediaKind.playlist:
+        if (isOffline && !_hasDownloadedPlaylist(item.id, downloads)) {
+          _showOfflineUnavailable(
+            context,
+            'Download this playlist to open it offline.',
+          );
+          return;
+        }
         context.push('/playlist/${item.id}');
     }
   }
@@ -269,6 +304,13 @@ class _SearchTrackMenuButton extends ConsumerWidget {
       onPressed: () async {
         final repo = ref.read(jellyfinRepositoryProvider);
         final downloaded = ref.read(downloadManagerProvider).tracks[trackId];
+        if (downloaded == null && ref.read(isOfflineProvider)) {
+          _showOfflineUnavailable(
+            context,
+            'Download this song to manage it offline.',
+          );
+          return;
+        }
         final track = downloaded?.toTrack() ?? await repo.track(trackId);
         if (!context.mounted) return;
         final localArtwork = downloaded?.artworkPath;
@@ -642,12 +684,28 @@ List<BrowseItem> _mergeResults(
 ) {
   final merged = <BrowseItem>[];
   final seenIds = <String>{};
-  for (final item in [...remoteResults, ...localResults]) {
+  // Downloaded results come from the app's local manifest, so keep those
+  // first when a persisted index and downloaded catalog both have the item.
+  for (final item in [...localResults, ...remoteResults]) {
     if (seenIds.add(item.id)) {
       merged.add(item);
     }
   }
   return merged;
+}
+
+bool _hasDownloadedAlbum(String albumId, DownloadsState downloads) {
+  return downloads.tracks.values.any((track) => track.albumId == albumId);
+}
+
+bool _hasDownloadedPlaylist(String playlistId, DownloadsState downloads) {
+  final playlist = downloads.playlists[playlistId];
+  if (playlist == null) return false;
+  return playlist.trackIds.any(downloads.tracks.containsKey);
+}
+
+void _showOfflineUnavailable(BuildContext context, String message) {
+  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
 }
 
 String? _localArtworkFor(BrowseItem item, DownloadsState downloads) {
