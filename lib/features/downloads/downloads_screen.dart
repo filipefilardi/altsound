@@ -45,48 +45,36 @@ class DownloadsScreen extends ConsumerWidget {
       });
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Downloads'),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(28),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: Row(
-              children: [
-                Text(
-                  '${downloads.tracks.length} tracks · ${_formatBytes(downloads.totalSizeBytes)}',
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 12,
-                  ),
-                ),
-                if (downloads.queueLength > 0) ...[
-                  const SizedBox(width: 12),
-                  Text(
-                    '${downloads.queueLength} queued',
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ),
+      appBar: AppBar(title: const Text('Downloads')),
       body: albumIds.isEmpty
           ? const EmptyState(
               icon: Icons.download_rounded,
               title: 'No downloads yet',
               message: 'Tap the download icon on any album to keep it offline.',
             )
-          : ListView.separated(
-              padding: const EdgeInsets.only(bottom: 96),
-              itemCount: albumIds.length,
-              separatorBuilder: (_, __) => const Divider(height: 1, indent: 80),
+          : ListView.builder(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+              itemCount: albumIds.length + 2,
               itemBuilder: (_, i) {
-                final albumId = albumIds[i];
+                if (i == 0) {
+                  return _DownloadsSummary(
+                    trackCount: downloads.tracks.length,
+                    albumCount: albumIds.length,
+                    totalSize: downloads.totalSizeBytes,
+                    queueLength: downloads.queueLength,
+                  );
+                }
+                if (i == 1) {
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(4, 20, 0, 8),
+                    child: Text(
+                      'READY OFFLINE',
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                  );
+                }
+
+                final albumId = albumIds[i - 2];
                 final tracks = byAlbum[albumId]!;
                 final first = tracks.first;
                 return _DownloadedAlbumTile(
@@ -104,6 +92,73 @@ class DownloadsScreen extends ConsumerWidget {
                 );
               },
             ),
+    );
+  }
+}
+
+class _DownloadsSummary extends StatelessWidget {
+  const _DownloadsSummary({
+    required this.trackCount,
+    required this.albumCount,
+    required this.totalSize,
+    required this.queueLength,
+  });
+
+  final int trackCount;
+  final int albumCount;
+  final int totalSize;
+  final int queueLength;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(
+              Icons.download_for_offline_rounded,
+              color: AppColors.primary,
+              size: 25,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$albumCount albums ready',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  '$trackCount tracks · ${_formatBytes(totalSize)}'
+                  '${queueLength > 0 ? ' · $queueLength queued' : ''}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -134,35 +189,107 @@ class _DownloadedAlbumTile extends ConsumerWidget {
     final repo = ref.watch(jellyfinRepositoryProvider);
     final manager = ref.read(downloadManagerProvider.notifier);
 
-    return ListTile(
-      onTap: albumId == 'unknown'
-          ? null
-          : () => context.push('/album/$albumId'),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      leading: ClipRRect(
-        borderRadius: BorderRadius.circular(4),
-        child: SizedBox(
-          width: 56,
-          height: 56,
-          child: CachedNetworkImage(
-            imageUrl: repo.imageUrl(imageItemId, imageTag: imageTag, size: 200),
-            fit: BoxFit.cover,
-            placeholder: (_, __) => Container(color: AppColors.surfaceElevated),
-            errorWidget: (_, __, ___) =>
-                const Icon(Icons.album_rounded, color: AppColors.textTertiary),
+    final canOpen = albumId != 'unknown';
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(8),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: canOpen ? () => context.push('/album/$albumId') : null,
+          child: Padding(
+            padding: const EdgeInsets.all(10),
+            child: Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: SizedBox(
+                    width: 58,
+                    height: 58,
+                    child: CachedNetworkImage(
+                      imageUrl: repo.imageUrl(
+                        imageItemId,
+                        imageTag: imageTag,
+                        size: 200,
+                      ),
+                      fit: BoxFit.cover,
+                      placeholder: (_, __) =>
+                          Container(color: AppColors.surfaceElevated),
+                      errorWidget: (_, __, ___) => const Icon(
+                        Icons.album_rounded,
+                        color: AppColors.textTertiary,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        albumName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        artistName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        '$trackCount tracks · ${formatLongDuration(totalDuration)} · ${_formatBytes(totalSize)}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: AppColors.textTertiary,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                PopupMenuButton<_DownloadAction>(
+                  icon: const Icon(
+                    Icons.more_vert_rounded,
+                    color: AppColors.textSecondary,
+                  ),
+                  onSelected: (action) {
+                    switch (action) {
+                      case _DownloadAction.remove:
+                        _confirmDelete(context, manager);
+                    }
+                  },
+                  itemBuilder: (context) => const [
+                    PopupMenuItem(
+                      value: _DownloadAction.remove,
+                      child: ListTile(
+                        leading: Icon(
+                          Icons.delete_rounded,
+                          color: AppColors.error,
+                        ),
+                        title: Text('Remove download'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-      title: Text(albumName, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: Text(
-        '$artistName · $trackCount tracks · ${_formatBytes(totalSize)} · ${formatLongDuration(totalDuration)}',
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
-      ),
-      trailing: IconButton(
-        icon: const Icon(Icons.delete_rounded, color: AppColors.textSecondary),
-        onPressed: () => _confirmDelete(context, manager),
       ),
     );
   }
@@ -194,6 +321,8 @@ class _DownloadedAlbumTile extends ConsumerWidget {
     if (confirmed == true) manager.deleteAlbum(albumId);
   }
 }
+
+enum _DownloadAction { remove }
 
 String _formatBytes(int bytes) {
   if (bytes < 1024) return '${bytes}B';

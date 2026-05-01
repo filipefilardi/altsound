@@ -11,6 +11,7 @@ import '../features/auth/login_screen.dart';
 import '../features/downloads/downloads_screen.dart';
 import '../features/downloads/downloads_settings_screen.dart';
 import '../features/home/home_screen.dart';
+import '../features/library/library_collection_screen.dart';
 import '../features/library/library_screen.dart';
 import '../features/player/now_playing_screen.dart';
 import '../features/playlist/playlist_screen.dart';
@@ -61,6 +62,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, __) => const RecentlyAddedScreen(),
       ),
       GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
+      GoRoute(
+        path: '/library/albums',
+        builder: (_, __) =>
+            const LibraryCollectionScreen(kind: LibraryCollectionKind.albums),
+      ),
+      GoRoute(
+        path: '/library/artists',
+        builder: (_, __) =>
+            const LibraryCollectionScreen(kind: LibraryCollectionKind.artists),
+      ),
       GoRoute(
         path: '/settings/downloads',
         builder: (_, __) => const DownloadsSettingsScreen(),

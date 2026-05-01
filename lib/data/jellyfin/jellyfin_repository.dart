@@ -474,6 +474,39 @@ class JellyfinRepository {
     return items.map(BrowseItem.fromJson).toList();
   }
 
+  Future<List<BrowseItem>> albums({int limit = 500}) async {
+    final s = _session;
+    final res = await _api.dio.get<Map<String, dynamic>>(
+      '/Users/${s.userId}/Items',
+      queryParameters: {
+        'IncludeItemTypes': 'MusicAlbum',
+        'Recursive': true,
+        'Limit': limit,
+        'SortBy': 'SortName',
+        'Fields': 'AlbumArtist,Artists',
+      },
+    );
+    final items = ((res.data?['Items'] as List?) ?? const [])
+        .cast<Map<String, dynamic>>();
+    return items.map(BrowseItem.fromJson).toList();
+  }
+
+  Future<List<BrowseItem>> artists({int limit = 500}) async {
+    final s = _session;
+    final res = await _api.dio.get<Map<String, dynamic>>(
+      '/Users/${s.userId}/Items',
+      queryParameters: {
+        'IncludeItemTypes': 'MusicArtist',
+        'Recursive': true,
+        'Limit': limit,
+        'SortBy': 'SortName',
+      },
+    );
+    final items = ((res.data?['Items'] as List?) ?? const [])
+        .cast<Map<String, dynamic>>();
+    return items.map(BrowseItem.fromJson).toList();
+  }
+
   Future<BrowseItem> createPlaylist(String name) async {
     final s = _session;
     final created = await _api.dio.post<Map<String, dynamic>>(
