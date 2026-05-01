@@ -9,13 +9,24 @@ import '../../data/downloads/download_manager.dart';
 import '../../data/downloads/downloaded_playlist.dart';
 import '../../data/downloads/downloaded_track.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
+import '../../data/local/connectivity_provider.dart';
 
 class OfflineLibraryView extends ConsumerWidget {
-  const OfflineLibraryView({super.key});
+  const OfflineLibraryView({
+    super.key,
+    this.showEmptyState = true,
+    this.scrollable = true,
+    this.padding = const EdgeInsets.only(top: 8, bottom: 96),
+  });
+
+  final bool showEmptyState;
+  final bool scrollable;
+  final EdgeInsetsGeometry padding;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final downloads = ref.watch(downloadManagerProvider);
+    final isOffline = ref.watch(isOfflineProvider);
 
     final albums = _groupAlbums(downloads.tracks.values.toList());
     final playlists = downloads.playlists.values.toList()
@@ -26,11 +37,13 @@ class OfflineLibraryView extends ConsumerWidget {
       });
 
     if (albums.isEmpty && playlists.isEmpty) {
-      return const EmptyState(
-        icon: Icons.wifi_off_rounded,
-        title: "You're offline",
-        message:
-            'No downloaded songs yet.\nDownload albums or playlists while online to listen anywhere.',
+      if (!showEmptyState) return const SizedBox.shrink();
+      return EmptyState(
+        icon: isOffline ? Icons.wifi_off_rounded : Icons.download_outlined,
+        title: isOffline ? "You're offline" : 'No downloads yet',
+        message: isOffline
+            ? 'No downloaded songs yet.\nDownload albums or playlists while online to listen anywhere.'
+            : 'Downloaded albums and playlists will appear here.',
       );
     }
 
@@ -52,7 +65,10 @@ class OfflineLibraryView extends ConsumerWidget {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.only(top: 8, bottom: 96),
+      padding: padding,
+      primary: scrollable ? null : false,
+      shrinkWrap: !scrollable,
+      physics: scrollable ? null : const NeverScrollableScrollPhysics(),
       itemCount: items.length,
       itemBuilder: (context, i) {
         final item = items[i];
@@ -72,11 +88,15 @@ class OfflineLibraryView extends ConsumerWidget {
               .where((id) => downloads.tracks.containsKey(id))
               .length;
           final localArt = _firstLocalArtwork(
-            p.trackIds.map((id) => downloads.tracks[id]).whereType<DownloadedTrack>(),
+            p.trackIds
+                .map((id) => downloads.tracks[id])
+                .whereType<DownloadedTrack>(),
           );
+          final remoteArt = isOffline || p.imageTag == null
+              ? null
+              : repo.imageUrl(p.id, imageTag: p.imageTag, size: 200);
           return _ContentTile(
-            imageSource: localArt ??
-                repo.imageUrl(p.id, imageTag: p.imageTag, size: 200),
+            imageSource: localArt ?? remoteArt,
             title: p.name,
             subtitle: '$trackCount songs downloaded',
             isRound: false,
@@ -86,9 +106,11 @@ class OfflineLibraryView extends ConsumerWidget {
 
         final a = item.album!;
         final localArt = _firstLocalArtwork(a.tracks);
+        final remoteArt = isOffline || a.imageTag == null
+            ? null
+            : repo.imageUrl(a.imageItemId, imageTag: a.imageTag, size: 200);
         return _ContentTile(
-          imageSource: localArt ??
-              repo.imageUrl(a.imageItemId, imageTag: a.imageTag, size: 200),
+          imageSource: localArt ?? remoteArt,
           title: a.albumName,
           subtitle: '${a.artistName} · ${a.trackCount} songs',
           isRound: false,
@@ -117,7 +139,9 @@ class OfflineLibraryView extends ConsumerWidget {
   }
 
   DateTime _latestDownload(
-      DownloadedPlaylist playlist, DownloadsState downloads) {
+    DownloadedPlaylist playlist,
+    DownloadsState downloads,
+  ) {
     final times = playlist.trackIds
         .map((id) => downloads.tracks[id]?.downloadedAt)
         .where((t) => t != null)
@@ -168,7 +192,7 @@ class _ContentTile extends StatelessWidget {
     required this.onTap,
   });
 
-  final String imageSource;
+  final String? imageSource;
   final String title;
   final String subtitle;
   final bool isRound;
@@ -177,8 +201,7 @@ class _ContentTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       leading: ClipRRect(
         borderRadius: BorderRadius.circular(isRound ? 28 : 6),
         child: SizedBox(
@@ -190,8 +213,7 @@ class _ContentTile extends StatelessWidget {
                 const ColoredBox(color: AppColors.surfaceElevated),
             errorBuilder: (_) => const ColoredBox(
               color: AppColors.surfaceElevated,
-              child:
-                  Icon(Icons.album, color: AppColors.textTertiary, size: 24),
+              child: Icon(Icons.album, color: AppColors.textTertiary, size: 24),
             ),
           ),
         ),
@@ -206,13 +228,10 @@ class _ContentTile extends StatelessWidget {
         subtitle,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style:
-            const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+        style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
       ),
-      trailing:
-          const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+      trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
       onTap: onTap,
     );
   }
 }
-
