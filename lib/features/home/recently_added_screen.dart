@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/artwork_placeholder.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/skeleton.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
@@ -19,7 +20,10 @@ class RecentlyAddedScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Recently Added')),
-      bottomNavigationBar: const MiniPlayerSlot(withTopDivider: true),
+      bottomNavigationBar: const MiniPlayerSlot(
+        withTopDivider: true,
+        reserveSpaceWhenEmpty: true,
+      ),
       body: async.when(
         loading: () => const _GridLoading(),
         error: (e, _) => ErrorStateView(
@@ -57,17 +61,12 @@ class RecentlyAddedScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
+                    AspectRatio(
+                      aspectRatio: 1,
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
                         child: imageUrl == null
-                            ? const ColoredBox(
-                                color: AppColors.surfaceElevated,
-                                child: Icon(
-                                  Icons.album,
-                                  color: AppColors.textTertiary,
-                                ),
-                              )
+                            ? const ArtworkPlaceholder()
                             : CachedNetworkImage(
                                 imageUrl: imageUrl,
                                 width: double.infinity,
@@ -75,13 +74,8 @@ class RecentlyAddedScreen extends ConsumerWidget {
                                 placeholder: (_, __) => const ColoredBox(
                                   color: AppColors.surfaceElevated,
                                 ),
-                                errorWidget: (_, __, ___) => const ColoredBox(
-                                  color: AppColors.surfaceElevated,
-                                  child: Icon(
-                                    Icons.album,
-                                    color: AppColors.textTertiary,
-                                  ),
-                                ),
+                                errorWidget: (_, __, ___) =>
+                                    const ArtworkPlaceholder(),
                               ),
                       ),
                     ),
@@ -135,7 +129,8 @@ class _GridLoading extends StatelessWidget {
         itemBuilder: (_, __) => Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
+            AspectRatio(
+              aspectRatio: 1,
               child: Skeleton.box(
                 width: double.infinity,
                 height: double.infinity,

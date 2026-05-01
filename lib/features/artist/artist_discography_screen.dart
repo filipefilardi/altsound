@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/artwork_placeholder.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/skeleton.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
@@ -20,7 +21,10 @@ class ArtistDiscographyScreen extends ConsumerWidget {
     final async = ref.watch(artistProvider(artistId));
     return Scaffold(
       appBar: AppBar(title: const Text('Discography')),
-      bottomNavigationBar: const MiniPlayerSlot(withTopDivider: true),
+      bottomNavigationBar: const MiniPlayerSlot(
+        withTopDivider: true,
+        reserveSpaceWhenEmpty: true,
+      ),
       body: async.when(
         loading: () => const _DiscographyLoading(),
         error: (e, _) => ErrorStateView(
@@ -51,42 +55,32 @@ class ArtistDiscographyScreen extends ConsumerWidget {
               final album = artist.albums[i];
               final imageUrl =
                   (album.imageTag == null || album.imageTag!.isEmpty)
-                      ? null
-                      : repo.imageUrl(
-                          album.id,
-                          imageTag: album.imageTag,
-                          size: 400,
-                        );
+                  ? null
+                  : repo.imageUrl(
+                      album.id,
+                      imageTag: album.imageTag,
+                      size: 400,
+                    );
               return InkWell(
                 borderRadius: BorderRadius.circular(12),
                 onTap: () => context.push('/album/${album.id}'),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
+                    AspectRatio(
+                      aspectRatio: 1,
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
                         child: imageUrl == null
-                            ? Container(
-                                color: AppColors.surfaceElevated,
-                                child: const Icon(
-                                  Icons.album,
-                                  color: AppColors.textTertiary,
-                                ),
-                              )
+                            ? const ArtworkPlaceholder()
                             : CachedNetworkImage(
                                 imageUrl: imageUrl,
                                 width: double.infinity,
                                 fit: BoxFit.cover,
                                 placeholder: (_, __) =>
                                     Container(color: AppColors.surfaceElevated),
-                                errorWidget: (_, __, ___) => Container(
-                                  color: AppColors.surfaceElevated,
-                                  child: const Icon(
-                                    Icons.album,
-                                    color: AppColors.textTertiary,
-                                  ),
-                                ),
+                                errorWidget: (_, __, ___) =>
+                                    const ArtworkPlaceholder(),
                               ),
                       ),
                     ),
@@ -134,8 +128,12 @@ class _DiscographyLoading extends StatelessWidget {
         itemBuilder: (_, __) => Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Skeleton.box(width: double.infinity, height: double.infinity),
+            AspectRatio(
+              aspectRatio: 1,
+              child: Skeleton.box(
+                width: double.infinity,
+                height: double.infinity,
+              ),
             ),
             const SizedBox(height: 8),
             Skeleton.line(height: 12),

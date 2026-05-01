@@ -41,7 +41,10 @@ class AlbumScreen extends ConsumerWidget {
     });
 
     return Scaffold(
-      bottomNavigationBar: const MiniPlayerSlot(withTopDivider: true),
+      bottomNavigationBar: const MiniPlayerSlot(
+        withTopDivider: true,
+        reserveSpaceWhenEmpty: true,
+      ),
       body: async.when(
         loading: () {
           // If we have local tracks, skip the spinner while remote metadata loads.
@@ -319,16 +322,18 @@ class _AlbumViewState extends ConsumerState<_AlbumView> {
                 track: track,
                 index: i,
                 onTap: () {
-                  final current =
-                      ref.read(currentMediaItemProvider).value;
-                  final isCurrentInContext = current != null &&
+                  final current = ref.read(currentMediaItemProvider).value;
+                  final isCurrentInContext =
+                      current != null &&
                       current.extras?['jellyfinId'] == track.id &&
                       current.extras?['contextId'] == album.id;
                   if (isCurrentInContext) {
                     context.push('/now-playing');
                     return;
                   }
-                  ref.read(playerControllerProvider).playTracks(
+                  ref
+                      .read(playerControllerProvider)
+                      .playTracks(
                         album.tracks,
                         startIndex: i,
                         contextId: album.id,
