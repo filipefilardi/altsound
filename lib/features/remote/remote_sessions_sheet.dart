@@ -7,8 +7,9 @@ import '../../data/jellyfin/remote_sessions_repository.dart';
 import '../player/player_providers.dart';
 import 'remote_player_controller.dart';
 
-final _sessionsListProvider =
-    FutureProvider.autoDispose<List<RemoteSession>>((ref) {
+final _sessionsListProvider = FutureProvider.autoDispose<List<RemoteSession>>((
+  ref,
+) {
   return ref.watch(remoteSessionsRepositoryProvider).list();
 });
 

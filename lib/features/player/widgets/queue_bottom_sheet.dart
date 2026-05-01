@@ -12,7 +12,7 @@ const double _kQueueRowHeight = 64;
 Future<void> showQueueBottomSheet(BuildContext context, WidgetRef ref) {
   return showModalBottomSheet<void>(
     context: context,
-    backgroundColor: AppColors.surfaceElevated,
+    backgroundColor: AppColors.surface,
     isScrollControlled: true,
     showDragHandle: true,
     useSafeArea: true,
@@ -40,7 +40,8 @@ class _QueueSheetState extends ConsumerState<_QueueSheet> {
   Widget build(BuildContext context) {
     final queueAsync = ref.watch(queueProvider);
     final stateAsync = ref.watch(playbackStateProvider);
-    final userQueuedIds = ref.watch(userQueuedIdsProvider).value ?? const <String>{};
+    final userQueuedIds =
+        ref.watch(userQueuedIdsProvider).value ?? const <String>{};
     final loopMode = ref.watch(playerLoopModeProvider).value ?? LoopMode.off;
     final fullQueue = queueAsync.value ?? const <MediaItem>[];
     final absoluteIndex = stateAsync.value?.queueIndex;
@@ -76,13 +77,17 @@ class _QueueSheetState extends ConsumerState<_QueueSheet> {
                       onReorder: (displayOld, displayNew) {
                         ref
                             .read(playerControllerProvider)
-                            .reorderQueue(displayOld + offset, displayNew + offset);
+                            .reorderQueue(
+                              displayOld + offset,
+                              displayNew + offset,
+                            );
                       },
                       itemBuilder: (context, i) {
                         final m = queue[i];
                         final isCurrent = i == 0;
-                        final isUserQueued = userQueuedIds
-                            .contains(m.extras?['jellyfinId'] as String?);
+                        final isUserQueued = userQueuedIds.contains(
+                          m.extras?['jellyfinId'] as String?,
+                        );
                         return _QueueRow(
                           key: ValueKey(m.id + i.toString()),
                           item: m,
@@ -120,10 +125,7 @@ class _Header extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Text(
-            'Up next',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
+          Text('Up next', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(width: 10),
           if (label.isNotEmpty)
             Padding(
@@ -131,9 +133,9 @@ class _Header extends StatelessWidget {
               child: Text(
                 label,
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: AppColors.textTertiary,
-                      letterSpacing: 1.0,
-                    ),
+                  color: AppColors.textTertiary,
+                  letterSpacing: 1.0,
+                ),
               ),
             ),
           const Spacer(),
@@ -171,10 +173,10 @@ class _RepeatBadge extends StatelessWidget {
           Text(
             label,
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: AppColors.primary,
-                  letterSpacing: 0.6,
-                  fontSize: 11,
-                ),
+              color: AppColors.primary,
+              letterSpacing: 0.6,
+              fontSize: 11,
+            ),
           ),
         ],
       ),
@@ -290,8 +292,11 @@ class _RowArt extends StatelessWidget {
         child: art == null
             ? const ColoredBox(
                 color: AppColors.background,
-                child: Icon(Icons.music_note,
-                    color: AppColors.textTertiary, size: 20),
+                child: Icon(
+                  Icons.music_note,
+                  color: AppColors.textTertiary,
+                  size: 20,
+                ),
               )
             : CachedNetworkImage(
                 imageUrl: art.toString(),
@@ -300,8 +305,11 @@ class _RowArt extends StatelessWidget {
                     const ColoredBox(color: AppColors.background),
                 errorWidget: (_, __, ___) => const ColoredBox(
                   color: AppColors.background,
-                  child: Icon(Icons.music_note,
-                      color: AppColors.textTertiary, size: 20),
+                  child: Icon(
+                    Icons.music_note,
+                    color: AppColors.textTertiary,
+                    size: 20,
+                  ),
                 ),
               ),
       ),

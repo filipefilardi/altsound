@@ -5,25 +5,26 @@ import 'app_colors.dart';
 class AppGradients {
   AppGradients._();
 
-  /// Purple-blue → violet, used on the primary play button and login CTA.
+  /// Solid primary fill exposed as a gradient for controls that already use a
+  /// gradient decoration.
   static const accent = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [AppColors.primary, AppColors.accent],
+    colors: [AppColors.primary, AppColors.primary],
   );
 
   /// Slim version for thin progress bars.
   static const accentHorizontal = LinearGradient(
     begin: Alignment.centerLeft,
     end: Alignment.centerRight,
-    colors: [AppColors.primary, AppColors.accent],
+    colors: [AppColors.primary, AppColors.primary],
   );
 
-  /// Soft purple radial used on the login backdrop.
+  /// Solid dark charcoal backdrop for the login screen.
   static const loginBackdrop = RadialGradient(
     center: Alignment(0, -0.6),
     radius: 1.1,
-    colors: [Color(0x337B68EE), AppColors.background],
+    colors: [AppColors.background, AppColors.background],
     stops: [0.0, 0.85],
   );
 }
