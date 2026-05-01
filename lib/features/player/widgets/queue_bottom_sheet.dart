@@ -158,7 +158,7 @@ class _RepeatBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final isOne = loopMode == LoopMode.one;
     final label = isOne ? 'Repeat track' : 'Repeat queue';
-    final icon = isOne ? Icons.repeat_one : Icons.repeat;
+    final icon = isOne ? Icons.repeat_one_rounded : Icons.repeat_rounded;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -246,7 +246,7 @@ class _QueueRow extends StatelessWidget {
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 8),
                 child: Icon(
-                  Icons.repeat_one,
+                  Icons.repeat_one_rounded,
                   color: AppColors.primary,
                   size: 18,
                 ),
@@ -255,7 +255,7 @@ class _QueueRow extends StatelessWidget {
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 8),
                 child: Icon(
-                  Icons.queue_music,
+                  Icons.queue_music_rounded,
                   color: AppColors.textTertiary,
                   size: 16,
                 ),
@@ -265,7 +265,7 @@ class _QueueRow extends StatelessWidget {
               child: const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 8, vertical: 16),
                 child: Icon(
-                  Icons.drag_indicator,
+                  Icons.drag_indicator_rounded,
                   color: AppColors.textTertiary,
                   size: 20,
                 ),
@@ -293,7 +293,7 @@ class _RowArt extends StatelessWidget {
             ? const ColoredBox(
                 color: AppColors.background,
                 child: Icon(
-                  Icons.music_note,
+                  Icons.music_note_rounded,
                   color: AppColors.textTertiary,
                   size: 20,
                 ),
@@ -306,7 +306,7 @@ class _RowArt extends StatelessWidget {
                 errorWidget: (_, __, ___) => const ColoredBox(
                   color: AppColors.background,
                   child: Icon(
-                    Icons.music_note,
+                    Icons.music_note_rounded,
                     color: AppColors.textTertiary,
                     size: 20,
                   ),

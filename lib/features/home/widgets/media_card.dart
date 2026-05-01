@@ -101,7 +101,11 @@ class _Fallback extends StatelessWidget {
     return Container(
       color: AppColors.surfaceElevated,
       child: const Center(
-        child: Icon(Icons.album, color: AppColors.textTertiary, size: 48),
+        child: Icon(
+          Icons.album_rounded,
+          color: AppColors.textTertiary,
+          size: 48,
+        ),
       ),
     );
   }

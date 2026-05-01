@@ -65,7 +65,10 @@ class SearchTrackArtwork extends ConsumerWidget {
     final br = BorderRadius.circular(isArtistShape ? 28 : 8);
     Widget fallback() => Container(
       color: AppColors.surfaceElevated,
-      child: const Icon(Icons.music_note, color: AppColors.textTertiary),
+      child: const Icon(
+        Icons.music_note_rounded,
+        color: AppColors.textTertiary,
+      ),
     );
     Widget artwork() {
       final url = imageUrl;

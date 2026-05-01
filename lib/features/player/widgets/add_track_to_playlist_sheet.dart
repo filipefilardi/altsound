@@ -40,9 +40,7 @@ Future<void> openAddTracksToPlaylistFlow(
     showDragHandle: true,
     builder: (sheetContext) => FractionallySizedBox(
       heightFactor: 0.9,
-      child: SafeArea(
-        child: _PickPlaylistSheet(playlists: playlists),
-      ),
+      child: SafeArea(child: _PickPlaylistSheet(playlists: playlists)),
     ),
   );
   if (target == null || !context.mounted) return;
@@ -145,9 +143,9 @@ Future<void> _showCreatePlaylistDialog(
   final created = await repo.createPlaylist(playlistName);
   await repo.addTrackToPlaylist(trackId: trackId, playlistId: created.id);
   if (!context.mounted) return;
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text('Playlist "${created.name}" created')),
-  );
+  ScaffoldMessenger.of(
+    context,
+  ).showSnackBar(SnackBar(content: Text('Playlist "${created.name}" created')));
 }
 
 class _ManageTrackPlaylistsSheet extends ConsumerStatefulWidget {
@@ -184,7 +182,8 @@ class _ManageTrackPlaylistsSheetState
     _isFavorite = widget.initialPresence.isFavorite;
     for (final membership in widget.initialPresence.memberships) {
       _playlistIdsContainingTrack.add(membership.playlistId);
-      _entryIdByPlaylistId[membership.playlistId] = membership.playlistItemEntryId;
+      _entryIdByPlaylistId[membership.playlistId] =
+          membership.playlistItemEntryId;
     }
     _searchCtrl.addListener(() {
       setState(() => _query = _searchCtrl.text.trim().toLowerCase());
@@ -221,7 +220,7 @@ class _ManageTrackPlaylistsSheetState
             controller: _searchCtrl,
             decoration: const InputDecoration(
               hintText: 'Search playlists',
-              prefixIcon: Icon(Icons.search),
+              prefixIcon: Icon(Icons.search_rounded),
             ),
           ),
         ),
@@ -237,10 +236,14 @@ class _ManageTrackPlaylistsSheetState
                   icon: Icons.favorite_rounded,
                   iconColor: AppColors.like,
                   title: 'Liked songs',
-                  selected: _playlistIdsContainingTrack.contains(widget.likedPlaylistId),
+                  selected: _playlistIdsContainingTrack.contains(
+                    widget.likedPlaylistId,
+                  ),
                   onTap: () => unawaited(
                     _toggleLikedSongs(
-                      selected: !_playlistIdsContainingTrack.contains(widget.likedPlaylistId),
+                      selected: !_playlistIdsContainingTrack.contains(
+                        widget.likedPlaylistId,
+                      ),
                     ),
                   ),
                 ),
@@ -253,7 +256,9 @@ class _ManageTrackPlaylistsSheetState
                   onTap: () => unawaited(
                     _togglePlaylist(
                       playlist: playlist,
-                      selected: !_playlistIdsContainingTrack.contains(playlist.id),
+                      selected: !_playlistIdsContainingTrack.contains(
+                        playlist.id,
+                      ),
                     ),
                   ),
                 ),
@@ -287,7 +292,8 @@ class _ManageTrackPlaylistsSheetState
           if (entryId != null) _entryIdByPlaylistId[playlist.id] = entryId;
         });
       } else {
-        final entryId = _entryIdByPlaylistId[playlist.id] ??
+        final entryId =
+            _entryIdByPlaylistId[playlist.id] ??
             await repo.playlistEntryIdForTrack(
               playlistId: playlist.id,
               trackId: widget.trackId,
@@ -333,7 +339,8 @@ class _ManageTrackPlaylistsSheetState
           if (entryId != null) _entryIdByPlaylistId[likedId] = entryId;
         });
       } else {
-        final entryId = _entryIdByPlaylistId[likedId] ??
+        final entryId =
+            _entryIdByPlaylistId[likedId] ??
             await repo.playlistEntryIdForTrack(
               playlistId: likedId,
               trackId: widget.trackId,
@@ -383,7 +390,9 @@ class _ManageTrackPlaylistsSheetState
       _entryIdByPlaylistId
         ..clear()
         ..addEntries(
-          refreshedMemberships.map((m) => MapEntry(m.playlistId, m.playlistItemEntryId)),
+          refreshedMemberships.map(
+            (m) => MapEntry(m.playlistId, m.playlistItemEntryId),
+          ),
         );
     });
     for (final m in refreshedMemberships) {
@@ -409,7 +418,11 @@ class _NewPlaylistRow extends StatelessWidget {
           color: AppColors.primary.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(10),
         ),
-        child: const Icon(Icons.add_rounded, color: AppColors.primary, size: 22),
+        child: const Icon(
+          Icons.add_rounded,
+          color: AppColors.primary,
+          size: 22,
+        ),
       ),
       title: Text(
         'New playlist',
@@ -457,7 +470,9 @@ class _PlaylistToggleRow extends StatelessWidget {
       trailing: AnimatedSwitcher(
         duration: const Duration(milliseconds: 200),
         child: Icon(
-          selected ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+          selected
+              ? Icons.check_circle_rounded
+              : Icons.radio_button_unchecked_rounded,
           key: ValueKey(selected),
           color: selected ? AppColors.primary : AppColors.textTertiary,
           size: 22,
@@ -517,7 +532,7 @@ class _PickPlaylistSheetState extends State<_PickPlaylistSheet> {
             controller: _searchCtrl,
             decoration: const InputDecoration(
               hintText: 'Search playlists',
-              prefixIcon: Icon(Icons.search),
+              prefixIcon: Icon(Icons.search_rounded),
             ),
           ),
         ),

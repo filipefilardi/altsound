@@ -56,8 +56,10 @@ class CollectionDownloadButton extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child:
-                const Text('Remove', style: TextStyle(color: AppColors.error)),
+            child: const Text(
+              'Remove',
+              style: TextStyle(color: AppColors.error),
+            ),
           ),
         ],
       ),
@@ -73,12 +75,13 @@ class CollectionDownloadButton extends ConsumerWidget {
     if (!manager.supported) return const SizedBox.shrink();
     if (tracks.isEmpty) return const SizedBox.shrink();
 
-    final downloadedCount =
-        tracks.where((t) => downloads.isDownloaded(t.id)).length;
-    final inProgress =
-        tracks.any((t) => downloads.progressFor(t.id) != null);
+    final downloadedCount = tracks
+        .where((t) => downloads.isDownloaded(t.id))
+        .length;
+    final inProgress = tracks.any((t) => downloads.progressFor(t.id) != null);
     final allDone = downloadedCount == tracks.length;
-    final isQueuedButBlocked = !allDone &&
+    final isQueuedButBlocked =
+        !allDone &&
         !inProgress &&
         downloads.isBlockedByWifiOnly &&
         tracks.any((t) => downloads.isQueued(t.id));
@@ -86,7 +89,10 @@ class CollectionDownloadButton extends ConsumerWidget {
     if (allDone) {
       return IconButton(
         tooltip: 'Remove downloads',
-        icon: const Icon(Icons.download_for_offline, color: AppColors.primary),
+        icon: const Icon(
+          Icons.download_for_offline_rounded,
+          color: AppColors.primary,
+        ),
         onPressed: () => _confirmDelete(context),
       );
     }
@@ -96,7 +102,8 @@ class CollectionDownloadButton extends ConsumerWidget {
           .map((t) => downloads.progressFor(t.id))
           .whereType<double>()
           .toList();
-      final overall = (downloadedCount +
+      final overall =
+          (downloadedCount +
               (activeProgresses.isEmpty
                   ? 0
                   : activeProgresses.reduce((a, b) => a + b))) /
@@ -113,8 +120,11 @@ class CollectionDownloadButton extends ConsumerWidget {
               color: AppColors.primary,
               backgroundColor: AppColors.divider,
             ),
-            const Icon(Icons.downloading,
-                size: 18, color: AppColors.textPrimary),
+            const Icon(
+              Icons.downloading_rounded,
+              size: 18,
+              color: AppColors.textPrimary,
+            ),
           ],
         ),
       );
@@ -123,14 +133,17 @@ class CollectionDownloadButton extends ConsumerWidget {
     if (isQueuedButBlocked) {
       return IconButton(
         tooltip: 'Waiting for WiFi — tap to change settings',
-        icon: const Icon(Icons.wifi_off_rounded, color: AppColors.textSecondary),
+        icon: const Icon(
+          Icons.wifi_off_rounded,
+          color: AppColors.textSecondary,
+        ),
         onPressed: () => showWifiRequiredDialog(context),
       );
     }
 
     return IconButton(
       tooltip: downloadTooltip,
-      icon: const Icon(Icons.download_outlined, color: AppColors.textPrimary),
+      icon: const Icon(Icons.download_rounded, color: AppColors.textPrimary),
       onPressed: () async {
         final canDownload = await ref
             .read(downloadPreferencesProvider.notifier)

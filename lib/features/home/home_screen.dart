@@ -111,7 +111,7 @@ class _Greeting extends StatelessWidget {
         ),
         IconButton.filledTonal(
           onPressed: () => context.push('/settings'),
-          icon: const Icon(Icons.settings_outlined, size: 20),
+          icon: const Icon(Icons.settings_rounded, size: 20),
           style: IconButton.styleFrom(
             backgroundColor: AppColors.surface,
             foregroundColor: AppColors.textPrimary,
@@ -185,7 +185,7 @@ class _ResumeCard extends ConsumerWidget {
                     const Padding(
                       padding: EdgeInsets.only(right: 12),
                       child: Icon(
-                        Icons.chevron_right,
+                        Icons.chevron_right_rounded,
                         color: AppColors.textSecondary,
                       ),
                     ),
@@ -221,7 +221,7 @@ class _ResumeArtFallback extends StatelessWidget {
   Widget build(BuildContext context) {
     return const ColoredBox(
       color: AppColors.surface,
-      child: Icon(Icons.album, color: AppColors.textTertiary, size: 32),
+      child: Icon(Icons.album_rounded, color: AppColors.textTertiary, size: 32),
     );
   }
 }

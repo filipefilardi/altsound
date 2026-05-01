@@ -35,26 +35,23 @@ class PlayerHeroArt extends StatelessWidget {
         child: artUri == null
             ? const _ArtFallback()
             : isLocal
-                ? Image(
-                    image: FileImage(File(artUri.toFilePath())),
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const _ArtFallback(),
-                  )
-                : CachedNetworkImage(
-                    imageUrl: artUri.toString(),
-                    fit: BoxFit.cover,
-                    placeholder: (_, __) => const _ArtFallback(),
-                    errorWidget: (_, __, ___) => const _ArtFallback(),
-                  ),
+            ? Image(
+                image: FileImage(File(artUri.toFilePath())),
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const _ArtFallback(),
+              )
+            : CachedNetworkImage(
+                imageUrl: artUri.toString(),
+                fit: BoxFit.cover,
+                placeholder: (_, __) => const _ArtFallback(),
+                errorWidget: (_, __, ___) => const _ArtFallback(),
+              ),
       ),
     );
     if (!hero) return child;
     return Hero(
       tag: playerArtHeroTag(mediaItem.id),
-      child: Material(
-        type: MaterialType.transparency,
-        child: child,
-      ),
+      child: Material(type: MaterialType.transparency, child: child),
     );
   }
 }
@@ -67,7 +64,7 @@ class _ArtFallback extends StatelessWidget {
       color: AppColors.surfaceElevated,
       child: const Center(
         child: Icon(
-          Icons.music_note,
+          Icons.music_note_rounded,
           size: 64,
           color: AppColors.textTertiary,
         ),

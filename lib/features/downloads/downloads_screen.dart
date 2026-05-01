@@ -22,7 +22,7 @@ class DownloadsScreen extends ConsumerWidget {
       return Scaffold(
         appBar: AppBar(title: const Text('Downloads')),
         body: const EmptyState(
-          icon: Icons.cloud_off,
+          icon: Icons.cloud_off_rounded,
           title: "Downloads aren't available on web",
           message: 'Open AltSound on iOS or Android to download for offline.',
         ),
@@ -77,16 +77,14 @@ class DownloadsScreen extends ConsumerWidget {
       ),
       body: albumIds.isEmpty
           ? const EmptyState(
-              icon: Icons.download_outlined,
+              icon: Icons.download_rounded,
               title: 'No downloads yet',
-              message:
-                  'Tap the download icon on any album to keep it offline.',
+              message: 'Tap the download icon on any album to keep it offline.',
             )
           : ListView.separated(
               padding: const EdgeInsets.only(bottom: 96),
               itemCount: albumIds.length,
-              separatorBuilder: (_, __) =>
-                  const Divider(height: 1, indent: 80),
+              separatorBuilder: (_, __) => const Divider(height: 1, indent: 80),
               itemBuilder: (_, i) {
                 final albumId = albumIds[i];
                 final tracks = byAlbum[albumId]!;
@@ -94,10 +92,11 @@ class DownloadsScreen extends ConsumerWidget {
                 return _DownloadedAlbumTile(
                   albumId: albumId,
                   trackCount: tracks.length,
-                  totalSize:
-                      tracks.fold(0, (s, t) => s + t.fileSize),
-                  totalDuration:
-                      tracks.fold(Duration.zero, (s, t) => s + t.duration),
+                  totalSize: tracks.fold(0, (s, t) => s + t.fileSize),
+                  totalDuration: tracks.fold(
+                    Duration.zero,
+                    (s, t) => s + t.duration,
+                  ),
                   albumName: first.albumName ?? 'Unknown album',
                   artistName: first.artistName,
                   imageItemId: first.imageItemId,
@@ -139,8 +138,7 @@ class _DownloadedAlbumTile extends ConsumerWidget {
       onTap: albumId == 'unknown'
           ? null
           : () => context.push('/album/$albumId'),
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       leading: ClipRRect(
         borderRadius: BorderRadius.circular(4),
         child: SizedBox(
@@ -150,13 +148,12 @@ class _DownloadedAlbumTile extends ConsumerWidget {
             imageUrl: repo.imageUrl(imageItemId, imageTag: imageTag, size: 200),
             fit: BoxFit.cover,
             placeholder: (_, __) => Container(color: AppColors.surfaceElevated),
-            errorWidget: (_, __, ___) => const Icon(Icons.album,
-                color: AppColors.textTertiary),
+            errorWidget: (_, __, ___) =>
+                const Icon(Icons.album_rounded, color: AppColors.textTertiary),
           ),
         ),
       ),
-      title: Text(albumName,
-          maxLines: 1, overflow: TextOverflow.ellipsis),
+      title: Text(albumName, maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: Text(
         '$artistName · $trackCount tracks · ${_formatBytes(totalSize)} · ${formatLongDuration(totalDuration)}',
         maxLines: 1,
@@ -164,21 +161,21 @@ class _DownloadedAlbumTile extends ConsumerWidget {
         style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
       ),
       trailing: IconButton(
-        icon: const Icon(Icons.delete_outline,
-            color: AppColors.textSecondary),
+        icon: const Icon(Icons.delete_rounded, color: AppColors.textSecondary),
         onPressed: () => _confirmDelete(context, manager),
       ),
     );
   }
 
   Future<void> _confirmDelete(
-      BuildContext context, DownloadManager manager) async {
+    BuildContext context,
+    DownloadManager manager,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Remove download'),
-        content: Text(
-            'Remove "$albumName" from your downloads?'),
+        content: Text('Remove "$albumName" from your downloads?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -186,8 +183,10 @@ class _DownloadedAlbumTile extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child:
-                const Text('Remove', style: TextStyle(color: AppColors.error)),
+            child: const Text(
+              'Remove',
+              style: TextStyle(color: AppColors.error),
+            ),
           ),
         ],
       ),

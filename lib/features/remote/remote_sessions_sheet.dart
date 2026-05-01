@@ -41,7 +41,7 @@ class _RemoteSessionsSheet extends ConsumerWidget {
             const SizedBox(height: 16),
             if (activeId != null)
               ListTile(
-                leading: const Icon(Icons.phone_android),
+                leading: const Icon(Icons.phone_android_rounded),
                 title: const Text('This device'),
                 onTap: () => _switchToLocal(context, ref, activeId),
               ),
@@ -57,11 +57,14 @@ class _RemoteSessionsSheet extends ConsumerWidget {
                   children: [
                     for (final s in sessions)
                       ListTile(
-                        leading: const Icon(Icons.cast),
+                        leading: const Icon(Icons.cast_rounded),
                         title: Text(s.deviceName),
                         subtitle: Text(s.client),
                         trailing: s.id == activeId
-                            ? const Icon(Icons.check, color: AppColors.like)
+                            ? const Icon(
+                                Icons.check_rounded,
+                                color: AppColors.like,
+                              )
                             : null,
                         onTap: () => _switchToRemote(context, ref, s.id),
                       ),

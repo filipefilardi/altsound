@@ -134,8 +134,8 @@ class MiniPlayer extends ConsumerWidget {
                             ),
                             _RoundIcon(
                               icon: saved
-                                  ? Icons.playlist_add_check
-                                  : Icons.playlist_add,
+                                  ? Icons.playlist_add_check_rounded
+                                  : Icons.playlist_add_rounded,
                               iconColor: saved ? AppColors.primary : null,
                               onTap: () => unawaited(
                                 _onMiniPlayerPlaylistTap(
@@ -147,7 +147,9 @@ class MiniPlayer extends ConsumerWidget {
                               ),
                             ),
                             _RoundIcon(
-                              icon: playing ? Icons.pause : Icons.play_arrow,
+                              icon: playing
+                                  ? Icons.pause_rounded
+                                  : Icons.play_arrow_rounded,
                               onTap: controller.togglePlay,
                             ),
                           ],

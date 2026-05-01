@@ -87,14 +87,17 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
               ).pop(_SelectionBulkAction.addToLiked),
             ),
             ListTile(
-              leading: const Icon(Icons.playlist_add, color: AppColors.primary),
+              leading: const Icon(
+                Icons.playlist_add_rounded,
+                color: AppColors.primary,
+              ),
               title: const Text('Add to another playlist'),
               onTap: () => Navigator.of(
                 sheetContext,
               ).pop(_SelectionBulkAction.addToPlaylist),
             ),
             ListTile(
-              leading: const Icon(Icons.remove_circle_outline),
+              leading: const Icon(Icons.remove_circle_rounded),
               title: const Text('Remove from this playlist'),
               onTap: () => Navigator.of(
                 sheetContext,
@@ -159,14 +162,14 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
             ? AppBar(
                 leading: IconButton(
                   tooltip: 'Cancel',
-                  icon: const Icon(Icons.close),
+                  icon: const Icon(Icons.close_rounded),
                   onPressed: _clearSelection,
                 ),
                 title: Text('${_selectedTrackIds.length} selected'),
                 actions: [
                   IconButton(
                     tooltip: 'More',
-                    icon: const Icon(Icons.more_vert),
+                    icon: const Icon(Icons.more_vert_rounded),
                     onPressed: () => _showSelectionActionsMenu(
                       context,
                       playlistId: playlistId,
@@ -180,7 +183,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                   if (canDelete)
                     IconButton(
                       tooltip: 'Delete playlist',
-                      icon: const Icon(Icons.delete_outline),
+                      icon: const Icon(Icons.delete_rounded),
                       onPressed: () => _confirmDelete(context, ref, playlist),
                     ),
                 ],
@@ -695,14 +698,16 @@ class _ActionRow extends ConsumerWidget {
                       );
                     }
                   : null,
-              icon: isPlaylistPlaying ? Icons.pause : Icons.play_arrow,
+              icon: isPlaylistPlaying
+                  ? Icons.pause_rounded
+                  : Icons.play_arrow_rounded,
               tooltip: isPlaylistPlaying ? 'Pause' : 'Play',
             ),
             const SizedBox(width: 12),
             IconButton(
               tooltip: 'Shuffle',
               icon: Icon(
-                Icons.shuffle,
+                Icons.shuffle_rounded,
                 color: shuffleEnabled
                     ? AppColors.primary
                     : AppColors.textPrimary,
@@ -712,7 +717,7 @@ class _ActionRow extends ConsumerWidget {
             PlaylistDownloadButton(playlist: playlist),
             IconButton(
               tooltip: 'More actions',
-              icon: const Icon(Icons.more_vert),
+              icon: const Icon(Icons.more_vert_rounded),
               onPressed: enabled
                   ? () async {
                       final action =
@@ -724,14 +729,18 @@ class _ActionRow extends ConsumerWidget {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   ListTile(
-                                    leading: const Icon(Icons.playlist_add),
+                                    leading: const Icon(
+                                      Icons.playlist_add_rounded,
+                                    ),
                                     title: const Text('Add to playlist'),
                                     onTap: () => Navigator.of(sheetContext).pop(
                                       _PlaylistCollectionAction.addToPlaylist,
                                     ),
                                   ),
                                   ListTile(
-                                    leading: const Icon(Icons.add_to_queue),
+                                    leading: const Icon(
+                                      Icons.add_to_queue_rounded,
+                                    ),
                                     title: const Text('Add to queue'),
                                     onTap: () => Navigator.of(
                                       sheetContext,
@@ -781,7 +790,11 @@ class _ArtFallback extends StatelessWidget {
     return const ColoredBox(
       color: AppColors.surfaceElevated,
       child: Center(
-        child: Icon(Icons.queue_music, color: AppColors.textTertiary, size: 40),
+        child: Icon(
+          Icons.queue_music_rounded,
+          color: AppColors.textTertiary,
+          size: 40,
+        ),
       ),
     );
   }
@@ -934,7 +947,7 @@ class _PlaylistTrackTile extends ConsumerWidget {
                   const Padding(
                     padding: EdgeInsets.only(right: 4),
                     child: Icon(
-                      Icons.download_for_offline,
+                      Icons.download_for_offline_rounded,
                       size: 14,
                       color: AppColors.primary,
                     ),

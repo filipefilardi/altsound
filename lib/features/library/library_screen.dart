@@ -22,7 +22,7 @@ class LibraryScreen extends ConsumerWidget {
           title: const Text('Your Library'),
           actions: [
             IconButton(
-              icon: const Icon(Icons.settings_outlined),
+              icon: const Icon(Icons.settings_rounded),
               tooltip: 'Settings',
               onPressed: () => context.push('/settings'),
             ),
@@ -89,7 +89,7 @@ class LibraryScreen extends ConsumerWidget {
           _NewPlaylistTile(onTap: () => _createPlaylist(context, ref)),
           ...rest.map(
             (playlist) => _SectionTile(
-              icon: Icons.queue_music_outlined,
+              icon: Icons.queue_music_rounded,
               title: playlist.name,
               subtitle: playlist.childCount != null
                   ? 'Playlist · ${playlist.childCount} songs'
@@ -106,7 +106,7 @@ class LibraryScreen extends ConsumerWidget {
         title: const Text('Your Library'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings_outlined),
+            icon: const Icon(Icons.settings_rounded),
             tooltip: 'Settings',
             onPressed: () => context.push('/settings'),
           ),
@@ -255,7 +255,10 @@ class _NewPlaylistTile extends StatelessWidget {
         'Create a new playlist',
         style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
       ),
-      trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+      trailing: const Icon(
+        Icons.chevron_right_rounded,
+        color: AppColors.textSecondary,
+      ),
       onTap: onTap,
     );
   }
@@ -304,7 +307,10 @@ class _SectionTile extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
       ),
-      trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+      trailing: const Icon(
+        Icons.chevron_right_rounded,
+        color: AppColors.textSecondary,
+      ),
       onTap: onTap,
     );
   }

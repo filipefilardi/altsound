@@ -39,7 +39,7 @@ class OfflineLibraryView extends ConsumerWidget {
     if (albums.isEmpty && playlists.isEmpty) {
       if (!showEmptyState) return const SizedBox.shrink();
       return EmptyState(
-        icon: isOffline ? Icons.wifi_off_rounded : Icons.download_outlined,
+        icon: isOffline ? Icons.wifi_off_rounded : Icons.download_rounded,
         title: isOffline ? "You're offline" : 'No downloads yet',
         message: isOffline
             ? 'No downloaded songs yet.\nDownload albums or playlists while online to listen anywhere.'
@@ -213,7 +213,11 @@ class _ContentTile extends StatelessWidget {
                 const ColoredBox(color: AppColors.surfaceElevated),
             errorBuilder: (_) => const ColoredBox(
               color: AppColors.surfaceElevated,
-              child: Icon(Icons.album, color: AppColors.textTertiary, size: 24),
+              child: Icon(
+                Icons.album_rounded,
+                color: AppColors.textTertiary,
+                size: 24,
+              ),
             ),
           ),
         ),
@@ -230,7 +234,10 @@ class _ContentTile extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
       ),
-      trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+      trailing: const Icon(
+        Icons.chevron_right_rounded,
+        color: AppColors.textSecondary,
+      ),
       onTap: onTap,
     );
   }

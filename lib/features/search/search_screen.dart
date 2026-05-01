@@ -83,11 +83,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               onChanged: _onChanged,
               decoration: InputDecoration(
                 hintText: 'Songs, albums, artists',
-                prefixIcon: const Icon(Icons.search),
+                prefixIcon: const Icon(Icons.search_rounded),
                 suffixIcon: _ctrl.text.isEmpty
                     ? null
                     : IconButton(
-                        icon: const Icon(Icons.clear),
+                        icon: const Icon(Icons.close_rounded),
                         onPressed: () {
                           _ctrl.clear();
                           _onChanged('');
@@ -107,7 +107,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                       }
                       if (snap.hasError) {
                         return EmptyState(
-                          icon: Icons.error_outline,
+                          icon: Icons.error_outline_rounded,
                           title: 'Search failed',
                           message: '${snap.error}',
                         );
@@ -210,7 +210,7 @@ class _ResultTile extends ConsumerWidget {
                   const Padding(
                     padding: EdgeInsets.only(right: 4),
                     child: Icon(
-                      Icons.download_for_offline,
+                      Icons.download_for_offline_rounded,
                       size: 14,
                       color: AppColors.primary,
                     ),
@@ -278,10 +278,10 @@ class _ResultTile extends ConsumerWidget {
   }
 
   IconData _iconFor(MediaKind k) => switch (k) {
-    MediaKind.album => Icons.album,
-    MediaKind.artist => Icons.person,
-    MediaKind.track => Icons.music_note,
-    MediaKind.playlist => Icons.queue_music,
+    MediaKind.album => Icons.album_rounded,
+    MediaKind.artist => Icons.person_rounded,
+    MediaKind.track => Icons.music_note_rounded,
+    MediaKind.playlist => Icons.queue_music_rounded,
   };
 
   String _labelFor(MediaKind k) => switch (k) {
@@ -300,7 +300,7 @@ class _SearchTrackMenuButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return IconButton(
-      icon: const Icon(Icons.more_vert, color: AppColors.textSecondary),
+      icon: const Icon(Icons.more_vert_rounded, color: AppColors.textSecondary),
       onPressed: () async {
         final repo = ref.read(jellyfinRepositoryProvider);
         final downloaded = ref.read(downloadManagerProvider).tracks[trackId];
@@ -345,7 +345,7 @@ class _SearchTrackMenuButton extends ConsumerWidget {
                               ? Container(
                                   color: AppColors.surfaceHighlight,
                                   child: const Icon(
-                                    Icons.music_note,
+                                    Icons.music_note_rounded,
                                     color: AppColors.textTertiary,
                                     size: 20,
                                   ),
@@ -359,7 +359,7 @@ class _SearchTrackMenuButton extends ConsumerWidget {
                                   errorBuilder: (_) => Container(
                                     color: AppColors.surfaceHighlight,
                                     child: const Icon(
-                                      Icons.music_note,
+                                      Icons.music_note_rounded,
                                       color: AppColors.textTertiary,
                                       size: 20,
                                     ),
@@ -415,7 +415,7 @@ class _SearchTrackMenuButton extends ConsumerWidget {
                 const Divider(height: 1),
                 // ── Actions ──
                 ListTile(
-                  leading: const Icon(Icons.playlist_add),
+                  leading: const Icon(Icons.playlist_add_rounded),
                   title: const Text('Add to playlist'),
                   onTap: () => Navigator.of(
                     sheetCtx,
@@ -423,7 +423,7 @@ class _SearchTrackMenuButton extends ConsumerWidget {
                 ),
                 const Divider(height: 1, indent: 56),
                 ListTile(
-                  leading: const Icon(Icons.queue_music),
+                  leading: const Icon(Icons.queue_music_rounded),
                   title: const Text('Add to queue'),
                   onTap: () =>
                       Navigator.of(sheetCtx).pop(_TrackMenuAction.addToQueue),
@@ -431,7 +431,7 @@ class _SearchTrackMenuButton extends ConsumerWidget {
                 if (track.albumId != null && track.albumId!.isNotEmpty) ...[
                   const Divider(height: 1, indent: 56),
                   ListTile(
-                    leading: const Icon(Icons.album_outlined),
+                    leading: const Icon(Icons.album_rounded),
                     title: const Text('Go to album'),
                     onTap: () =>
                         Navigator.of(sheetCtx).pop(_TrackMenuAction.goToAlbum),
@@ -440,7 +440,7 @@ class _SearchTrackMenuButton extends ConsumerWidget {
                 if (track.artistId != null && track.artistId!.isNotEmpty) ...[
                   const Divider(height: 1, indent: 56),
                   ListTile(
-                    leading: const Icon(Icons.person_outline),
+                    leading: const Icon(Icons.person_rounded),
                     title: const Text('Go to artist'),
                     onTap: () =>
                         Navigator.of(sheetCtx).pop(_TrackMenuAction.goToArtist),
@@ -582,7 +582,7 @@ class _IdleHint extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return EmptyState(
-      icon: Icons.search,
+      icon: Icons.search_rounded,
       title: 'Search your Jellyfin library',
       message: 'Find songs, albums, and artists you already have.',
     );
@@ -596,7 +596,7 @@ class _NoResults extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return EmptyState(
-      icon: Icons.search_off,
+      icon: Icons.search_off_rounded,
       title: 'No matches in your library',
       message: 'Nothing matched "$term". Try a different spelling.',
     );
