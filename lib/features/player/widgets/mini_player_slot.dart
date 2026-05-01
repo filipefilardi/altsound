@@ -10,10 +10,12 @@ class MiniPlayerSlot extends ConsumerWidget {
     super.key,
     this.withTopDivider = false,
     this.reserveSpaceWhenEmpty = false,
+    this.applyBottomSafeArea = true,
   });
 
   final bool withTopDivider;
   final bool reserveSpaceWhenEmpty;
+  final bool applyBottomSafeArea;
 
   static const _emptyBottomPadding = 24.0;
 
@@ -32,20 +34,22 @@ class MiniPlayerSlot extends ConsumerWidget {
       if (!reserveSpaceWhenEmpty) return const SizedBox.shrink();
       return DecoratedBox(
         decoration: decoration,
-        child: const SafeArea(
+        child: SafeArea(
           top: false,
-          minimum: EdgeInsets.only(bottom: _emptyBottomPadding),
-          child: SizedBox.shrink(),
+          bottom: applyBottomSafeArea,
+          minimum: const EdgeInsets.only(bottom: _emptyBottomPadding),
+          child: const SizedBox.shrink(),
         ),
       );
     }
 
     return DecoratedBox(
       decoration: decoration,
-      child: const SafeArea(
+      child: SafeArea(
         top: false,
-        minimum: EdgeInsets.only(bottom: 6),
-        child: MiniPlayer(),
+        bottom: applyBottomSafeArea,
+        minimum: const EdgeInsets.only(bottom: 6),
+        child: const MiniPlayer(),
       ),
     );
   }
