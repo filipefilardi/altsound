@@ -1,4 +1,10 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
 
 import 'auth_repository.dart';
 import '../../core/utils/search_normalization.dart';
@@ -27,6 +33,11 @@ class JellyfinRepository {
   final JellyfinApi _api;
   String? _likedSongsPlaylistId;
   Future<List<BrowseItem>>? _searchCatalogFuture;
+  Future<List<BrowseItem>>? _searchRefreshFuture;
+  String? _searchCatalogSessionKey;
+
+  static const _searchIndexVersion = 1;
+  static const _searchIndexMaxAge = Duration(hours: 12);
 
   JellyfinSession get _session {
     final s = _api.session;
@@ -133,7 +144,9 @@ class JellyfinRepository {
   Future<List<BrowseItem>> search(String term) async {
     final t = term.trim();
     if (t.isEmpty) return const [];
-    final catalogFuture = _searchCatalogFuture ??= _loadSearchCatalog();
+    _ensureSearchCatalogSession();
+    final catalogFuture = _searchCatalogFuture ??=
+        _loadPersistedSearchCatalog();
     final List<BrowseItem> catalog;
     try {
       catalog = await catalogFuture;
@@ -143,7 +156,70 @@ class JellyfinRepository {
       }
       rethrow;
     }
+
+    if (catalog.isEmpty) {
+      final refreshed = await refreshSearchCatalog();
+      return _filterSearchCatalog(refreshed, t).take(50).toList();
+    }
+
+    unawaited(_refreshSearchCatalogIfStale());
     return _filterSearchCatalog(catalog, t).take(50).toList();
+  }
+
+  Future<List<BrowseItem>> searchCached(String term) async {
+    final t = term.trim();
+    if (t.isEmpty) return const [];
+    _ensureSearchCatalogSession();
+    final catalog = await (_searchCatalogFuture ??=
+        _loadPersistedSearchCatalog());
+    return _filterSearchCatalog(catalog, t).take(50).toList();
+  }
+
+  Future<void> warmSearchCatalog({bool forceRefresh = false}) async {
+    _ensureSearchCatalogSession();
+    await (_searchCatalogFuture ??= _loadPersistedSearchCatalog());
+    if (forceRefresh) {
+      unawaited(refreshSearchCatalog());
+    } else {
+      unawaited(_refreshSearchCatalogIfStale());
+    }
+  }
+
+  Future<List<BrowseItem>> refreshSearchCatalog() {
+    _ensureSearchCatalogSession();
+    final existing = _searchRefreshFuture;
+    if (existing != null) return existing;
+
+    final future = _loadSearchCatalog().then((catalog) async {
+      _searchCatalogFuture = Future.value(catalog);
+      await _persistSearchCatalog(catalog);
+      return catalog;
+    });
+    _searchRefreshFuture = future;
+    return future.whenComplete(() {
+      if (identical(_searchRefreshFuture, future)) {
+        _searchRefreshFuture = null;
+      }
+    });
+  }
+
+  Future<void> _refreshSearchCatalogIfStale() async {
+    _ensureSearchCatalogSession();
+    if (_searchRefreshFuture != null) return;
+    if (!await _isSearchCatalogStale()) return;
+    try {
+      await refreshSearchCatalog();
+    } catch (_) {
+      // Search can keep using the last persisted catalog.
+    }
+  }
+
+  void _ensureSearchCatalogSession() {
+    final key = '${_session.serverId}_${_session.userId}';
+    if (_searchCatalogSessionKey == key) return;
+    _searchCatalogSessionKey = key;
+    _searchCatalogFuture = null;
+    _searchRefreshFuture = null;
   }
 
   Future<List<BrowseItem>> _loadSearchCatalog() async {
@@ -180,6 +256,67 @@ class JellyfinRepository {
     }
     return results;
   }
+
+  Future<List<BrowseItem>> _loadPersistedSearchCatalog() async {
+    final file = await _searchCatalogFile();
+    if (file == null || !file.existsSync()) return const [];
+    try {
+      final json = jsonDecode(await file.readAsString());
+      if (json is! Map<String, dynamic>) return const [];
+      if (json['version'] != _searchIndexVersion) return const [];
+      if (json['serverId'] != _session.serverId ||
+          json['userId'] != _session.userId) {
+        return const [];
+      }
+      final rawItems = (json['items'] as List?) ?? const [];
+      return rawItems
+          .whereType<Map<String, dynamic>>()
+          .map(BrowseItem.fromSearchJson)
+          .toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  Future<void> _persistSearchCatalog(List<BrowseItem> catalog) async {
+    final file = await _searchCatalogFile();
+    if (file == null) return;
+    try {
+      if (!file.parent.existsSync()) {
+        file.parent.createSync(recursive: true);
+      }
+      await file.writeAsString(
+        jsonEncode({
+          'version': _searchIndexVersion,
+          'serverId': _session.serverId,
+          'userId': _session.userId,
+          'updatedAt': DateTime.now().toIso8601String(),
+          'items': catalog.map((item) => item.toSearchJson()).toList(),
+        }),
+      );
+    } catch (_) {}
+  }
+
+  Future<bool> _isSearchCatalogStale() async {
+    final file = await _searchCatalogFile();
+    if (file == null || !file.existsSync()) return true;
+    try {
+      final stat = await file.stat();
+      return DateTime.now().difference(stat.modified) > _searchIndexMaxAge;
+    } catch (_) {
+      return true;
+    }
+  }
+
+  Future<File?> _searchCatalogFile() async {
+    if (kIsWeb) return null;
+    final dir = await getApplicationSupportDirectory();
+    final key = _safeFilePart('${_session.serverId}_${_session.userId}');
+    return File('${dir.path}/search/catalog_$key.json');
+  }
+
+  String _safeFilePart(String value) =>
+      base64Url.encode(utf8.encode(value)).replaceAll('=', '');
 
   List<BrowseItem> _filterSearchCatalog(List<BrowseItem> catalog, String term) {
     final matches = catalog

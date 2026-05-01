@@ -46,7 +46,8 @@ class BrowseItem {
     String? subtitle;
     switch (kind) {
       case MediaKind.album:
-        subtitle = json['AlbumArtist'] as String? ??
+        subtitle =
+            json['AlbumArtist'] as String? ??
             (json['Artists'] as List?)?.cast<String>().firstOrNull;
       case MediaKind.track:
         subtitle = json['Artists'] is List
@@ -70,6 +71,30 @@ class BrowseItem {
       childCount: json['ChildCount'] as int?,
     );
   }
+
+  factory BrowseItem.fromSearchJson(Map<String, dynamic> json) {
+    return BrowseItem(
+      id: json['id'] as String,
+      name: json['name'] as String? ?? 'Untitled',
+      subtitle: json['subtitle'] as String?,
+      imageTag: json['imageTag'] as String?,
+      kind: MediaKind.values.byName(json['kind'] as String),
+      runTime: json['runTimeMs'] == null
+          ? null
+          : Duration(milliseconds: json['runTimeMs'] as int),
+      childCount: json['childCount'] as int?,
+    );
+  }
+
+  Map<String, dynamic> toSearchJson() => {
+    'id': id,
+    'name': name,
+    'subtitle': subtitle,
+    'imageTag': imageTag,
+    'kind': kind.name,
+    'runTimeMs': runTime?.inMilliseconds,
+    'childCount': childCount,
+  };
 }
 
 class Album {
@@ -91,10 +116,8 @@ class Album {
   final String? imageTag;
   final List<Track> tracks;
 
-  Duration get totalDuration => tracks.fold(
-        Duration.zero,
-        (sum, t) => sum + t.duration,
-      );
+  Duration get totalDuration =>
+      tracks.fold(Duration.zero, (sum, t) => sum + t.duration);
 
   factory Album.fromJson(
     Map<String, dynamic> json, {
@@ -104,9 +127,11 @@ class Album {
       id: json['Id'] as String,
       name: json['Name'] as String? ?? 'Untitled',
       artistName: json['AlbumArtist'] as String? ?? 'Unknown Artist',
-      artistId: (json['AlbumArtists'] as List?)
-          ?.cast<Map<String, dynamic>>()
-          .firstOrNull?['Id'] as String?,
+      artistId:
+          (json['AlbumArtists'] as List?)
+                  ?.cast<Map<String, dynamic>>()
+                  .firstOrNull?['Id']
+              as String?,
       year: json['ProductionYear'] as int?,
       imageTag: _primaryImageTag(json),
       tracks: tracks,
@@ -143,15 +168,18 @@ class Track {
 
   factory Track.fromJson(Map<String, dynamic> json) {
     final artists = (json['Artists'] as List?)?.cast<String>();
-    final artistId = (json['ArtistItems'] as List?)
-        ?.cast<Map<String, dynamic>>()
-        .firstOrNull?['Id'] as String?;
+    final artistId =
+        (json['ArtistItems'] as List?)
+                ?.cast<Map<String, dynamic>>()
+                .firstOrNull?['Id']
+            as String?;
     return Track(
       id: json['Id'] as String,
       name: json['Name'] as String? ?? 'Untitled',
       albumId: json['AlbumId'] as String?,
       albumName: json['Album'] as String?,
-      artistName: artists?.join(', ') ??
+      artistName:
+          artists?.join(', ') ??
           json['AlbumArtist'] as String? ??
           'Unknown Artist',
       artistId: artistId,
