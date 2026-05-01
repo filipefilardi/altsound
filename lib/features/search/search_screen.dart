@@ -11,7 +11,6 @@ import '../../core/widgets/skeleton.dart';
 import '../../data/downloads/download_manager.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
 import '../../data/jellyfin/models/media_item.dart';
-import '../../data/lidarr/lidarr_repository.dart';
 import '../player/player_providers.dart';
 import '../player/widgets/add_track_to_playlist_sheet.dart';
 import '../player/widgets/playing_track_leading.dart';
@@ -42,28 +41,15 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       final repo = ref.read(jellyfinRepositoryProvider);
       setState(() {
         _term = v.trim();
-        _future =
-            _term.isEmpty ? Future.value(const []) : repo.search(_term);
+        _future = _term.isEmpty ? Future.value(const []) : repo.search(_term);
       });
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final hasLidarr = ref.watch(lidarrRepositoryProvider) != null;
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Search'),
-        actions: [
-          if (hasLidarr)
-            IconButton(
-              tooltip: 'Discover via Lidarr',
-              icon: const Icon(Icons.travel_explore),
-              onPressed: () => context.push('/discover'),
-            ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('Search')),
       body: Column(
         children: [
           Padding(
@@ -89,10 +75,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           ),
           Expanded(
             child: _term.isEmpty
-                ? _IdleHint(
-                    onDiscover:
-                        hasLidarr ? () => context.push('/discover') : null,
-                  )
+                ? const _IdleHint()
                 : FutureBuilder<List<BrowseItem>>(
                     future: _future,
                     builder: (context, snap) {
@@ -108,12 +91,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                       }
                       final results = snap.data ?? const [];
                       if (results.isEmpty) {
-                        return _NoResults(
-                          term: _term,
-                          onDiscover: hasLidarr
-                              ? () => context.push('/discover')
-                              : null,
-                        );
+                        return _NoResults(term: _term);
                       }
                       return _GroupedResults(results: results);
                     },
@@ -132,16 +110,17 @@ class _ResultTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final repo = ref.watch(jellyfinRepositoryProvider);
-    final imageUrl = repo.imageUrl(item.id, imageTag: item.imageTag, size: 200);
+    final imageUrl = item.imageTag == null || item.imageTag!.isEmpty
+        ? null
+        : repo.imageUrl(item.id, imageTag: item.imageTag, size: 200);
     final isArtist = item.kind == MediaKind.artist;
     final isTrack = item.kind == MediaKind.track;
     final current = ref.watch(currentMediaItemProvider).value;
-    final isCurrentTrack = isTrack &&
-        current != null &&
-        current.extras?['jellyfinId'] == item.id;
+    final isCurrentTrack =
+        isTrack && current != null && current.extras?['jellyfinId'] == item.id;
 
-    final isDownloaded = isTrack &&
-        ref.watch(downloadManagerProvider).isDownloaded(item.id);
+    final isDownloaded =
+        isTrack && ref.watch(downloadManagerProvider).isDownloaded(item.id);
 
     final leading = isTrack
         ? SearchTrackArtwork(
@@ -154,16 +133,27 @@ class _ResultTile extends ConsumerWidget {
             child: SizedBox(
               width: 56,
               height: 56,
-              child: CachedNetworkImage(
-                imageUrl: imageUrl,
-                fit: BoxFit.cover,
-                placeholder: (_, __) =>
-                    Container(color: AppColors.surfaceElevated),
-                errorWidget: (_, __, ___) => Container(
-                  color: AppColors.surfaceElevated,
-                  child: Icon(_iconFor(item.kind), color: AppColors.textTertiary),
-                ),
-              ),
+              child: imageUrl == null
+                  ? Container(
+                      color: AppColors.surfaceElevated,
+                      child: Icon(
+                        _iconFor(item.kind),
+                        color: AppColors.textTertiary,
+                      ),
+                    )
+                  : CachedNetworkImage(
+                      imageUrl: imageUrl,
+                      fit: BoxFit.cover,
+                      placeholder: (_, __) =>
+                          Container(color: AppColors.surfaceElevated),
+                      errorWidget: (_, __, ___) => Container(
+                        color: AppColors.surfaceElevated,
+                        child: Icon(
+                          _iconFor(item.kind),
+                          color: AppColors.textTertiary,
+                        ),
+                      ),
+                    ),
             ),
           );
 
@@ -192,8 +182,11 @@ class _ResultTile extends ConsumerWidget {
                 if (isDownloaded)
                   const Padding(
                     padding: EdgeInsets.only(right: 4),
-                    child: Icon(Icons.download_for_offline,
-                        size: 14, color: AppColors.primary),
+                    child: Icon(
+                      Icons.download_for_offline,
+                      size: 14,
+                      color: AppColors.primary,
+                    ),
                   ),
                 if (item.runTime != null)
                   PlayingTrackDuration(
@@ -214,9 +207,9 @@ class _ResultTile extends ConsumerWidget {
         context.push('/album/${item.id}');
       case MediaKind.track:
         final track = await ref.read(jellyfinRepositoryProvider).track(item.id);
-        await ref
-            .read(playerControllerProvider)
-            .playTracks([track], selectedTrack: true);
+        await ref.read(playerControllerProvider).playTracks([
+          track,
+        ], selectedTrack: true);
       case MediaKind.artist:
         context.push('/artist/${item.id}');
       case MediaKind.playlist:
@@ -225,18 +218,18 @@ class _ResultTile extends ConsumerWidget {
   }
 
   IconData _iconFor(MediaKind k) => switch (k) {
-        MediaKind.album => Icons.album,
-        MediaKind.artist => Icons.person,
-        MediaKind.track => Icons.music_note,
-        MediaKind.playlist => Icons.queue_music,
-      };
+    MediaKind.album => Icons.album,
+    MediaKind.artist => Icons.person,
+    MediaKind.track => Icons.music_note,
+    MediaKind.playlist => Icons.queue_music,
+  };
 
   String _labelFor(MediaKind k) => switch (k) {
-        MediaKind.album => 'Album',
-        MediaKind.artist => 'Artist',
-        MediaKind.track => 'Song',
-        MediaKind.playlist => 'Playlist',
-      };
+    MediaKind.album => 'Album',
+    MediaKind.artist => 'Artist',
+    MediaKind.track => 'Song',
+    MediaKind.playlist => 'Playlist',
+  };
 }
 
 class _SearchTrackMenuButton extends ConsumerWidget {
@@ -252,11 +245,13 @@ class _SearchTrackMenuButton extends ConsumerWidget {
         final repo = ref.read(jellyfinRepositoryProvider);
         final track = await repo.track(trackId);
         if (!context.mounted) return;
-        final imageUrl = repo.imageUrl(
-          track.imageItemId,
-          imageTag: track.imageTag,
-          size: 200,
-        );
+        final imageUrl = track.imageTag == null || track.imageTag!.isEmpty
+            ? null
+            : repo.imageUrl(
+                track.imageItemId,
+                imageTag: track.imageTag,
+                size: 200,
+              );
         final action = await showModalBottomSheet<_TrackMenuAction>(
           context: context,
           showDragHandle: true,
@@ -275,20 +270,30 @@ class _SearchTrackMenuButton extends ConsumerWidget {
                         child: SizedBox(
                           width: 48,
                           height: 48,
-                          child: CachedNetworkImage(
-                            imageUrl: imageUrl,
-                            fit: BoxFit.cover,
-                            placeholder: (_, __) =>
-                                Container(color: AppColors.surfaceHighlight),
-                            errorWidget: (_, __, ___) => Container(
-                              color: AppColors.surfaceHighlight,
-                              child: const Icon(
-                                Icons.music_note,
-                                color: AppColors.textTertiary,
-                                size: 20,
-                              ),
-                            ),
-                          ),
+                          child: imageUrl == null
+                              ? Container(
+                                  color: AppColors.surfaceHighlight,
+                                  child: const Icon(
+                                    Icons.music_note,
+                                    color: AppColors.textTertiary,
+                                    size: 20,
+                                  ),
+                                )
+                              : CachedNetworkImage(
+                                  imageUrl: imageUrl,
+                                  fit: BoxFit.cover,
+                                  placeholder: (_, __) => Container(
+                                    color: AppColors.surfaceHighlight,
+                                  ),
+                                  errorWidget: (_, __, ___) => Container(
+                                    color: AppColors.surfaceHighlight,
+                                    child: const Icon(
+                                      Icons.music_note,
+                                      color: AppColors.textTertiary,
+                                      size: 20,
+                                    ),
+                                  ),
+                                ),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -341,8 +346,9 @@ class _SearchTrackMenuButton extends ConsumerWidget {
                 ListTile(
                   leading: const Icon(Icons.playlist_add),
                   title: const Text('Add to playlist'),
-                  onTap: () => Navigator.of(sheetCtx)
-                      .pop(_TrackMenuAction.addToPlaylist),
+                  onTap: () => Navigator.of(
+                    sheetCtx,
+                  ).pop(_TrackMenuAction.addToPlaylist),
                 ),
                 const Divider(height: 1, indent: 56),
                 ListTile(
@@ -356,8 +362,8 @@ class _SearchTrackMenuButton extends ConsumerWidget {
                   ListTile(
                     leading: const Icon(Icons.album_outlined),
                     title: const Text('Go to album'),
-                    onTap: () => Navigator.of(sheetCtx)
-                        .pop(_TrackMenuAction.goToAlbum),
+                    onTap: () =>
+                        Navigator.of(sheetCtx).pop(_TrackMenuAction.goToAlbum),
                   ),
                 ],
                 if (track.artistId != null && track.artistId!.isNotEmpty) ...[
@@ -365,8 +371,8 @@ class _SearchTrackMenuButton extends ConsumerWidget {
                   ListTile(
                     leading: const Icon(Icons.person_outline),
                     title: const Text('Go to artist'),
-                    onTap: () => Navigator.of(sheetCtx)
-                        .pop(_TrackMenuAction.goToArtist),
+                    onTap: () =>
+                        Navigator.of(sheetCtx).pop(_TrackMenuAction.goToArtist),
                   ),
                 ],
                 const SizedBox(height: 8),
@@ -406,7 +412,9 @@ class _GroupedResults extends StatelessWidget {
     final tracks = results.where((r) => r.kind == MediaKind.track).toList();
     final albums = results.where((r) => r.kind == MediaKind.album).toList();
     final artists = results.where((r) => r.kind == MediaKind.artist).toList();
-    final playlists = results.where((r) => r.kind == MediaKind.playlist).toList();
+    final playlists = results
+        .where((r) => r.kind == MediaKind.playlist)
+        .toList();
 
     final sections = <(String, List<BrowseItem>)>[
       if (artists.isNotEmpty) ('Artists', artists),
@@ -498,8 +506,7 @@ class _SearchResultsSkeleton extends StatelessWidget {
 }
 
 class _IdleHint extends StatelessWidget {
-  const _IdleHint({this.onDiscover});
-  final VoidCallback? onDiscover;
+  const _IdleHint();
 
   @override
   Widget build(BuildContext context) {
@@ -507,37 +514,20 @@ class _IdleHint extends StatelessWidget {
       icon: Icons.search,
       title: 'Search your Jellyfin library',
       message: 'Find songs, albums, and artists you already have.',
-      action: onDiscover == null
-          ? null
-          : TextButton.icon(
-              onPressed: onDiscover,
-              icon: const Icon(Icons.travel_explore),
-              label: const Text('Discover via Lidarr'),
-            ),
     );
   }
 }
 
 class _NoResults extends StatelessWidget {
-  const _NoResults({required this.term, this.onDiscover});
+  const _NoResults({required this.term});
   final String term;
-  final VoidCallback? onDiscover;
 
   @override
   Widget build(BuildContext context) {
     return EmptyState(
       icon: Icons.search_off,
       title: 'No matches in your library',
-      message: 'Nothing matched "$term". Try a different spelling'
-          '${onDiscover != null ? ', or request it through Lidarr.' : '.'}',
-      action: onDiscover == null
-          ? null
-          : ElevatedButton.icon(
-              onPressed: onDiscover,
-              icon: const Icon(Icons.travel_explore, color: AppColors.onAccent),
-              label: Text('REQUEST "$term" VIA LIDARR'),
-            ),
+      message: 'Nothing matched "$term". Try a different spelling.',
     );
   }
 }
-

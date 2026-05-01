@@ -12,7 +12,6 @@ import '../../core/theme/app_gradients.dart';
 import '../../data/downloads/download_manager.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
 import '../../data/jellyfin/models/jellyfin_session.dart';
-import '../../data/lidarr/lidarr_config.dart';
 import '../../data/local/offline_mode.dart';
 import '../../data/local/playback_preferences.dart';
 import '../auth/auth_controller.dart';
@@ -35,7 +34,9 @@ final _imageCacheSizeProvider = FutureProvider.autoDispose<int>((ref) async {
       if (entity is File) {
         try {
           total += await entity.length();
-        } catch (_) {/* skip unreadable */}
+        } catch (_) {
+          /* skip unreadable */
+        }
       }
     }
     return total;
@@ -156,7 +157,8 @@ class _Avatar extends StatelessWidget {
     if (trimmed.isEmpty) return '?';
     final parts = trimmed.split(RegExp(r'\s+'));
     if (parts.length == 1) return parts[0].characters.first.toUpperCase();
-    return (parts[0].characters.first + parts[1].characters.first).toUpperCase();
+    return (parts[0].characters.first + parts[1].characters.first)
+        .toUpperCase();
   }
 
   @override
@@ -192,8 +194,8 @@ class _StatusDot extends StatelessWidget {
     final color = online == null
         ? AppColors.textTertiary
         : online!
-            ? const Color(0xFF66CC8A)
-            : AppColors.error;
+        ? const Color(0xFF66CC8A)
+        : AppColors.error;
     return Container(
       width: 8,
       height: 8,
@@ -202,10 +204,7 @@ class _StatusDot extends StatelessWidget {
   }
 }
 
-Future<void> _showAccountSheet(
-  BuildContext context,
-  JellyfinSession session,
-) {
+Future<void> _showAccountSheet(BuildContext context, JellyfinSession session) {
   return showModalBottomSheet<void>(
     context: context,
     showDragHandle: true,
@@ -306,8 +305,10 @@ class _PlaybackGroup extends ConsumerWidget {
             prefs.streamingQuality.label,
             style: const TextStyle(color: AppColors.textSecondary),
           ),
-          trailing: const Icon(Icons.chevron_right,
-              color: AppColors.textSecondary),
+          trailing: const Icon(
+            Icons.chevron_right,
+            color: AppColors.textSecondary,
+          ),
           onTap: () => _showStreamingQualitySheet(context),
         ),
         SwitchListTile(
@@ -333,7 +334,6 @@ class _LibraryGroup extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final downloads = ref.watch(downloadManagerProvider);
-    final lidarr = ref.watch(lidarrConfigProvider);
     final offlineMode = ref.watch(offlineModeProvider);
 
     return _SettingsGroup(
@@ -356,8 +356,10 @@ class _LibraryGroup extends ConsumerWidget {
             '${downloads.tracks.length} tracks · ${_formatBytes(downloads.totalSizeBytes)}',
             style: const TextStyle(color: AppColors.textSecondary),
           ),
-          trailing: const Icon(Icons.chevron_right,
-              color: AppColors.textSecondary),
+          trailing: const Icon(
+            Icons.chevron_right,
+            color: AppColors.textSecondary,
+          ),
           onTap: () => context.push('/downloads'),
         ),
         ListTile(
@@ -367,20 +369,11 @@ class _LibraryGroup extends ConsumerWidget {
             'Auto-download, WiFi only',
             style: TextStyle(color: AppColors.textSecondary),
           ),
-          trailing: const Icon(Icons.chevron_right,
-              color: AppColors.textSecondary),
-          onTap: () => context.push('/settings/downloads'),
-        ),
-        ListTile(
-          leading: const Icon(Icons.travel_explore_outlined),
-          title: const Text('Lidarr connection'),
-          subtitle: Text(
-            lidarr == null ? 'Not connected' : lidarr.url,
-            style: const TextStyle(color: AppColors.textSecondary),
+          trailing: const Icon(
+            Icons.chevron_right,
+            color: AppColors.textSecondary,
           ),
-          trailing: const Icon(Icons.chevron_right,
-              color: AppColors.textSecondary),
-          onTap: () => context.push('/settings/lidarr'),
+          onTap: () => context.push('/settings/downloads'),
         ),
       ],
     );
@@ -437,10 +430,7 @@ class _SignOutTile extends ConsumerWidget {
       clipBehavior: Clip.antiAlias,
       child: ListTile(
         leading: const Icon(Icons.logout, color: AppColors.error),
-        title: const Text(
-          'Sign out',
-          style: TextStyle(color: AppColors.error),
-        ),
+        title: const Text('Sign out', style: TextStyle(color: AppColors.error)),
         onTap: () async {
           await ref.read(authControllerProvider.notifier).logout();
           if (context.mounted) context.pop();

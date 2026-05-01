@@ -20,12 +20,14 @@ final artistBioProvider = FutureProvider.family<String?, String>(
 
 class WikipediaRepository {
   WikipediaRepository() {
-    _dio = Dio(BaseOptions(
-      baseUrl: 'https://en.wikipedia.org',
-      headers: {'User-Agent': 'AltSound/1.0 (music-player-app)'},
-      sendTimeout: const Duration(seconds: 8),
-      receiveTimeout: const Duration(seconds: 10),
-    ));
+    _dio = Dio(
+      BaseOptions(
+        baseUrl: 'https://en.wikipedia.org',
+        headers: {'User-Agent': 'AltSound/1.0 (music-player-app)'},
+        sendTimeout: const Duration(seconds: 8),
+        receiveTimeout: const Duration(seconds: 10),
+      ),
+    );
   }
 
   late final Dio _dio;
