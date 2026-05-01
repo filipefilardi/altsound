@@ -27,17 +27,13 @@ class HomeScreen extends ConsumerWidget {
           slivers: [
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-              sliver: SliverToBoxAdapter(
-                child: _Greeting(username: username),
-              ),
+              sliver: SliverToBoxAdapter(child: _Greeting(username: username)),
             ),
             const SliverPadding(
               padding: EdgeInsets.fromLTRB(20, 8, 20, 8),
               sliver: SliverToBoxAdapter(child: _ResumeCard()),
             ),
-            const SliverFillRemaining(
-              child: OfflineLibraryView(),
-            ),
+            const SliverFillRemaining(child: OfflineLibraryView()),
           ],
         ),
       );
@@ -59,31 +55,31 @@ class HomeScreen extends ConsumerWidget {
           slivers: [
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-              sliver: SliverToBoxAdapter(
-                child: _Greeting(username: username),
-              ),
+              sliver: SliverToBoxAdapter(child: _Greeting(username: username)),
             ),
             const SliverPadding(
               padding: EdgeInsets.fromLTRB(20, 8, 20, 8),
               sliver: SliverToBoxAdapter(child: _ResumeCard()),
             ),
-            SliverList.list(children: [
-              const SizedBox(height: 8),
-              Shelf(
-                title: 'Recently added',
-                items: ref.watch(recentlyAddedProvider),
-                onSeeAll: () => context.push('/recently-added'),
-              ),
-              Shelf(
-                title: 'Most played',
-                items: ref.watch(mostPlayedProvider),
-              ),
-              Shelf(
-                title: 'Recently played',
-                items: ref.watch(recentlyPlayedProvider),
-              ),
-              const SizedBox(height: 32),
-            ]),
+            SliverList.list(
+              children: [
+                const SizedBox(height: 8),
+                Shelf(
+                  title: 'Recently added',
+                  items: ref.watch(recentlyAddedProvider),
+                  onSeeAll: () => context.push('/recently-added'),
+                ),
+                Shelf(
+                  title: 'Most played',
+                  items: ref.watch(mostPlayedProvider),
+                ),
+                Shelf(
+                  title: 'Recently played',
+                  items: ref.watch(recentlyPlayedProvider),
+                ),
+                const SizedBox(height: 32),
+              ],
+            ),
           ],
         ),
       ),
@@ -95,14 +91,6 @@ class _Greeting extends StatelessWidget {
   const _Greeting({required this.username});
   final String username;
 
-  String _timeOfDay() {
-    final h = DateTime.now().hour;
-    if (h < 5) return 'Late night';
-    if (h < 12) return 'Good morning';
-    if (h < 18) return 'Good afternoon';
-    return 'Good evening';
-  }
-
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -113,13 +101,8 @@ class _Greeting extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                _timeOfDay(),
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 2),
-              Text(
-                username.isEmpty ? 'Welcome back' : username,
-                style: Theme.of(context).textTheme.headlineLarge,
+                username,
+                style: Theme.of(context).textTheme.headlineMedium,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -201,8 +184,10 @@ class _ResumeCard extends ConsumerWidget {
                   if (albumId != null)
                     const Padding(
                       padding: EdgeInsets.only(right: 12),
-                      child: Icon(Icons.chevron_right,
-                          color: AppColors.textSecondary),
+                      child: Icon(
+                        Icons.chevron_right,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                 ],
               ),
