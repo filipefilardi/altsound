@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'auth_repository.dart';
+import '../../core/utils/search_normalization.dart';
 import 'jellyfin_api.dart';
 import 'models/jellyfin_session.dart';
 import 'models/media_item.dart';
@@ -25,6 +26,7 @@ class JellyfinRepository {
 
   final JellyfinApi _api;
   String? _likedSongsPlaylistId;
+  Future<List<BrowseItem>>? _searchCatalogFuture;
 
   JellyfinSession get _session {
     final s = _api.session;
@@ -106,10 +108,10 @@ class JellyfinRepository {
       );
       return albumRes.data;
     });
-    final albumJson = (await Future.wait(albumFutures)).whereType<Map<String, dynamic>>();
-    return albumJson
-        .map(BrowseItem.fromJson)
-        .toList();
+    final albumJson = (await Future.wait(
+      albumFutures,
+    )).whereType<Map<String, dynamic>>();
+    return albumJson.map(BrowseItem.fromJson).toList();
   }
 
   Future<List<BrowseItem>> mostPlayedAlbums({int limit = 20}) async {
@@ -125,66 +127,73 @@ class JellyfinRepository {
       },
     );
     final items = (res.data?['Items'] as List?) ?? const [];
-    return items
-        .cast<Map<String, dynamic>>()
-        .map(BrowseItem.fromJson)
-        .toList();
+    return items.cast<Map<String, dynamic>>().map(BrowseItem.fromJson).toList();
   }
 
   Future<List<BrowseItem>> search(String term) async {
     final t = term.trim();
     if (t.isEmpty) return const [];
-    final s = _session;
-    final res = await _api.dio.get<Map<String, dynamic>>(
-      '/Users/${s.userId}/Items',
-      queryParameters: {
-        'searchTerm': t,
-        'IncludeItemTypes': 'MusicAlbum,MusicArtist,Audio,Playlist',
-        'Recursive': true,
-        'Limit': 50,
-        'Fields': 'AlbumArtist,Artists,ArtistItems,AlbumId,RunTimeTicks',
-      },
-    );
-    final rawItems = ((res.data?['Items'] as List?) ?? const [])
-        .cast<Map<String, dynamic>>();
-    final results = rawItems
-        .cast<Map<String, dynamic>>()
-        .map(BrowseItem.fromJson)
-        .toList();
-
-    final artistIds = rawItems
-        .where((item) => item['Type'] == 'MusicArtist')
-        .map((item) => item['Id'] as String?)
-        .whereType<String>()
-        .where((id) => id.isNotEmpty)
-        .toSet()
-        .toList();
-    if (artistIds.isEmpty) return results;
-
-    final tracksForArtists = await _api.dio.get<Map<String, dynamic>>(
-      '/Users/${s.userId}/Items',
-      queryParameters: {
-        'IncludeItemTypes': 'Audio',
-        'Recursive': true,
-        'ArtistIds': artistIds.join(','),
-        'Limit': 100,
-        'SortBy': 'SortName',
-        'Fields': 'AlbumArtist,Artists,ArtistItems,AlbumId,RunTimeTicks',
-      },
-    );
-    final extraTracks = (((tracksForArtists.data?['Items'] as List?) ?? const [])
-            .cast<Map<String, dynamic>>())
-        .map(BrowseItem.fromJson)
-        .where((item) => item.kind == MediaKind.track)
-        .toList();
-
-    final existingIds = results.map((item) => item.id).toSet();
-    for (final track in extraTracks) {
-      if (existingIds.add(track.id)) {
-        results.add(track);
+    final catalogFuture = _searchCatalogFuture ??= _loadSearchCatalog();
+    final List<BrowseItem> catalog;
+    try {
+      catalog = await catalogFuture;
+    } catch (_) {
+      if (identical(_searchCatalogFuture, catalogFuture)) {
+        _searchCatalogFuture = null;
       }
+      rethrow;
+    }
+    return _filterSearchCatalog(catalog, t).take(50).toList();
+  }
+
+  Future<List<BrowseItem>> _loadSearchCatalog() async {
+    final s = _session;
+    const pageSize = 500;
+    var startIndex = 0;
+    final results = <BrowseItem>[];
+    final seenIds = <String>{};
+
+    while (true) {
+      final res = await _api.dio.get<Map<String, dynamic>>(
+        '/Users/${s.userId}/Items',
+        queryParameters: {
+          'IncludeItemTypes': 'MusicAlbum,MusicArtist,Audio,Playlist',
+          'Recursive': true,
+          'StartIndex': startIndex,
+          'Limit': pageSize,
+          'SortBy': 'SortName',
+          'Fields': 'AlbumArtist,Artists,ArtistItems,AlbumId,RunTimeTicks',
+        },
+      );
+      final rawItems = ((res.data?['Items'] as List?) ?? const [])
+          .cast<Map<String, dynamic>>();
+      for (final json in rawItems) {
+        final item = BrowseItem.fromJson(json);
+        if (seenIds.add(item.id)) {
+          results.add(item);
+        }
+      }
+      final total = res.data?['TotalRecordCount'] as int?;
+      startIndex += rawItems.length;
+      if (rawItems.length < pageSize) break;
+      if (total != null && startIndex >= total) break;
     }
     return results;
+  }
+
+  List<BrowseItem> _filterSearchCatalog(List<BrowseItem> catalog, String term) {
+    final matches = catalog
+        .where((item) => searchMatches(term, [item.name, item.subtitle]))
+        .toList();
+    matches.sort((a, b) {
+      final relevance = searchRelevance(term, [
+        b.name,
+        b.subtitle,
+      ]).compareTo(searchRelevance(term, [a.name, a.subtitle]));
+      if (relevance != 0) return relevance;
+      return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+    });
+    return matches;
   }
 
   Future<Track> track(String trackId) async {
@@ -246,7 +255,8 @@ class JellyfinRepository {
         'SortOrder': 'Descending',
         'Limit': 500,
         'EnableUserData': true,
-        'Fields': 'AlbumArtist,Artists,ArtistItems,AlbumId,RunTimeTicks,UserData',
+        'Fields':
+            'AlbumArtist,Artists,ArtistItems,AlbumId,RunTimeTicks,UserData',
       },
     );
     final popularTracks = ((topTracksRes.data?['Items'] as List?) ?? const [])
@@ -331,10 +341,7 @@ class JellyfinRepository {
     final s = _session;
     final created = await _api.dio.post<Map<String, dynamic>>(
       '/Playlists',
-      queryParameters: {
-        'Name': name.trim(),
-        'UserId': s.userId,
-      },
+      queryParameters: {'Name': name.trim(), 'UserId': s.userId},
     );
     return BrowseItem.fromJson(created.data ?? {});
   }
@@ -352,16 +359,14 @@ class JellyfinRepository {
         'Fields': 'Id',
       },
     );
-    final alreadyInPlaylist = (((existing.data?['Items'] as List?) ?? const [])
-            .cast<Map<String, dynamic>>())
-        .any((item) => item['Id'] == trackId);
+    final alreadyInPlaylist =
+        (((existing.data?['Items'] as List?) ?? const [])
+                .cast<Map<String, dynamic>>())
+            .any((item) => item['Id'] == trackId);
     if (alreadyInPlaylist) return;
     await _api.dio.post<void>(
       '/Playlists/$playlistId/Items',
-      queryParameters: {
-        'Ids': trackId,
-        'UserId': s.userId,
-      },
+      queryParameters: {'Ids': trackId, 'UserId': s.userId},
     );
   }
 
@@ -395,8 +400,10 @@ class JellyfinRepository {
   }) async {
     final list = playlistsCache ?? await playlists();
     final futures = list.map((p) async {
-      final entryId =
-          await playlistEntryIdForTrack(playlistId: p.id, trackId: trackId);
+      final entryId = await playlistEntryIdForTrack(
+        playlistId: p.id,
+        trackId: trackId,
+      );
       if (entryId == null) return null;
       return PlaylistMembership(
         playlistId: p.id,
@@ -417,10 +424,7 @@ class JellyfinRepository {
     final s = _session;
     await _api.dio.delete<void>(
       '/Playlists/$playlistId/Items',
-      queryParameters: {
-        'entryIds': playlistItemEntryId,
-        'UserId': s.userId,
-      },
+      queryParameters: {'entryIds': playlistItemEntryId, 'UserId': s.userId},
     );
   }
 
@@ -452,10 +456,7 @@ class JellyfinRepository {
     final s = _session;
     final created = await _api.dio.post<Map<String, dynamic>>(
       '/Playlists',
-      queryParameters: {
-        'Name': 'Liked Songs',
-        'UserId': s.userId,
-      },
+      queryParameters: {'Name': 'Liked Songs', 'UserId': s.userId},
     );
     final id = created.data?['Id'] as String?;
     if (id == null || id.isEmpty) {
@@ -465,11 +466,7 @@ class JellyfinRepository {
     return id;
   }
 
-  String imageUrl(
-    String itemId, {
-    String? imageTag,
-    int size = 400,
-  }) {
+  String imageUrl(String itemId, {String? imageTag, int size = 400}) {
     final s = _session;
     final params = <String, String>{
       'fillHeight': '$size',
@@ -479,8 +476,10 @@ class JellyfinRepository {
       'api_key': s.accessToken,
     };
     final query = params.entries
-        .map((e) =>
-            '${Uri.encodeQueryComponent(e.key)}=${Uri.encodeQueryComponent(e.value)}')
+        .map(
+          (e) =>
+              '${Uri.encodeQueryComponent(e.key)}=${Uri.encodeQueryComponent(e.value)}',
+        )
         .join('&');
     return '${s.serverUrl}/Items/$itemId/Images/Primary?$query';
   }
@@ -543,8 +542,10 @@ class JellyfinRepository {
       'Static': 'true',
     };
     final query = params.entries
-        .map((e) =>
-            '${Uri.encodeQueryComponent(e.key)}=${Uri.encodeQueryComponent(e.value)}')
+        .map(
+          (e) =>
+              '${Uri.encodeQueryComponent(e.key)}=${Uri.encodeQueryComponent(e.value)}',
+        )
         .join('&');
     return '${s.serverUrl}/Audio/$trackId/stream?$query';
   }

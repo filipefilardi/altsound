@@ -1,9 +1,9 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/format.dart';
+import '../../../core/widgets/local_or_network_image.dart';
 import '../player_providers.dart';
 
 /// Leading column for track rows: index number, highlighted when playing.
@@ -70,11 +70,11 @@ class SearchTrackArtwork extends ConsumerWidget {
     Widget artwork() {
       final url = imageUrl;
       if (url == null || url.isEmpty) return fallback();
-      return CachedNetworkImage(
-        imageUrl: url,
+      return LocalOrNetworkImage(
+        source: url,
         fit: BoxFit.cover,
-        placeholder: (_, __) => Container(color: AppColors.surfaceElevated),
-        errorWidget: (_, __, ___) => fallback(),
+        placeholderBuilder: (_) => Container(color: AppColors.surfaceElevated),
+        errorBuilder: (_) => fallback(),
       );
     }
 

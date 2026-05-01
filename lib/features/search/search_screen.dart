@@ -1,16 +1,19 @@
 import 'dart:async';
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/search_normalization.dart';
 import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/local_or_network_image.dart';
 import '../../core/widgets/skeleton.dart';
 import '../../data/downloads/download_manager.dart';
+import '../../data/downloads/downloaded_track.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
 import '../../data/jellyfin/models/media_item.dart';
+import '../../data/local/connectivity_provider.dart';
 import '../player/player_providers.dart';
 import '../player/widgets/add_track_to_playlist_sheet.dart';
 import '../player/widgets/playing_track_leading.dart';
@@ -38,12 +41,27 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   void _onChanged(String v) {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 300), () {
-      final repo = ref.read(jellyfinRepositoryProvider);
       setState(() {
         _term = v.trim();
-        _future = _term.isEmpty ? Future.value(const []) : repo.search(_term);
+        _future = _term.isEmpty ? Future.value(const []) : _search(_term);
       });
     });
+  }
+
+  Future<List<BrowseItem>> _search(String term) async {
+    final downloads = ref.read(downloadManagerProvider);
+    final localResults = _searchDownloads(downloads, term);
+    if (ref.read(isOfflineProvider)) return localResults;
+
+    try {
+      final remoteResults = await ref
+          .read(jellyfinRepositoryProvider)
+          .search(term);
+      return _mergeResults(remoteResults, localResults);
+    } catch (_) {
+      if (localResults.isNotEmpty) return localResults;
+      rethrow;
+    }
   }
 
   @override
@@ -110,9 +128,13 @@ class _ResultTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final repo = ref.watch(jellyfinRepositoryProvider);
-    final imageUrl = item.imageTag == null || item.imageTag!.isEmpty
-        ? null
-        : repo.imageUrl(item.id, imageTag: item.imageTag, size: 200);
+    final downloads = ref.watch(downloadManagerProvider);
+    final localArtwork = _localArtworkFor(item, downloads);
+    final imageUrl =
+        localArtwork ??
+        (item.imageTag == null || item.imageTag!.isEmpty
+            ? null
+            : repo.imageUrl(item.id, imageTag: item.imageTag, size: 200));
     final isArtist = item.kind == MediaKind.artist;
     final isTrack = item.kind == MediaKind.track;
     final current = ref.watch(currentMediaItemProvider).value;
@@ -141,12 +163,12 @@ class _ResultTile extends ConsumerWidget {
                         color: AppColors.textTertiary,
                       ),
                     )
-                  : CachedNetworkImage(
-                      imageUrl: imageUrl,
+                  : LocalOrNetworkImage(
+                      source: imageUrl,
                       fit: BoxFit.cover,
-                      placeholder: (_, __) =>
+                      placeholderBuilder: (_) =>
                           Container(color: AppColors.surfaceElevated),
-                      errorWidget: (_, __, ___) => Container(
+                      errorBuilder: (_) => Container(
                         color: AppColors.surfaceElevated,
                         child: Icon(
                           _iconFor(item.kind),
@@ -206,7 +228,10 @@ class _ResultTile extends ConsumerWidget {
       case MediaKind.album:
         context.push('/album/${item.id}');
       case MediaKind.track:
-        final track = await ref.read(jellyfinRepositoryProvider).track(item.id);
+        final downloaded = ref.read(downloadManagerProvider).tracks[item.id];
+        final track =
+            downloaded?.toTrack() ??
+            await ref.read(jellyfinRepositoryProvider).track(item.id);
         await ref.read(playerControllerProvider).playTracks([
           track,
         ], selectedTrack: true);
@@ -243,15 +268,19 @@ class _SearchTrackMenuButton extends ConsumerWidget {
       icon: const Icon(Icons.more_vert, color: AppColors.textSecondary),
       onPressed: () async {
         final repo = ref.read(jellyfinRepositoryProvider);
-        final track = await repo.track(trackId);
+        final downloaded = ref.read(downloadManagerProvider).tracks[trackId];
+        final track = downloaded?.toTrack() ?? await repo.track(trackId);
         if (!context.mounted) return;
-        final imageUrl = track.imageTag == null || track.imageTag!.isEmpty
-            ? null
-            : repo.imageUrl(
-                track.imageItemId,
-                imageTag: track.imageTag,
-                size: 200,
-              );
+        final localArtwork = downloaded?.artworkPath;
+        final imageUrl =
+            localArtwork ??
+            (track.imageTag == null || track.imageTag!.isEmpty
+                ? null
+                : repo.imageUrl(
+                    track.imageItemId,
+                    imageTag: track.imageTag,
+                    size: 200,
+                  ));
         final action = await showModalBottomSheet<_TrackMenuAction>(
           context: context,
           showDragHandle: true,
@@ -279,13 +308,13 @@ class _SearchTrackMenuButton extends ConsumerWidget {
                                     size: 20,
                                   ),
                                 )
-                              : CachedNetworkImage(
-                                  imageUrl: imageUrl,
+                              : LocalOrNetworkImage(
+                                  source: imageUrl,
                                   fit: BoxFit.cover,
-                                  placeholder: (_, __) => Container(
+                                  placeholderBuilder: (_) => Container(
                                     color: AppColors.surfaceHighlight,
                                   ),
-                                  errorWidget: (_, __, ___) => Container(
+                                  errorBuilder: (_) => Container(
                                     color: AppColors.surfaceHighlight,
                                     child: const Icon(
                                       Icons.music_note,
@@ -529,5 +558,118 @@ class _NoResults extends StatelessWidget {
       title: 'No matches in your library',
       message: 'Nothing matched "$term". Try a different spelling.',
     );
+  }
+}
+
+List<BrowseItem> _searchDownloads(DownloadsState downloads, String term) {
+  final candidates = <({BrowseItem item, List<String?> fields})>[];
+
+  for (final track in downloads.tracks.values) {
+    candidates.add((
+      item: BrowseItem(
+        id: track.id,
+        name: track.name,
+        subtitle: track.artistName,
+        imageTag: track.imageTag,
+        kind: MediaKind.track,
+        runTime: track.duration,
+      ),
+      fields: [track.name, track.artistName, track.albumName],
+    ));
+  }
+
+  final albumsById = <String, List<DownloadedTrack>>{};
+  for (final track in downloads.tracks.values) {
+    final albumId = track.albumId;
+    if (albumId == null || albumId.isEmpty) continue;
+    (albumsById[albumId] ??= []).add(track);
+  }
+  for (final entry in albumsById.entries) {
+    final first = entry.value.first;
+    candidates.add((
+      item: BrowseItem(
+        id: entry.key,
+        name: first.albumName ?? 'Unknown Album',
+        subtitle: first.artistName,
+        imageTag: first.imageTag,
+        kind: MediaKind.album,
+        childCount: entry.value.length,
+      ),
+      fields: [first.albumName, first.artistName],
+    ));
+  }
+
+  for (final playlist in downloads.playlists.values) {
+    final playlistTracks = playlist.trackIds
+        .map((id) => downloads.tracks[id])
+        .whereType<DownloadedTrack>()
+        .toList();
+    candidates.add((
+      item: BrowseItem(
+        id: playlist.id,
+        name: playlist.name,
+        subtitle: 'Playlist',
+        imageTag: playlist.imageTag,
+        kind: MediaKind.playlist,
+        childCount: playlistTracks.length,
+      ),
+      fields: [
+        playlist.name,
+        ...playlistTracks.expand(
+          (track) => [track.name, track.artistName, track.albumName],
+        ),
+      ],
+    ));
+  }
+
+  final matches = candidates
+      .where((candidate) => searchMatches(term, candidate.fields))
+      .toList();
+  matches.sort((a, b) {
+    final relevance = searchRelevance(
+      term,
+      b.fields,
+    ).compareTo(searchRelevance(term, a.fields));
+    if (relevance != 0) return relevance;
+    return a.item.name.toLowerCase().compareTo(b.item.name.toLowerCase());
+  });
+  return matches.map((match) => match.item).take(50).toList();
+}
+
+List<BrowseItem> _mergeResults(
+  List<BrowseItem> remoteResults,
+  List<BrowseItem> localResults,
+) {
+  final merged = <BrowseItem>[];
+  final seenIds = <String>{};
+  for (final item in [...remoteResults, ...localResults]) {
+    if (seenIds.add(item.id)) {
+      merged.add(item);
+    }
+  }
+  return merged;
+}
+
+String? _localArtworkFor(BrowseItem item, DownloadsState downloads) {
+  switch (item.kind) {
+    case MediaKind.track:
+      return downloads.tracks[item.id]?.artworkPath;
+    case MediaKind.album:
+      for (final track in downloads.tracks.values) {
+        if (track.albumId == item.id && track.artworkPath != null) {
+          return track.artworkPath;
+        }
+      }
+      return null;
+    case MediaKind.playlist:
+      final playlist = downloads.playlists[item.id];
+      if (playlist == null) return null;
+      for (final trackId in playlist.trackIds) {
+        final artworkPath = downloads.tracks[trackId]?.artworkPath;
+        if (artworkPath != null) return artworkPath;
+      }
+      return null;
+    case MediaKind.artist:
+      return null;
   }
 }
