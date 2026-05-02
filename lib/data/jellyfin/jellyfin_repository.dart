@@ -575,6 +575,16 @@ class JellyfinRepository {
     return BrowseItem.fromJson(created.data ?? {});
   }
 
+  Future<void> renamePlaylist({
+    required String playlistId,
+    required String name,
+  }) async {
+    await _api.dio.post<void>(
+      '/Playlists/$playlistId',
+      data: {'Name': name.trim()},
+    );
+  }
+
   Future<void> addTrackToPlaylist({
     required String trackId,
     required String playlistId,

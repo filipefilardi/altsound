@@ -222,7 +222,10 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
             inSelection: _inSelection,
             onLongPress: _onLongPressStartSelection,
             onToggleSelected: _toggleTrackSelected,
-            onDelete: playlist.name.toLowerCase().trim() == 'liked songs'
+            onRename: _isLikedSongsPlaylist(playlist)
+                ? null
+                : () => _renamePlaylist(context, ref, playlist),
+            onDelete: _isLikedSongsPlaylist(playlist)
                 ? null
                 : () => _confirmDelete(context, ref, playlist),
           ),
@@ -251,6 +254,39 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
     );
   }
 
+  Future<void> _renamePlaylist(
+    BuildContext context,
+    WidgetRef ref,
+    PlaylistDetail playlist,
+  ) async {
+    final name = await showDialog<String>(
+      context: context,
+      builder: (_) => _RenamePlaylistDialog(initialName: playlist.name),
+    );
+    final playlistName = name?.trim() ?? '';
+    if (playlistName.isEmpty || playlistName == playlist.name.trim()) return;
+
+    try {
+      await ref
+          .read(jellyfinRepositoryProvider)
+          .renamePlaylist(playlistId: playlist.id, name: playlistName);
+      await ref
+          .read(downloadManagerProvider.notifier)
+          .renamePlaylist(playlist.id, playlistName);
+      ref.invalidate(playlistProvider(playlist.id));
+      ref.invalidate(playlistsProvider);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Renamed to "$playlistName"')));
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not rename playlist: $e')));
+    }
+  }
+
   Future<void> _confirmDelete(
     BuildContext context,
     WidgetRef ref,
@@ -277,6 +313,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
     );
     if (confirm != true) return;
     await ref.read(jellyfinRepositoryProvider).deletePlaylist(playlist.id);
+    ref.invalidate(playlistsProvider);
     if (!context.mounted) return;
     context.pop();
   }
@@ -477,6 +514,60 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
   }
 }
 
+bool _isLikedSongsPlaylist(PlaylistDetail playlist) {
+  return playlist.name.toLowerCase().trim() == 'liked songs';
+}
+
+class _RenamePlaylistDialog extends StatefulWidget {
+  const _RenamePlaylistDialog({required this.initialName});
+
+  final String initialName;
+
+  @override
+  State<_RenamePlaylistDialog> createState() => _RenamePlaylistDialogState();
+}
+
+class _RenamePlaylistDialogState extends State<_RenamePlaylistDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialName);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    Navigator.of(context).pop(_controller.text.trim());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Rename playlist'),
+      content: TextField(
+        controller: _controller,
+        autofocus: true,
+        decoration: const InputDecoration(hintText: 'Playlist name'),
+        textInputAction: TextInputAction.done,
+        onSubmitted: (_) => _submit(),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(onPressed: _submit, child: const Text('Rename')),
+      ],
+    );
+  }
+}
+
 class _PlaylistView extends ConsumerWidget {
   const _PlaylistView({
     required this.playlist,
@@ -484,6 +575,7 @@ class _PlaylistView extends ConsumerWidget {
     required this.inSelection,
     required this.onLongPress,
     required this.onToggleSelected,
+    this.onRename,
     this.onDelete,
   });
 
@@ -492,6 +584,7 @@ class _PlaylistView extends ConsumerWidget {
   final bool inSelection;
   final void Function(String trackId) onLongPress;
   final void Function(String trackId) onToggleSelected;
+  final VoidCallback? onRename;
   final VoidCallback? onDelete;
 
   @override
@@ -506,6 +599,7 @@ class _PlaylistView extends ConsumerWidget {
           _ActionRow(
             playlist: playlist,
             selectionActive: inSelection,
+            onRename: onRename,
             onDelete: onDelete,
           ),
           const SizedBox(height: 8),
@@ -662,11 +756,13 @@ class _ActionRow extends ConsumerWidget {
   const _ActionRow({
     required this.playlist,
     this.selectionActive = false,
+    this.onRename,
     this.onDelete,
   });
 
   final PlaylistDetail playlist;
   final bool selectionActive;
+  final VoidCallback? onRename;
   final VoidCallback? onDelete;
 
   @override
@@ -681,7 +777,8 @@ class _ActionRow extends ConsumerWidget {
         (currentMediaItem?.extras?['contextId'] as String?) == playlist.id;
     final hasTracks = playlist.tracks.isNotEmpty;
     final enabled = hasTracks && !selectionActive;
-    final canOpenMore = !selectionActive && (hasTracks || onDelete != null);
+    final canOpenMore =
+        !selectionActive && (hasTracks || onRename != null || onDelete != null);
 
     return Opacity(
       opacity: selectionActive ? 0.45 : 1,
@@ -756,8 +853,19 @@ class _ActionRow extends ConsumerWidget {
                                           ),
                                     ),
                                   ],
-                                  if (onDelete != null) ...[
+                                  if (onRename != null || onDelete != null) ...[
                                     if (hasTracks) const Divider(height: 1),
+                                  ],
+                                  if (onRename != null) ...[
+                                    ListTile(
+                                      leading: const Icon(Icons.edit_rounded),
+                                      title: const Text('Rename playlist'),
+                                      onTap: () => Navigator.of(
+                                        sheetContext,
+                                      ).pop(_PlaylistCollectionAction.rename),
+                                    ),
+                                  ],
+                                  if (onDelete != null) ...[
                                     ListTile(
                                       leading: const Icon(
                                         Icons.delete_rounded,
@@ -795,6 +903,8 @@ class _ActionRow extends ConsumerWidget {
                           );
                         case _PlaylistCollectionAction.delete:
                           onDelete?.call();
+                        case _PlaylistCollectionAction.rename:
+                          onRename?.call();
                       }
                     }
                   : null,
@@ -806,7 +916,7 @@ class _ActionRow extends ConsumerWidget {
   }
 }
 
-enum _PlaylistCollectionAction { addToPlaylist, addToQueue, delete }
+enum _PlaylistCollectionAction { addToPlaylist, addToQueue, rename, delete }
 
 class _ArtFallback extends StatelessWidget {
   const _ArtFallback();
