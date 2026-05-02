@@ -327,127 +327,131 @@ class _SearchTrackMenuButton extends ConsumerWidget {
           context: context,
           showDragHandle: true,
           builder: (sheetCtx) => SafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // ── Track header ──
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-                  child: Row(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(6),
-                        child: SizedBox(
-                          width: 48,
-                          height: 48,
-                          child: imageUrl == null
-                              ? Container(
-                                  color: AppColors.surfaceHighlight,
-                                  child: const Icon(
-                                    Icons.music_note_rounded,
-                                    color: AppColors.textTertiary,
-                                    size: 20,
-                                  ),
-                                )
-                              : LocalOrNetworkImage(
-                                  source: imageUrl,
-                                  fit: BoxFit.cover,
-                                  placeholderBuilder: (_) => Container(
-                                    color: AppColors.surfaceHighlight,
-                                  ),
-                                  errorBuilder: (_) => Container(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // ── Track header ──
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                    child: Row(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: SizedBox(
+                            width: 48,
+                            height: 48,
+                            child: imageUrl == null
+                                ? Container(
                                     color: AppColors.surfaceHighlight,
                                     child: const Icon(
                                       Icons.music_note_rounded,
                                       color: AppColors.textTertiary,
                                       size: 20,
                                     ),
+                                  )
+                                : LocalOrNetworkImage(
+                                    source: imageUrl,
+                                    fit: BoxFit.cover,
+                                    placeholderBuilder: (_) => Container(
+                                      color: AppColors.surfaceHighlight,
+                                    ),
+                                    errorBuilder: (_) => Container(
+                                      color: AppColors.surfaceHighlight,
+                                      child: const Icon(
+                                        Icons.music_note_rounded,
+                                        color: AppColors.textTertiary,
+                                        size: 20,
+                                      ),
+                                    ),
+                                  ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                track.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textPrimary,
+                                  fontSize: 15,
+                                ),
+                              ),
+                              if (track.albumName != null) ...[
+                                const SizedBox(height: 2),
+                                Text(
+                                  '${track.artistName} · ${track.albumName}',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 12,
                                   ),
                                 ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              track.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary,
-                                fontSize: 15,
-                              ),
-                            ),
-                            if (track.albumName != null) ...[
-                              const SizedBox(height: 2),
-                              Text(
-                                '${track.artistName} · ${track.albumName}',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: AppColors.textSecondary,
-                                  fontSize: 12,
+                              ] else ...[
+                                const SizedBox(height: 2),
+                                Text(
+                                  track.artistName,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 12,
+                                  ),
                                 ),
-                              ),
-                            ] else ...[
-                              const SizedBox(height: 2),
-                              Text(
-                                track.artistName,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: AppColors.textSecondary,
-                                  fontSize: 12,
-                                ),
-                              ),
+                              ],
                             ],
-                          ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                const Divider(height: 1),
-                // ── Actions ──
-                ListTile(
-                  leading: const Icon(Icons.playlist_add_rounded),
-                  title: const Text('Add to playlist'),
-                  onTap: () => Navigator.of(
-                    sheetCtx,
-                  ).pop(_TrackMenuAction.addToPlaylist),
-                ),
-                const Divider(height: 1, indent: 56),
-                ListTile(
-                  leading: const Icon(Icons.queue_music_rounded),
-                  title: const Text('Add to queue'),
-                  onTap: () =>
-                      Navigator.of(sheetCtx).pop(_TrackMenuAction.addToQueue),
-                ),
-                if (track.albumId != null && track.albumId!.isNotEmpty) ...[
+                  const Divider(height: 1),
+                  // ── Actions ──
+                  ListTile(
+                    leading: const Icon(Icons.playlist_add_rounded),
+                    title: const Text('Add to playlist'),
+                    onTap: () => Navigator.of(
+                      sheetCtx,
+                    ).pop(_TrackMenuAction.addToPlaylist),
+                  ),
                   const Divider(height: 1, indent: 56),
                   ListTile(
-                    leading: const Icon(Icons.album_rounded),
-                    title: const Text('Go to album'),
+                    leading: const Icon(Icons.queue_music_rounded),
+                    title: const Text('Add to queue'),
                     onTap: () =>
-                        Navigator.of(sheetCtx).pop(_TrackMenuAction.goToAlbum),
+                        Navigator.of(sheetCtx).pop(_TrackMenuAction.addToQueue),
                   ),
+                  if (track.albumId != null && track.albumId!.isNotEmpty) ...[
+                    const Divider(height: 1, indent: 56),
+                    ListTile(
+                      leading: const Icon(Icons.album_rounded),
+                      title: const Text('Go to album'),
+                      onTap: () => Navigator.of(
+                        sheetCtx,
+                      ).pop(_TrackMenuAction.goToAlbum),
+                    ),
+                  ],
+                  if (track.artistId != null && track.artistId!.isNotEmpty) ...[
+                    const Divider(height: 1, indent: 56),
+                    ListTile(
+                      leading: const Icon(Icons.person_rounded),
+                      title: const Text('Go to artist'),
+                      onTap: () => Navigator.of(
+                        sheetCtx,
+                      ).pop(_TrackMenuAction.goToArtist),
+                    ),
+                  ],
+                  const SizedBox(height: 8),
                 ],
-                if (track.artistId != null && track.artistId!.isNotEmpty) ...[
-                  const Divider(height: 1, indent: 56),
-                  ListTile(
-                    leading: const Icon(Icons.person_rounded),
-                    title: const Text('Go to artist'),
-                    onTap: () =>
-                        Navigator.of(sheetCtx).pop(_TrackMenuAction.goToArtist),
-                  ),
-                ],
-                const SizedBox(height: 8),
-              ],
+              ),
             ),
           ),
         );
