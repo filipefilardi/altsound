@@ -20,6 +20,31 @@ final albumProvider = FutureProvider.autoDispose.family<Album, String>((
   return ref.watch(jellyfinRepositoryProvider).album(id);
 });
 
+typedef MoreAlbumsByArtistRequest = ({String artistId, String excludeAlbumId});
+typedef SimilarAlbumsRequest = ({String albumId, String artistName});
+
+final moreAlbumsByArtistProvider = FutureProvider.autoDispose
+    .family<List<BrowseItem>, MoreAlbumsByArtistRequest>((ref, request) {
+      if (ref.watch(isOfflineProvider)) return const [];
+      return ref
+          .watch(jellyfinRepositoryProvider)
+          .moreAlbumsByArtist(
+            artistId: request.artistId,
+            excludeAlbumId: request.excludeAlbumId,
+          );
+    });
+
+final similarAlbumsProvider = FutureProvider.autoDispose
+    .family<List<BrowseItem>, SimilarAlbumsRequest>((ref, request) {
+      if (ref.watch(isOfflineProvider)) return const [];
+      return ref
+          .watch(jellyfinRepositoryProvider)
+          .similarAlbums(
+            request.albumId,
+            excludeArtistName: request.artistName,
+          );
+    });
+
 Album? _buildOfflineAlbum(String albumId, DownloadsState downloads) {
   final tracks = downloads.tracks.values
       .where((track) => track.albumId == albumId)

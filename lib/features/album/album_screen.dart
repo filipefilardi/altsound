@@ -14,6 +14,7 @@ import '../../data/downloads/download_preferences.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
 import '../../data/jellyfin/models/media_item.dart';
 import '../downloads/widgets/album_download_button.dart';
+import '../home/widgets/media_card.dart';
 import '../player/player_providers.dart';
 import '../player/widgets/add_track_to_playlist_sheet.dart';
 import '../player/widgets/mini_player_slot.dart';
@@ -199,7 +200,27 @@ class _AlbumViewState extends ConsumerState<_AlbumView> {
     );
 
     return RefreshIndicator(
-      onRefresh: () async => ref.refresh(albumProvider(album.id).future),
+      onRefresh: () async {
+        final artistId = album.artistId;
+        ref.invalidate(
+          similarAlbumsProvider((
+            albumId: album.id,
+            artistName: album.artistName,
+          )),
+        );
+        if (artistId != null && artistId.isNotEmpty) {
+          ref.invalidate(
+            moreAlbumsByArtistProvider((
+              artistId: artistId,
+              excludeAlbumId: album.id,
+            )),
+          );
+        }
+        final refreshedAlbum = await ref.refresh(
+          albumProvider(album.id).future,
+        );
+        if (!mounted || refreshedAlbum.id != album.id) return;
+      },
       child: CustomScrollView(
         slivers: [
           SliverAppBar(
@@ -343,7 +364,138 @@ class _AlbumViewState extends ConsumerState<_AlbumView> {
               );
             },
           ),
+          SliverToBoxAdapter(child: _AlbumRecommendations(album: album)),
           const SliverToBoxAdapter(child: SizedBox(height: 32)),
+        ],
+      ),
+    );
+  }
+}
+
+class _AlbumRecommendations extends ConsumerWidget {
+  const _AlbumRecommendations({required this.album});
+
+  final Album album;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final artistId = album.artistId;
+    final moreFromArtist = artistId == null || artistId.isEmpty
+        ? const AsyncValue<List<BrowseItem>>.data([])
+        : ref.watch(
+            moreAlbumsByArtistProvider((
+              artistId: artistId,
+              excludeAlbumId: album.id,
+            )),
+          );
+    final similarAlbums = ref.watch(
+      similarAlbumsProvider((albumId: album.id, artistName: album.artistName)),
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (artistId != null && artistId.isNotEmpty)
+          _RecommendationShelf(
+            title: 'More from ${album.artistName}',
+            items: moreFromArtist,
+          ),
+        _RecommendationShelf(title: 'More Like This', items: similarAlbums),
+      ],
+    );
+  }
+}
+
+class _RecommendationShelf extends StatelessWidget {
+  const _RecommendationShelf({required this.title, required this.items});
+
+  final String title;
+  final AsyncValue<List<BrowseItem>> items;
+
+  @override
+  Widget build(BuildContext context) {
+    return items.when(
+      loading: () => _RecommendationShelfFrame(
+        title: title,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const NeverScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Skeleton.group(
+            child: Row(
+              children: const [
+                _RecommendationSkeleton(),
+                SizedBox(width: 6),
+                _RecommendationSkeleton(),
+                SizedBox(width: 6),
+                _RecommendationSkeleton(),
+              ],
+            ),
+          ),
+        ),
+      ),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (items) {
+        if (items.isEmpty) return const SizedBox.shrink();
+        return _RecommendationShelfFrame(
+          title: title,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: items.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 6),
+            itemBuilder: (_, i) => MediaCard(item: items[i]),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _RecommendationShelfFrame extends StatelessWidget {
+  const _RecommendationShelfFrame({required this.title, required this.child});
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
+            child: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+          ),
+          SizedBox(height: 220, child: child),
+        ],
+      ),
+    );
+  }
+}
+
+class _RecommendationSkeleton extends StatelessWidget {
+  const _RecommendationSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 156,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Skeleton.box(width: 156, height: 156, radius: 10),
+          const SizedBox(height: 10),
+          Skeleton.line(width: 120),
+          const SizedBox(height: 6),
+          Skeleton.line(width: 80, height: 10),
         ],
       ),
     );
