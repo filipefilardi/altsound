@@ -36,35 +36,37 @@ class DownloadedTrack {
   Duration get duration => Duration(milliseconds: durationMs);
 
   Track toTrack() => Track(
-        id: id,
-        name: name,
-        albumId: albumId,
-        albumName: albumName,
-        artistName: artistName,
-        artistId: null,
-        duration: duration,
-        trackNumber: trackNumber,
-        discNumber: discNumber,
-        imageTag: imageTag,
-        albumImageItemId: imageItemId,
-      );
+    id: id,
+    name: name,
+    albumId: albumId,
+    albumName: albumName,
+    artistName: artistName,
+    artistId: null,
+    duration: duration,
+    trackNumber: trackNumber,
+    discNumber: discNumber,
+    imageTag: imageTag,
+    albumImageItemId: imageItemId,
+    playlistItemId: null,
+    dateAdded: null,
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'albumId': albumId,
-        'albumName': albumName,
-        'artistName': artistName,
-        'durationMs': durationMs,
-        'trackNumber': trackNumber,
-        'discNumber': discNumber,
-        'imageItemId': imageItemId,
-        'imageTag': imageTag,
-        'filePath': filePath,
-        'fileSize': fileSize,
-        'artworkPath': artworkPath,
-        'downloadedAt': downloadedAt.toIso8601String(),
-      };
+    'id': id,
+    'name': name,
+    'albumId': albumId,
+    'albumName': albumName,
+    'artistName': artistName,
+    'durationMs': durationMs,
+    'trackNumber': trackNumber,
+    'discNumber': discNumber,
+    'imageItemId': imageItemId,
+    'imageTag': imageTag,
+    'filePath': filePath,
+    'fileSize': fileSize,
+    'artworkPath': artworkPath,
+    'downloadedAt': downloadedAt.toIso8601String(),
+  };
 
   factory DownloadedTrack.fromJson(Map<String, dynamic> json) {
     return DownloadedTrack(

@@ -152,6 +152,8 @@ class Track {
     required this.discNumber,
     required this.imageTag,
     required this.albumImageItemId,
+    required this.playlistItemId,
+    required this.dateAdded,
   });
 
   final String id;
@@ -165,6 +167,8 @@ class Track {
   final int? discNumber;
   final String? imageTag;
   final String? albumImageItemId;
+  final String? playlistItemId;
+  final DateTime? dateAdded;
 
   factory Track.fromJson(Map<String, dynamic> json) {
     final artists = (json['Artists'] as List?)?.cast<String>();
@@ -173,6 +177,7 @@ class Track {
                 ?.cast<Map<String, dynamic>>()
                 .firstOrNull?['Id']
             as String?;
+    final dateCreated = json['DateCreated'] as String?;
     return Track(
       id: json['Id'] as String,
       name: json['Name'] as String? ?? 'Untitled',
@@ -188,6 +193,8 @@ class Track {
       discNumber: json['ParentIndexNumber'] as int?,
       imageTag: _primaryImageTag(json),
       albumImageItemId: json['AlbumId'] as String?,
+      playlistItemId: json['PlaylistItemId'] as String?,
+      dateAdded: dateCreated == null ? null : DateTime.tryParse(dateCreated),
     );
   }
 

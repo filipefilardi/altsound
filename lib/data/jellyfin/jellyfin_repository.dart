@@ -46,7 +46,7 @@ class JellyfinRepository {
   }
 
   static const _trackFields =
-      'AlbumArtist,Artists,ArtistItems,AlbumId,ParentIndexNumber,ProductionYear,MediaSources';
+      'AlbumArtist,Artists,ArtistItems,AlbumId,ParentIndexNumber,ProductionYear,MediaSources,PlaylistItemId,DateCreated';
 
   Future<List<BrowseItem>> recentlyAddedAlbums({int limit = 20}) async {
     final s = _session;
@@ -472,11 +472,10 @@ class JellyfinRepository {
       '/Users/${s.userId}/Items/$playlistId',
     );
     final tracksRes = await _api.dio.get<Map<String, dynamic>>(
-      '/Users/${s.userId}/Items',
+      '/Playlists/$playlistId/Items',
       queryParameters: {
-        'ParentId': playlistId,
+        'UserId': s.userId,
         'IncludeItemTypes': 'Audio',
-        'Recursive': true,
         'SortBy': 'PlaylistItemId,SortName',
         'Fields': _trackFields,
       },
@@ -664,6 +663,18 @@ class JellyfinRepository {
     await _api.dio.delete<void>(
       '/Playlists/$playlistId/Items',
       queryParameters: {'entryIds': playlistItemEntryId, 'UserId': s.userId},
+    );
+  }
+
+  Future<void> movePlaylistItem({
+    required String playlistId,
+    required String playlistItemId,
+    required int newIndex,
+  }) async {
+    final s = _session;
+    await _api.dio.post<void>(
+      '/Playlists/$playlistId/Items/$playlistItemId/Move/$newIndex',
+      queryParameters: {'UserId': s.userId},
     );
   }
 

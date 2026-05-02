@@ -27,6 +27,8 @@ const double _kPlaylistShowAlbumWidthBreakpoint = 600;
 
 enum _SelectionBulkAction { addToLiked, addToPlaylist, removeFromPlaylist }
 
+enum _PlaylistSort { custom, title, artist, album, dateAdded }
+
 class PlaylistScreen extends ConsumerStatefulWidget {
   const PlaylistScreen({required this.playlistId, super.key});
 
@@ -38,6 +40,8 @@ class PlaylistScreen extends ConsumerStatefulWidget {
 
 class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
   final Set<String> _selectedTrackIds = {};
+  _PlaylistSort _activeSort = _PlaylistSort.custom;
+  bool _sortDescending = false;
   static const _emptySelection = <String>{};
 
   bool get _inSelection => _selectedTrackIds.isNotEmpty;
@@ -188,6 +192,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
             if (offlinePlaylist != null) {
               return _PlaylistView(
                 playlist: offlinePlaylist,
+                visibleTracks: _visiblePlaylistTracks(offlinePlaylist.tracks),
                 selectedTrackIds: _emptySelection,
                 inSelection: false,
                 onLongPress: (_) {},
@@ -204,6 +209,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
             if (offlinePlaylist != null) {
               return _PlaylistView(
                 playlist: offlinePlaylist,
+                visibleTracks: _visiblePlaylistTracks(offlinePlaylist.tracks),
                 selectedTrackIds: _emptySelection,
                 inSelection: false,
                 onLongPress: (_) {},
@@ -218,10 +224,13 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
           },
           data: (playlist) => _PlaylistView(
             playlist: playlist,
+            visibleTracks: _visiblePlaylistTracks(playlist.tracks),
             selectedTrackIds: _selectedTrackIds,
             inSelection: _inSelection,
             onLongPress: _onLongPressStartSelection,
             onToggleSelected: _toggleTrackSelected,
+            onSort: () => _showSortPlaylistSheet(context, ref, playlist),
+            onEdit: () => _editPlaylistOrder(context, ref, playlist),
             onRename: _isLikedSongsPlaylist(playlist)
                 ? null
                 : () => _renamePlaylist(context, ref, playlist),
@@ -252,6 +261,198 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
       imageTag: saved.imageTag,
       tracks: tracks,
     );
+  }
+
+  List<Track> _visiblePlaylistTracks(List<Track> tracks) {
+    return _sortedPlaylistTracks(
+      tracks,
+      _activeSort,
+      descending: _sortDescending,
+    );
+  }
+
+  Future<void> _showSortPlaylistSheet(
+    BuildContext context,
+    WidgetRef ref,
+    PlaylistDetail playlist,
+  ) async {
+    if (playlist.tracks.isEmpty) return;
+    final sort = await showModalBottomSheet<_PlaylistSort>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _PlaylistSortTile(
+              icon: Icons.format_list_numbered_rounded,
+              title: 'Custom order',
+              subtitle: 'Playlist order',
+              selected: _activeSort == _PlaylistSort.custom,
+              directional: false,
+              onTap: () => Navigator.of(sheetContext).pop(_PlaylistSort.custom),
+            ),
+            const Divider(height: 1),
+            _PlaylistSortTile(
+              icon: Icons.title_rounded,
+              title: 'Title',
+              selected: _activeSort == _PlaylistSort.title,
+              descending: _activeSort == _PlaylistSort.title && _sortDescending,
+              subtitle: _sortSubtitle(
+                _PlaylistSort.title,
+                selected: _activeSort == _PlaylistSort.title,
+                descending: _sortDescending,
+              ),
+              onTap: () => Navigator.of(sheetContext).pop(_PlaylistSort.title),
+            ),
+            _PlaylistSortTile(
+              icon: Icons.person_rounded,
+              title: 'Artist',
+              selected: _activeSort == _PlaylistSort.artist,
+              descending:
+                  _activeSort == _PlaylistSort.artist && _sortDescending,
+              subtitle: _sortSubtitle(
+                _PlaylistSort.artist,
+                selected: _activeSort == _PlaylistSort.artist,
+                descending: _sortDescending,
+              ),
+              onTap: () => Navigator.of(sheetContext).pop(_PlaylistSort.artist),
+            ),
+            _PlaylistSortTile(
+              icon: Icons.album_rounded,
+              title: 'Album',
+              selected: _activeSort == _PlaylistSort.album,
+              descending: _activeSort == _PlaylistSort.album && _sortDescending,
+              subtitle: _sortSubtitle(
+                _PlaylistSort.album,
+                selected: _activeSort == _PlaylistSort.album,
+                descending: _sortDescending,
+              ),
+              onTap: () => Navigator.of(sheetContext).pop(_PlaylistSort.album),
+            ),
+            _PlaylistSortTile(
+              icon: Icons.calendar_today_rounded,
+              title: 'Date added',
+              selected: _activeSort == _PlaylistSort.dateAdded,
+              descending:
+                  _activeSort == _PlaylistSort.dateAdded && _sortDescending,
+              subtitle: _sortSubtitle(
+                _PlaylistSort.dateAdded,
+                selected: _activeSort == _PlaylistSort.dateAdded,
+                descending: _sortDescending,
+              ),
+              onTap: () =>
+                  Navigator.of(sheetContext).pop(_PlaylistSort.dateAdded),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (sort == null || !context.mounted) return;
+    setState(() {
+      if (sort == _PlaylistSort.custom) {
+        _activeSort = _PlaylistSort.custom;
+        _sortDescending = false;
+        return;
+      }
+      _sortDescending = _activeSort == sort ? !_sortDescending : false;
+      _activeSort = sort;
+    });
+  }
+
+  Future<void> _editPlaylistOrder(
+    BuildContext context,
+    WidgetRef ref,
+    PlaylistDetail playlist,
+  ) async {
+    if (playlist.tracks.isEmpty) return;
+    final ordered = await showModalBottomSheet<List<Track>>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) => FractionallySizedBox(
+        heightFactor: 0.88,
+        child: _PlaylistOrderEditor(tracks: playlist.tracks),
+      ),
+    );
+    if (ordered == null || !context.mounted) return;
+    final updated = await _applyPlaylistOrder(
+      context,
+      ref,
+      playlist: playlist,
+      orderedTracks: ordered,
+      successMessage: 'Playlist order updated',
+    );
+    if (updated && mounted) {
+      setState(() {
+        _activeSort = _PlaylistSort.custom;
+        _sortDescending = false;
+      });
+    }
+  }
+
+  Future<bool> _applyPlaylistOrder(
+    BuildContext context,
+    WidgetRef ref, {
+    required PlaylistDetail playlist,
+    List<Track>? currentTracks,
+    required List<Track> orderedTracks,
+    required String successMessage,
+  }) async {
+    final currentIds = (currentTracks ?? playlist.tracks)
+        .map((t) => t.playlistItemId)
+        .toList();
+    final orderedIds = orderedTracks.map((t) => t.playlistItemId).toList();
+    if (currentIds.length != orderedIds.length ||
+        orderedIds.any((id) => id == null || id.isEmpty)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Could not reorder this playlist. Refresh and try again.',
+          ),
+        ),
+      );
+      return false;
+    }
+    if (_sameStringOrder(currentIds, orderedIds)) return true;
+
+    final currentOrder = currentIds.cast<String>().toList();
+    final targetOrder = orderedIds.cast<String>().toList();
+    final repo = ref.read(jellyfinRepositoryProvider);
+    try {
+      for (var index = 0; index < targetOrder.length; index++) {
+        final playlistItemId = targetOrder[index];
+        final currentIndex = currentOrder.indexOf(playlistItemId);
+        if (currentIndex == -1 || currentIndex == index) continue;
+        await repo.movePlaylistItem(
+          playlistId: playlist.id,
+          playlistItemId: playlistItemId,
+          newIndex: index,
+        );
+        currentOrder
+          ..removeAt(currentIndex)
+          ..insert(index, playlistItemId);
+      }
+      await ref
+          .read(downloadManagerProvider.notifier)
+          .reorderPlaylist(
+            playlist.id,
+            orderedTracks.map((t) => t.id).toList(),
+          );
+      ref.invalidate(playlistProvider(playlist.id));
+      if (!context.mounted) return true;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(successMessage)));
+      return true;
+    } catch (e) {
+      if (!context.mounted) return false;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not update playlist order: $e')),
+      );
+      return false;
+    }
   }
 
   Future<void> _renamePlaylist(
@@ -518,6 +719,238 @@ bool _isLikedSongsPlaylist(PlaylistDetail playlist) {
   return playlist.name.toLowerCase().trim() == 'liked songs';
 }
 
+bool _sameStringOrder(List<String?> a, List<String?> b) {
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if (a[i] != b[i]) return false;
+  }
+  return true;
+}
+
+List<Track> _sortedPlaylistTracks(
+  List<Track> tracks,
+  _PlaylistSort sort, {
+  required bool descending,
+}) {
+  final sorted = List<Track>.from(tracks);
+  switch (sort) {
+    case _PlaylistSort.custom:
+      return sorted;
+    case _PlaylistSort.title:
+      sorted.sort(
+        (a, b) => _compareStrings(
+          a.name,
+          b.name,
+        ).ifEqual(_compareStrings(a.id, b.id)),
+      );
+    case _PlaylistSort.artist:
+      sorted.sort(
+        (a, b) => _compareStrings(a.artistName, b.artistName)
+            .ifEqual(_compareStrings(a.name, b.name))
+            .ifEqual(_compareStrings(a.id, b.id)),
+      );
+    case _PlaylistSort.album:
+      sorted.sort(
+        (a, b) => _compareStrings(a.albumName ?? '', b.albumName ?? '')
+            .ifEqual(_compareNullableInts(a.discNumber, b.discNumber))
+            .ifEqual(_compareNullableInts(a.trackNumber, b.trackNumber))
+            .ifEqual(_compareStrings(a.name, b.name))
+            .ifEqual(_compareStrings(a.id, b.id)),
+      );
+    case _PlaylistSort.dateAdded:
+      sorted.sort(
+        (a, b) => _compareNullableDates(a.dateAdded, b.dateAdded)
+            .ifEqual(_compareStrings(a.name, b.name))
+            .ifEqual(_compareStrings(a.id, b.id)),
+      );
+  }
+  if (descending) {
+    return sorted.reversed.toList();
+  }
+  return sorted;
+}
+
+String _sortSubtitle(
+  _PlaylistSort sort, {
+  required bool selected,
+  required bool descending,
+}) {
+  switch (sort) {
+    case _PlaylistSort.custom:
+      return 'Playlist order';
+    case _PlaylistSort.title:
+    case _PlaylistSort.artist:
+    case _PlaylistSort.album:
+      if (!selected) return 'A-Z';
+      return descending ? 'Z-A' : 'A-Z';
+    case _PlaylistSort.dateAdded:
+      if (!selected) return 'Oldest first';
+      return descending ? 'Newest first' : 'Oldest first';
+  }
+}
+
+int _compareStrings(String a, String b) {
+  return a.trim().toLowerCase().compareTo(b.trim().toLowerCase());
+}
+
+int _compareNullableInts(int? a, int? b) {
+  if (a == null && b == null) return 0;
+  if (a == null) return 1;
+  if (b == null) return -1;
+  return a.compareTo(b);
+}
+
+int _compareNullableDates(DateTime? a, DateTime? b) {
+  if (a == null && b == null) return 0;
+  if (a == null) return 1;
+  if (b == null) return -1;
+  return a.compareTo(b);
+}
+
+extension _CompareChain on int {
+  int ifEqual(int next) => this == 0 ? next : this;
+}
+
+class _PlaylistSortTile extends StatelessWidget {
+  const _PlaylistSortTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.selected,
+    required this.onTap,
+    this.descending = false,
+    this.directional = true,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final bool selected;
+  final bool descending;
+  final bool directional;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Icon(icon),
+      title: Text(title),
+      subtitle: Text(subtitle),
+      trailing: selected
+          ? Icon(
+              directional
+                  ? (descending
+                        ? Icons.keyboard_arrow_down_rounded
+                        : Icons.keyboard_arrow_up_rounded)
+                  : Icons.check_rounded,
+              color: AppColors.primary,
+            )
+          : null,
+      onTap: onTap,
+    );
+  }
+}
+
+class _PlaylistOrderEditor extends StatefulWidget {
+  const _PlaylistOrderEditor({required this.tracks});
+
+  final List<Track> tracks;
+
+  @override
+  State<_PlaylistOrderEditor> createState() => _PlaylistOrderEditorState();
+}
+
+class _PlaylistOrderEditorState extends State<_PlaylistOrderEditor> {
+  late final List<Track> _tracks;
+
+  @override
+  void initState() {
+    super.initState();
+    _tracks = List<Track>.from(widget.tracks);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Edit playlist',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.of(context).pop(_tracks),
+                  child: const Text('Save'),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          Expanded(
+            child: ReorderableListView.builder(
+              buildDefaultDragHandles: false,
+              padding: const EdgeInsets.only(bottom: 24),
+              itemCount: _tracks.length,
+              onReorder: (oldIndex, newIndex) {
+                setState(() {
+                  if (newIndex > oldIndex) newIndex -= 1;
+                  final track = _tracks.removeAt(oldIndex);
+                  _tracks.insert(newIndex, track);
+                });
+              },
+              itemBuilder: (context, index) {
+                final track = _tracks[index];
+                return ListTile(
+                  key: track.playlistItemId == null
+                      ? ObjectKey(track)
+                      : ValueKey(track.playlistItemId),
+                  leading: Text(
+                    '${index + 1}',
+                    style: const TextStyle(color: AppColors.textSecondary),
+                  ),
+                  title: Text(
+                    track.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  subtitle: Text(
+                    track.albumName == null || track.albumName!.isEmpty
+                        ? track.artistName
+                        : '${track.artistName} · ${track.albumName}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  trailing: ReorderableDragStartListener(
+                    index: index,
+                    child: const Padding(
+                      padding: EdgeInsets.all(12),
+                      child: Icon(
+                        Icons.drag_indicator_rounded,
+                        color: AppColors.textTertiary,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _RenamePlaylistDialog extends StatefulWidget {
   const _RenamePlaylistDialog({required this.initialName});
 
@@ -571,19 +1004,25 @@ class _RenamePlaylistDialogState extends State<_RenamePlaylistDialog> {
 class _PlaylistView extends ConsumerWidget {
   const _PlaylistView({
     required this.playlist,
+    required this.visibleTracks,
     required this.selectedTrackIds,
     required this.inSelection,
     required this.onLongPress,
     required this.onToggleSelected,
+    this.onSort,
+    this.onEdit,
     this.onRename,
     this.onDelete,
   });
 
   final PlaylistDetail playlist;
+  final List<Track> visibleTracks;
   final Set<String> selectedTrackIds;
   final bool inSelection;
   final void Function(String trackId) onLongPress;
   final void Function(String trackId) onToggleSelected;
+  final VoidCallback? onSort;
+  final VoidCallback? onEdit;
   final VoidCallback? onRename;
   final VoidCallback? onDelete;
 
@@ -598,12 +1037,15 @@ class _PlaylistView extends ConsumerWidget {
           const SizedBox(height: 16),
           _ActionRow(
             playlist: playlist,
+            visibleTracks: visibleTracks,
             selectionActive: inSelection,
+            onSort: onSort,
+            onEdit: onEdit,
             onRename: onRename,
             onDelete: onDelete,
           ),
           const SizedBox(height: 8),
-          if (playlist.tracks.isEmpty)
+          if (visibleTracks.isEmpty)
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 24),
               child: Text(
@@ -612,11 +1054,11 @@ class _PlaylistView extends ConsumerWidget {
               ),
             )
           else
-            ...playlist.tracks.asMap().entries.map(
+            ...visibleTracks.asMap().entries.map(
               (entry) => _PlaylistTrackTile(
                 track: entry.value,
                 index: entry.key,
-                allTracks: playlist.tracks,
+                allTracks: visibleTracks,
                 contextId: playlist.id,
                 inSelection: inSelection,
                 isSelected: selectedTrackIds.contains(entry.value.id),
@@ -755,13 +1197,19 @@ class _PlaylistArtwork extends ConsumerWidget {
 class _ActionRow extends ConsumerWidget {
   const _ActionRow({
     required this.playlist,
+    required this.visibleTracks,
     this.selectionActive = false,
+    this.onSort,
+    this.onEdit,
     this.onRename,
     this.onDelete,
   });
 
   final PlaylistDetail playlist;
+  final List<Track> visibleTracks;
   final bool selectionActive;
+  final VoidCallback? onSort;
+  final VoidCallback? onEdit;
   final VoidCallback? onRename;
   final VoidCallback? onDelete;
 
@@ -775,10 +1223,11 @@ class _ActionRow extends ConsumerWidget {
     final isPlaylistPlaying =
         playbackState?.playing == true &&
         (currentMediaItem?.extras?['contextId'] as String?) == playlist.id;
-    final hasTracks = playlist.tracks.isNotEmpty;
+    final hasTracks = visibleTracks.isNotEmpty;
     final enabled = hasTracks && !selectionActive;
     final canOpenMore =
-        !selectionActive && (hasTracks || onRename != null || onDelete != null);
+        !selectionActive &&
+        (hasTracks || onEdit != null || onRename != null || onDelete != null);
 
     return Opacity(
       opacity: selectionActive ? 0.45 : 1,
@@ -794,7 +1243,7 @@ class _ActionRow extends ConsumerWidget {
                         return;
                       }
                       controller.playTracks(
-                        playlist.tracks,
+                        visibleTracks,
                         contextId: playlist.id,
                       );
                     }
@@ -815,6 +1264,11 @@ class _ActionRow extends ConsumerWidget {
               ),
               onPressed: enabled ? () => controller.toggleShuffle() : null,
             ),
+            IconButton(
+              tooltip: 'Sort',
+              icon: const Icon(Icons.sort_rounded),
+              onPressed: enabled ? onSort : null,
+            ),
             PlaylistDownloadButton(playlist: playlist),
             IconButton(
               tooltip: 'More actions',
@@ -830,6 +1284,16 @@ class _ActionRow extends ConsumerWidget {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   if (hasTracks) ...[
+                                    if (onEdit != null)
+                                      ListTile(
+                                        leading: const Icon(
+                                          Icons.edit_note_rounded,
+                                        ),
+                                        title: const Text('Edit playlist'),
+                                        onTap: () => Navigator.of(
+                                          sheetContext,
+                                        ).pop(_PlaylistCollectionAction.edit),
+                                      ),
                                     ListTile(
                                       leading: const Icon(
                                         Icons.playlist_add_rounded,
@@ -887,11 +1351,11 @@ class _ActionRow extends ConsumerWidget {
                           await openAddTracksToPlaylistFlow(
                             context,
                             ref,
-                            trackIds: playlist.tracks.map((t) => t.id).toList(),
+                            trackIds: visibleTracks.map((t) => t.id).toList(),
                           );
                         case _PlaylistCollectionAction.addToQueue:
                           final added = await controller.addTracksToQueue(
-                            playlist.tracks,
+                            visibleTracks,
                           );
                           if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -905,6 +1369,8 @@ class _ActionRow extends ConsumerWidget {
                           onDelete?.call();
                         case _PlaylistCollectionAction.rename:
                           onRename?.call();
+                        case _PlaylistCollectionAction.edit:
+                          onEdit?.call();
                       }
                     }
                   : null,
@@ -916,7 +1382,13 @@ class _ActionRow extends ConsumerWidget {
   }
 }
 
-enum _PlaylistCollectionAction { addToPlaylist, addToQueue, rename, delete }
+enum _PlaylistCollectionAction {
+  edit,
+  addToPlaylist,
+  addToQueue,
+  rename,
+  delete,
+}
 
 class _ArtFallback extends StatelessWidget {
   const _ArtFallback();
