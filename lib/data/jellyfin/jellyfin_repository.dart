@@ -157,13 +157,29 @@ class JellyfinRepository {
       rethrow;
     }
 
-    if (catalog.isEmpty) {
-      final refreshed = await refreshSearchCatalog();
-      return _filterSearchCatalog(refreshed, t).take(50).toList();
-    }
+    final indexedResults = _filterSearchCatalog(catalog, t).take(50).toList();
+    try {
+      final liveResults = await _searchLive(t);
+      unawaited(_upsertLoadedSearchCatalog(liveResults));
+      unawaited(
+        catalog.isEmpty
+            ? refreshSearchCatalog()
+            : _refreshSearchCatalogIfStale(),
+      );
+      return _mergeSearchResults(
+        indexedResults,
+        liveResults,
+        t,
+      ).take(50).toList();
+    } catch (_) {
+      if (catalog.isEmpty) {
+        final refreshed = await refreshSearchCatalog();
+        return _filterSearchCatalog(refreshed, t).take(50).toList();
+      }
 
-    unawaited(_refreshSearchCatalogIfStale());
-    return _filterSearchCatalog(catalog, t).take(50).toList();
+      unawaited(_refreshSearchCatalogIfStale());
+      return indexedResults;
+    }
   }
 
   Future<List<BrowseItem>> searchCached(String term) async {
@@ -257,6 +273,23 @@ class JellyfinRepository {
     return results;
   }
 
+  Future<List<BrowseItem>> _searchLive(String term) async {
+    final s = _session;
+    final res = await _api.dio.get<Map<String, dynamic>>(
+      '/Users/${s.userId}/Items',
+      queryParameters: {
+        'IncludeItemTypes': 'MusicAlbum,MusicArtist,Audio,Playlist',
+        'Recursive': true,
+        'searchTerm': term,
+        'Limit': 50,
+        'Fields': 'AlbumArtist,Artists,ArtistItems,AlbumId,RunTimeTicks',
+      },
+    );
+    final rawItems = ((res.data?['Items'] as List?) ?? const [])
+        .cast<Map<String, dynamic>>();
+    return rawItems.map(BrowseItem.fromJson).toList();
+  }
+
   Future<List<BrowseItem>> _loadPersistedSearchCatalog() async {
     final file = await _searchCatalogFile();
     if (file == null || !file.existsSync()) return const [];
@@ -322,7 +355,26 @@ class JellyfinRepository {
     final matches = catalog
         .where((item) => searchMatches(term, [item.name, item.subtitle]))
         .toList();
-    matches.sort((a, b) {
+    _sortSearchResults(matches, term);
+    return matches;
+  }
+
+  List<BrowseItem> _mergeSearchResults(
+    List<BrowseItem> indexedResults,
+    List<BrowseItem> liveResults,
+    String term,
+  ) {
+    final byId = <String, BrowseItem>{
+      for (final item in indexedResults) item.id: item,
+      for (final item in liveResults) item.id: item,
+    };
+    final results = byId.values.toList();
+    _sortSearchResults(results, term);
+    return results;
+  }
+
+  void _sortSearchResults(List<BrowseItem> results, String term) {
+    results.sort((a, b) {
       final relevance = searchRelevance(term, [
         b.name,
         b.subtitle,
@@ -330,7 +382,49 @@ class JellyfinRepository {
       if (relevance != 0) return relevance;
       return a.name.toLowerCase().compareTo(b.name.toLowerCase());
     });
-    return matches;
+  }
+
+  Future<void> _upsertLoadedSearchCatalog(List<BrowseItem> items) async {
+    if (items.isEmpty) return;
+    final catalogFuture = _searchCatalogFuture;
+    if (catalogFuture == null) return;
+
+    final List<BrowseItem> catalog;
+    try {
+      catalog = await catalogFuture;
+    } catch (_) {
+      return;
+    }
+    if (catalog.isEmpty) return;
+
+    final byId = <String, BrowseItem>{
+      for (final item in catalog) item.id: item,
+    };
+    var changed = false;
+    for (final item in items) {
+      final existing = byId[item.id];
+      if (existing == null ||
+          !mapEquals(existing.toSearchJson(), item.toSearchJson())) {
+        byId[item.id] = item;
+        changed = true;
+      }
+    }
+    if (!changed) return;
+
+    final updated = byId.values.toList()
+      ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    _searchCatalogFuture = Future.value(updated);
+
+    final file = await _searchCatalogFile();
+    final previousModified = file != null && file.existsSync()
+        ? (await file.stat()).modified
+        : null;
+    await _persistSearchCatalog(updated);
+    if (previousModified != null) {
+      try {
+        await file!.setLastModified(previousModified);
+      } catch (_) {}
+    }
   }
 
   Future<Track> track(String trackId) async {
