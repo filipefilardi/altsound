@@ -363,6 +363,65 @@ class JellyfinRepository {
     return Album.fromJson(detail.data ?? {}, tracks: tracks);
   }
 
+  Future<List<BrowseItem>> moreAlbumsByArtist({
+    required String artistId,
+    required String excludeAlbumId,
+    int limit = 12,
+  }) async {
+    final s = _session;
+    final res = await _api.dio.get<Map<String, dynamic>>(
+      '/Users/${s.userId}/Items',
+      queryParameters: {
+        'IncludeItemTypes': 'MusicAlbum',
+        'Recursive': true,
+        'ArtistIds': artistId,
+        'SortBy': 'ProductionYear,SortName',
+        'SortOrder': 'Descending',
+        'Limit': limit + 1,
+        'Fields': 'AlbumArtist,Artists',
+      },
+    );
+    final items = ((res.data?['Items'] as List?) ?? const [])
+        .cast<Map<String, dynamic>>()
+        .map(BrowseItem.fromJson)
+        .where((item) => item.id != excludeAlbumId)
+        .take(limit)
+        .toList();
+    return items;
+  }
+
+  Future<List<BrowseItem>> similarAlbums(
+    String albumId, {
+    String? excludeArtistName,
+    int limit = 12,
+  }) async {
+    final s = _session;
+    final res = await _api.dio.get<Map<String, dynamic>>(
+      '/Items/$albumId/Similar',
+      queryParameters: {
+        'UserId': s.userId,
+        'Limit': limit + 1,
+        'Fields': 'AlbumArtist,Artists',
+      },
+    );
+    final items = ((res.data?['Items'] as List?) ?? const [])
+        .cast<Map<String, dynamic>>()
+        .map(BrowseItem.fromJson)
+        .where((item) => item.kind == MediaKind.album && item.id != albumId)
+        .take(limit)
+        .toList();
+
+    final artistKey = normalizeForSearch(excludeArtistName ?? '');
+    if (artistKey.isNotEmpty &&
+        items.isNotEmpty &&
+        items.every(
+          (item) => normalizeForSearch(item.subtitle ?? '') == artistKey,
+        )) {
+      return const [];
+    }
+    return items;
+  }
+
   Future<Artist> artist(String artistId) async {
     final s = _session;
     final detail = await _api.dio.get<Map<String, dynamic>>(
