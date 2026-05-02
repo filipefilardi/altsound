@@ -35,8 +35,7 @@ class DownloadsState {
   bool isQueued(String trackId) => queuedTrackIds.contains(trackId);
   double? progressFor(String trackId) => progress[trackId];
 
-  int get totalSizeBytes =>
-      tracks.values.fold(0, (sum, t) => sum + t.fileSize);
+  int get totalSizeBytes => tracks.values.fold(0, (sum, t) => sum + t.fileSize);
 
   DownloadsState copyWith({
     Map<String, DownloadedTrack>? tracks,
@@ -45,15 +44,14 @@ class DownloadsState {
     Set<String>? queuedTrackIds,
     Map<String, DownloadedPlaylist>? playlists,
     bool? isBlockedByWifiOnly,
-  }) =>
-      DownloadsState(
-        tracks: tracks ?? this.tracks,
-        progress: progress ?? this.progress,
-        queueLength: queueLength ?? this.queueLength,
-        queuedTrackIds: queuedTrackIds ?? this.queuedTrackIds,
-        playlists: playlists ?? this.playlists,
-        isBlockedByWifiOnly: isBlockedByWifiOnly ?? this.isBlockedByWifiOnly,
-      );
+  }) => DownloadsState(
+    tracks: tracks ?? this.tracks,
+    progress: progress ?? this.progress,
+    queueLength: queueLength ?? this.queueLength,
+    queuedTrackIds: queuedTrackIds ?? this.queuedTrackIds,
+    playlists: playlists ?? this.playlists,
+    isBlockedByWifiOnly: isBlockedByWifiOnly ?? this.isBlockedByWifiOnly,
+  );
 }
 
 final downloadManagerProvider =
@@ -62,9 +60,9 @@ final downloadManagerProvider =
 class DownloadManager extends Notifier<DownloadsState> {
   // No receiveTimeout — file downloads can take a while. connectTimeout still
   // applies so we fail fast when the server is unreachable.
-  late final Dio _dio = Dio(BaseOptions(
-    connectTimeout: const Duration(seconds: 5),
-  ));
+  late final Dio _dio = Dio(
+    BaseOptions(connectTimeout: const Duration(seconds: 5)),
+  );
   Directory? _dir;
   File? _manifestFile;
   File? _playlistsFile;
@@ -118,14 +116,16 @@ class DownloadManager extends Notifier<DownloadsState> {
     final file = _manifestFile;
     if (file == null) return;
     await file.writeAsString(
-        jsonEncode(state.tracks.values.map((t) => t.toJson()).toList()));
+      jsonEncode(state.tracks.values.map((t) => t.toJson()).toList()),
+    );
   }
 
   Future<void> _persistPlaylists() async {
     final file = _playlistsFile;
     if (file == null) return;
     await file.writeAsString(
-        jsonEncode(state.playlists.values.map((p) => p.toJson()).toList()));
+      jsonEncode(state.playlists.values.map((p) => p.toJson()).toList()),
+    );
   }
 
   Future<void> enqueueTrack(Track track) async {
@@ -156,12 +156,30 @@ class DownloadManager extends Notifier<DownloadsState> {
       trackIds: playlist.tracks.map((t) => t.id).toList(),
     );
     state = state.copyWith(
-        playlists: {...state.playlists, playlist.id: downloaded});
+      playlists: {...state.playlists, playlist.id: downloaded},
+    );
     await _persistPlaylists();
 
     for (final t in playlist.tracks) {
       await enqueueTrack(t);
     }
+  }
+
+  Future<void> renamePlaylist(String playlistId, String name) async {
+    final playlist = state.playlists[playlistId];
+    if (playlist == null) return;
+    state = state.copyWith(
+      playlists: {
+        ...state.playlists,
+        playlistId: DownloadedPlaylist(
+          id: playlist.id,
+          name: name,
+          imageTag: playlist.imageTag,
+          trackIds: playlist.trackIds,
+        ),
+      },
+    );
+    await _persistPlaylists();
   }
 
   Future<void> deleteTracks(List<String> trackIds) async {
@@ -280,15 +298,18 @@ class DownloadManager extends Notifier<DownloadsState> {
     if (dir == null) return null;
     if (track.imageTag == null || track.imageTag!.isEmpty) return null;
 
-    final imageItemId =
-        track.albumImageItemId ?? track.albumId ?? track.id;
+    final imageItemId = track.albumImageItemId ?? track.albumId ?? track.id;
     final safeTag = track.imageTag!.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_');
     final cover = File('${dir.path}/art_${imageItemId}_$safeTag.jpg');
     if (cover.existsSync()) return cover.path;
 
     try {
       final repo = ref.read(jellyfinRepositoryProvider);
-      final url = repo.imageUrl(imageItemId, imageTag: track.imageTag, size: 800);
+      final url = repo.imageUrl(
+        imageItemId,
+        imageTag: track.imageTag,
+        size: 800,
+      );
       await _dio.download(url, cover.path);
       if (cover.existsSync()) return cover.path;
     } catch (_) {

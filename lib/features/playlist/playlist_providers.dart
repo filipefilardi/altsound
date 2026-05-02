@@ -19,6 +19,14 @@ final playlistProvider = FutureProvider.autoDispose
       return ref.read(jellyfinRepositoryProvider).playlist(playlistId);
     });
 
+final likedSongsPlaylistProvider = FutureProvider.autoDispose((ref) {
+  return ref.read(jellyfinRepositoryProvider).likedSongsPlaylist();
+});
+
+final playlistsProvider = FutureProvider.autoDispose((ref) {
+  return ref.read(jellyfinRepositoryProvider).playlists();
+});
+
 PlaylistDetail? _buildOfflinePlaylist(
   String playlistId,
   DownloadsState downloads,

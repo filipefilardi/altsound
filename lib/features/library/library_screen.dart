@@ -7,23 +7,24 @@ import '../../core/widgets/header_action_buttons.dart';
 import '../../core/widgets/skeleton.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
 import '../../data/jellyfin/models/media_item.dart';
+import '../playlist/playlist_providers.dart';
 
 class LibraryScreen extends ConsumerWidget {
   const LibraryScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final likedSongsAsync = ref.watch(_likedSongsPlaylistProvider);
-    final playlistsAsync = ref.watch(_playlistsProvider);
+    final likedSongsAsync = ref.watch(likedSongsPlaylistProvider);
+    final playlistsAsync = ref.watch(playlistsProvider);
 
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: () async {
-          ref.invalidate(_likedSongsPlaylistProvider);
-          ref.invalidate(_playlistsProvider);
+          ref.invalidate(likedSongsPlaylistProvider);
+          ref.invalidate(playlistsProvider);
           await Future.wait([
-            ref.read(_likedSongsPlaylistProvider.future),
-            ref.read(_playlistsProvider.future),
+            ref.read(likedSongsPlaylistProvider.future),
+            ref.read(playlistsProvider.future),
           ]);
         },
         child: CustomScrollView(
@@ -148,7 +149,7 @@ class LibraryScreen extends ConsumerWidget {
     final playlistName = name?.trim() ?? '';
     if (playlistName.isEmpty) return;
     await ref.read(jellyfinRepositoryProvider).createPlaylist(playlistName);
-    ref.invalidate(_playlistsProvider);
+    ref.invalidate(playlistsProvider);
     if (!context.mounted) return;
     ScaffoldMessenger.of(
       context,
@@ -161,14 +162,6 @@ String _playlistSubtitle(int? count) {
   if (count == 1) return 'Playlist · 1 song';
   return 'Playlist · $count songs';
 }
-
-final _likedSongsPlaylistProvider = FutureProvider.autoDispose((ref) {
-  return ref.read(jellyfinRepositoryProvider).likedSongsPlaylist();
-});
-
-final _playlistsProvider = FutureProvider.autoDispose((ref) {
-  return ref.read(jellyfinRepositoryProvider).playlists();
-});
 
 class _LibraryLoadingRows extends StatelessWidget {
   const _LibraryLoadingRows();
