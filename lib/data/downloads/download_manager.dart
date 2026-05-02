@@ -182,6 +182,23 @@ class DownloadManager extends Notifier<DownloadsState> {
     await _persistPlaylists();
   }
 
+  Future<void> reorderPlaylist(String playlistId, List<String> trackIds) async {
+    final playlist = state.playlists[playlistId];
+    if (playlist == null) return;
+    state = state.copyWith(
+      playlists: {
+        ...state.playlists,
+        playlistId: DownloadedPlaylist(
+          id: playlist.id,
+          name: playlist.name,
+          imageTag: playlist.imageTag,
+          trackIds: trackIds,
+        ),
+      },
+    );
+    await _persistPlaylists();
+  }
+
   Future<void> deleteTracks(List<String> trackIds) async {
     for (final id in trackIds) {
       await deleteTrack(id);
