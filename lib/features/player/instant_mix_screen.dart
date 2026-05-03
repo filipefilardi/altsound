@@ -253,6 +253,8 @@ class _InstantMixActionRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final playbackState = ref.watch(playbackStateProvider).value;
     final currentMediaItem = ref.watch(currentMediaItemProvider).value;
+    final shuffleEnabled =
+        ref.watch(playerShuffleEnabledProvider).value ?? false;
     final contextId = _instantMixContextId(seedItemId);
     final isMixPlaying =
         playbackState?.playing == true &&
@@ -281,10 +283,12 @@ class _InstantMixActionRow extends ConsumerWidget {
           const SizedBox(width: 12),
           Expanded(child: _InstantMixMeta(tracks: tracks)),
           IconButton(
-            tooltip: 'Shuffle play',
-            icon: const Icon(Icons.shuffle_rounded),
-            onPressed: () =>
-                _shufflePlayMix(ref, contextId: contextId, tracks: tracks),
+            tooltip: 'Shuffle',
+            icon: Icon(
+              Icons.shuffle_rounded,
+              color: shuffleEnabled ? AppColors.primary : AppColors.textPrimary,
+            ),
+            onPressed: () => ref.read(playerControllerProvider).toggleShuffle(),
           ),
           IconButton(
             tooltip: 'More actions',
@@ -583,22 +587,6 @@ Future<void> _addMixToQueue(
       content: Text('Added $added song${added == 1 ? '' : 's'} to queue'),
     ),
   );
-}
-
-Future<void> _shufflePlayMix(
-  WidgetRef ref, {
-  required String contextId,
-  required List<Track> tracks,
-}) async {
-  final shuffled = List<Track>.from(tracks)..shuffle();
-  await ref
-      .read(playerControllerProvider)
-      .playTracks(
-        shuffled,
-        contextId: contextId,
-        randomizeStart: false,
-        forceReload: true,
-      );
 }
 
 String _instantMixContextId(String seedItemId) => 'instant-mix:$seedItemId';
