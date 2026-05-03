@@ -99,7 +99,13 @@ class TrackMoreMenuButton extends ConsumerWidget {
           ).showSnackBar(const SnackBar(content: Text('Added to queue')));
         }
       case _TrackAction.instantMix:
-        await startInstantMix(context, ref, itemId: track.id);
+        openInstantMixPage(
+          context,
+          ref,
+          itemId: track.id,
+          kind: InstantMixSeedKind.track,
+          title: track.name,
+        );
       case _TrackAction.goToAlbum:
         if (track.albumId != null && track.albumId!.isNotEmpty) {
           context.push('/album/${track.albumId}');

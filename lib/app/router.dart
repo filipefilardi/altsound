@@ -13,6 +13,8 @@ import '../features/downloads/downloads_settings_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/library/library_collection_screen.dart';
 import '../features/library/library_screen.dart';
+import '../features/player/instant_mix.dart';
+import '../features/player/instant_mix_screen.dart';
 import '../features/player/now_playing_screen.dart';
 import '../features/playlist/playlist_screen.dart';
 import '../features/search/search_screen.dart';
@@ -93,6 +95,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/playlist/:id',
         builder: (_, st) =>
             PlaylistScreen(playlistId: st.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/instant-mix/:id',
+        builder: (_, st) => InstantMixScreen(
+          seedItemId: st.pathParameters['id']!,
+          seedKind: InstantMixSeedKind.fromQuery(
+            st.uri.queryParameters['kind'],
+          ),
+          seedTitle: st.uri.queryParameters['title'],
+        ),
       ),
       GoRoute(
         path: '/now-playing',

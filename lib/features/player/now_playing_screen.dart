@@ -14,6 +14,7 @@ import '../remote/remote_player_controller.dart';
 import '../remote/remote_sessions_sheet.dart';
 import 'audio_player_handler.dart';
 import 'current_track_playlist_presence.dart';
+import 'instant_mix.dart';
 import 'player_providers.dart';
 import 'widgets/add_track_to_playlist_sheet.dart';
 import 'widgets/player_hero_art.dart';
@@ -437,6 +438,21 @@ class _SecondaryControls extends ConsumerWidget {
             size: 22,
           ),
           tooltip: 'Repeat',
+        ),
+        IconButton(
+          onPressed: () => openInstantMixPage(
+            context,
+            ref,
+            itemId: mediaItem.id,
+            kind: InstantMixSeedKind.track,
+            title: mediaItem.title,
+          ),
+          icon: const Icon(
+            Icons.auto_awesome_rounded,
+            color: AppColors.textSecondary,
+            size: 22,
+          ),
+          tooltip: 'Instant Mix',
         ),
         IconButton(
           onPressed: offline || isRemote

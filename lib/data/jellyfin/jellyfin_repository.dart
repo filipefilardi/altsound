@@ -719,6 +719,18 @@ class JellyfinRepository {
     );
   }
 
+  Future<void> addTracksToPlaylist({
+    required List<String> trackIds,
+    required String playlistId,
+  }) async {
+    if (trackIds.isEmpty) return;
+    final s = _session;
+    await _api.dio.post<void>(
+      '/Playlists/$playlistId/Items',
+      queryParameters: {'Ids': trackIds.join(','), 'UserId': s.userId},
+    );
+  }
+
   /// Jellyfin playlist entry id for [trackId] inside [playlistId], or null.
   Future<String?> playlistEntryIdForTrack({
     required String playlistId,
@@ -843,6 +855,17 @@ class JellyfinRepository {
         )
         .join('&');
     return '${s.serverUrl}/Items/$itemId/Images/Primary?$query';
+  }
+
+  Future<String?> primaryImageUrl(String itemId, {int size = 400}) async {
+    final s = _session;
+    final res = await _api.dio.get<Map<String, dynamic>>(
+      '/Users/${s.userId}/Items/$itemId',
+    );
+    final tags = res.data?['ImageTags'];
+    final tag = tags is Map ? tags['Primary'] as String? : null;
+    if (tag == null || tag.isEmpty) return null;
+    return imageUrl(itemId, imageTag: tag, size: size);
   }
 
   /// Whether this item is favorited (requires `UserData` on the item).

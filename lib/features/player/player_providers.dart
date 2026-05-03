@@ -137,6 +137,8 @@ class PlayerController {
     int startIndex = 0,
     String? contextId,
     bool selectedTrack = false,
+    bool randomizeStart = true,
+    bool forceReload = false,
   }) async {
     if (tracks.isEmpty) return;
 
@@ -149,7 +151,10 @@ class PlayerController {
 
     // Play-all / shuffle-all path: resume without reloading if we're already
     // in this context. Safe because the caller has no specific target track.
-    if (!selectedTrack && startIndex == 0 && contextId != null) {
+    if (!forceReload &&
+        !selectedTrack &&
+        startIndex == 0 &&
+        contextId != null) {
       final current = handler.mediaItem.value;
       if ((current?.extras?['contextId'] as String?) == contextId) {
         if (!handler.playbackState.value.playing) await handler.play();
@@ -158,7 +163,7 @@ class PlayerController {
     }
 
     // Specific track tapped — try to jump within the existing queue first.
-    if (selectedTrack && contextId != null) {
+    if (!forceReload && selectedTrack && contextId != null) {
       final current = handler.mediaItem.value;
       final sameContext =
           (current?.extras?['contextId'] as String?) == contextId;
@@ -183,26 +188,8 @@ class PlayerController {
     await handler.loadQueue(
       toLoad,
       initialIndex: 0,
-      randomizeStart: !selectedTrack,
+      randomizeStart: randomizeStart && !selectedTrack,
     );
-  }
-
-  Future<int> playInstantMix(String seedItemId, {int limit = 100}) async {
-    final tracks = await repo.instantMix(seedItemId, limit: limit);
-    if (tracks.isEmpty) return 0;
-
-    if (isRemote) {
-      if (handler.playbackState.value.playing) await handler.pause();
-      await _remote.playTracks(tracks);
-      return tracks.length;
-    }
-
-    final contextId = 'instant-mix:$seedItemId';
-    final items = tracks
-        .map((t) => _toMediaItem(t, contextId: contextId))
-        .toList();
-    await handler.loadQueue(items, initialIndex: 0, randomizeStart: false);
-    return tracks.length;
   }
 
   Future<void> togglePlay() async {

@@ -1,14 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../data/local/connectivity_provider.dart';
-import 'player_providers.dart';
 
-Future<void> startInstantMix(
+enum InstantMixSeedKind {
+  album('album'),
+  artist('artist'),
+  playlist('playlist'),
+  track('track');
+
+  const InstantMixSeedKind(this.queryValue);
+
+  final String queryValue;
+
+  static InstantMixSeedKind? fromQuery(String? value) {
+    for (final kind in values) {
+      if (kind.queryValue == value) return kind;
+    }
+    return null;
+  }
+}
+
+void openInstantMixPage(
   BuildContext context,
   WidgetRef ref, {
   required String itemId,
-}) async {
+  required InstantMixSeedKind kind,
+  String? title,
+}) {
   final messenger = ScaffoldMessenger.of(context);
   if (ref.read(isOfflineProvider)) {
     messenger.showSnackBar(
@@ -17,20 +37,12 @@ Future<void> startInstantMix(
     return;
   }
 
-  try {
-    final count = await ref
-        .read(playerControllerProvider)
-        .playInstantMix(itemId);
-    if (!context.mounted) return;
-    if (count == 0) {
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Instant Mix found no songs.')),
-      );
-    }
-  } catch (e) {
-    if (!context.mounted) return;
-    messenger.showSnackBar(
-      SnackBar(content: Text('Could not start Instant Mix: $e')),
-    );
-  }
+  final uri = Uri(
+    path: '/instant-mix/${Uri.encodeComponent(itemId)}',
+    queryParameters: {
+      'kind': kind.queryValue,
+      if (title != null && title.trim().isNotEmpty) 'title': title.trim(),
+    },
+  );
+  context.push(uri.toString());
 }
