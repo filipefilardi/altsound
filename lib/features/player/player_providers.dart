@@ -62,14 +62,16 @@ final effectivePositionProvider = Provider<Duration>((ref) {
   if (ref.watch(activeRemoteSessionIdProvider) == null) {
     return ref.watch(positionProvider).value ?? Duration.zero;
   }
-  return ref.watch(activeRemoteSessionProvider).value?.position ?? Duration.zero;
+  return ref.watch(activeRemoteSessionProvider).value?.position ??
+      Duration.zero;
 });
 
 final effectiveDurationProvider = Provider<Duration>((ref) {
   if (ref.watch(activeRemoteSessionIdProvider) == null) {
     return ref.watch(currentMediaItemProvider).value?.duration ?? Duration.zero;
   }
-  return ref.watch(activeRemoteSessionProvider).value?.duration ?? Duration.zero;
+  return ref.watch(activeRemoteSessionProvider).value?.duration ??
+      Duration.zero;
 });
 
 /// App mixer volume 0.0–1.0 (from [AudioPlayer]).
@@ -121,7 +123,8 @@ class PlayerController {
 
   String? get _remoteId => ref.read(activeRemoteSessionIdProvider);
   bool get isRemote => _remoteId != null;
-  RemotePlayerController get _remote => ref.read(remotePlayerControllerProvider);
+  RemotePlayerController get _remote =>
+      ref.read(remotePlayerControllerProvider);
 
   /// Load [tracks] and play from [startIndex] onwards.
   ///
@@ -184,6 +187,24 @@ class PlayerController {
     );
   }
 
+  Future<int> playInstantMix(String seedItemId, {int limit = 100}) async {
+    final tracks = await repo.instantMix(seedItemId, limit: limit);
+    if (tracks.isEmpty) return 0;
+
+    if (isRemote) {
+      if (handler.playbackState.value.playing) await handler.pause();
+      await _remote.playTracks(tracks);
+      return tracks.length;
+    }
+
+    final contextId = 'instant-mix:$seedItemId';
+    final items = tracks
+        .map((t) => _toMediaItem(t, contextId: contextId))
+        .toList();
+    await handler.loadQueue(items, initialIndex: 0, randomizeStart: false);
+    return tracks.length;
+  }
+
   Future<void> togglePlay() async {
     if (isRemote) return _remote.togglePlay();
     final playing = handler.playbackState.value.playing;
@@ -199,8 +220,7 @@ class PlayerController {
   Future<void> next() => isRemote ? _remote.next() : handler.skipToNext();
   Future<void> previous() =>
       isRemote ? _remote.previous() : handler.skipToPrevious();
-  Future<void> seek(Duration p) =>
-      isRemote ? _remote.seek(p) : handler.seek(p);
+  Future<void> seek(Duration p) => isRemote ? _remote.seek(p) : handler.seek(p);
   Future<void> skipToIndex(int i) => handler.skipToQueueItem(i);
   Future<void> reorderQueue(int oldIndex, int newIndex) =>
       handler.reorderQueue(oldIndex, newIndex);
@@ -275,8 +295,8 @@ class PlayerController {
     final art = (t.imageTag == null || t.imageTag!.isEmpty)
         ? null
         : (localArtPath != null
-            ? Uri.file(localArtPath).toString()
-            : repo.imageUrl(t.imageItemId, imageTag: t.imageTag, size: 600));
+              ? Uri.file(localArtPath).toString()
+              : repo.imageUrl(t.imageItemId, imageTag: t.imageTag, size: 600));
     final quality = ref.read(playbackPreferencesProvider).streamingQuality;
     final streamUrl = localPath != null
         ? Uri.file(localPath).toString()

@@ -14,6 +14,7 @@ import '../../data/jellyfin/jellyfin_repository.dart';
 import '../../data/jellyfin/models/media_item.dart';
 import '../downloads/widgets/playlist_download_button.dart';
 import '../player/current_track_playlist_presence.dart';
+import '../player/instant_mix.dart';
 import '../player/now_playing_favorite.dart';
 import '../player/player_providers.dart';
 import '../player/widgets/add_track_to_playlist_sheet.dart';
@@ -1263,6 +1264,13 @@ class _ActionRow extends ConsumerWidget {
                     : AppColors.textPrimary,
               ),
               onPressed: enabled ? () => controller.toggleShuffle() : null,
+            ),
+            IconButton(
+              tooltip: 'Instant Mix',
+              icon: const Icon(Icons.auto_awesome_rounded),
+              onPressed: enabled
+                  ? () => startInstantMix(context, ref, itemId: playlist.id)
+                  : null,
             ),
             IconButton(
               tooltip: 'Sort',
