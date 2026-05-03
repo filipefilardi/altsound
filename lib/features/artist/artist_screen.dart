@@ -13,6 +13,7 @@ import '../../data/jellyfin/jellyfin_repository.dart';
 import '../../data/jellyfin/models/media_item.dart';
 import '../../data/wikipedia/wikipedia_repository.dart';
 import '../downloads/widgets/artist_download_button.dart';
+import '../player/instant_mix.dart';
 import '../player/widgets/mini_player_slot.dart';
 import '../player/player_providers.dart';
 import '../player/widgets/add_track_to_playlist_sheet.dart';
@@ -386,6 +387,13 @@ class _ArtistActionRow extends ConsumerWidget {
           ),
           onPressed: hasTracks
               ? () => ref.read(playerControllerProvider).toggleShuffle()
+              : null,
+        ),
+        IconButton(
+          tooltip: 'Instant Mix',
+          icon: const Icon(Icons.auto_awesome_rounded),
+          onPressed: hasTracks
+              ? () => startInstantMix(context, ref, itemId: artist.id)
               : null,
         ),
         ArtistDownloadButton(artist: artist),

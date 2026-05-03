@@ -436,6 +436,23 @@ class JellyfinRepository {
     return Track.fromJson(res.data ?? {});
   }
 
+  Future<List<Track>> instantMix(String itemId, {int limit = 100}) async {
+    final s = _session;
+    final res = await _api.dio.get<Map<String, dynamic>>(
+      '/Items/$itemId/InstantMix',
+      queryParameters: {
+        'UserId': s.userId,
+        'Limit': limit,
+        'Fields': _trackFields,
+        'EnableImages': true,
+        'EnableUserData': true,
+      },
+    );
+    final items = ((res.data?['Items'] as List?) ?? const [])
+        .cast<Map<String, dynamic>>();
+    return items.map(Track.fromJson).toList();
+  }
+
   Future<Album> album(String albumId) async {
     final s = _session;
     final detail = await _api.dio.get<Map<String, dynamic>>(

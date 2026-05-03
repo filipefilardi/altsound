@@ -15,6 +15,7 @@ import '../../data/jellyfin/jellyfin_repository.dart';
 import '../../data/jellyfin/models/media_item.dart';
 import '../downloads/widgets/album_download_button.dart';
 import '../home/widgets/media_card.dart';
+import '../player/instant_mix.dart';
 import '../player/player_providers.dart';
 import '../player/widgets/add_track_to_playlist_sheet.dart';
 import '../player/widgets/mini_player_slot.dart';
@@ -569,6 +570,13 @@ class _ActionBar extends ConsumerWidget {
             onPressed: album.tracks.isEmpty
                 ? null
                 : () => ref.read(playerControllerProvider).toggleShuffle(),
+          ),
+          IconButton(
+            tooltip: 'Instant Mix',
+            icon: const Icon(Icons.auto_awesome_rounded),
+            onPressed: album.tracks.isEmpty
+                ? null
+                : () => startInstantMix(context, ref, itemId: album.id),
           ),
           AlbumDownloadButton(album: album),
           IconButton(

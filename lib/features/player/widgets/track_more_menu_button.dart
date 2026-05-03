@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../data/jellyfin/models/media_item.dart';
+import '../instant_mix.dart';
 import '../player_providers.dart';
 import 'add_track_to_playlist_sheet.dart';
 
@@ -45,6 +46,12 @@ class TrackMoreMenuButton extends ConsumerWidget {
                 title: const Text('Play next'),
                 onTap: () =>
                     Navigator.of(sheetContext).pop(_TrackAction.playNext),
+              ),
+              ListTile(
+                leading: const Icon(Icons.auto_awesome_rounded),
+                title: const Text('Instant Mix'),
+                onTap: () =>
+                    Navigator.of(sheetContext).pop(_TrackAction.instantMix),
               ),
               ListTile(
                 leading: const Icon(Icons.add_to_queue_rounded),
@@ -91,6 +98,8 @@ class TrackMoreMenuButton extends ConsumerWidget {
             context,
           ).showSnackBar(const SnackBar(content: Text('Added to queue')));
         }
+      case _TrackAction.instantMix:
+        await startInstantMix(context, ref, itemId: track.id);
       case _TrackAction.goToAlbum:
         if (track.albumId != null && track.albumId!.isNotEmpty) {
           context.push('/album/${track.albumId}');
@@ -105,4 +114,11 @@ class TrackMoreMenuButton extends ConsumerWidget {
   }
 }
 
-enum _TrackAction { addToPlaylist, playNext, addToQueue, goToAlbum, goToArtist }
+enum _TrackAction {
+  addToPlaylist,
+  playNext,
+  instantMix,
+  addToQueue,
+  goToAlbum,
+  goToArtist,
+}
