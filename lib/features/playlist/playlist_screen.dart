@@ -1269,7 +1269,13 @@ class _ActionRow extends ConsumerWidget {
               tooltip: 'Instant Mix',
               icon: const Icon(Icons.auto_awesome_rounded),
               onPressed: enabled
-                  ? () => startInstantMix(context, ref, itemId: playlist.id)
+                  ? () => openInstantMixPage(
+                      context,
+                      ref,
+                      itemId: playlist.id,
+                      kind: InstantMixSeedKind.playlist,
+                      title: playlist.name,
+                    )
                   : null,
             ),
             IconButton(

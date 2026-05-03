@@ -393,7 +393,13 @@ class _ArtistActionRow extends ConsumerWidget {
           tooltip: 'Instant Mix',
           icon: const Icon(Icons.auto_awesome_rounded),
           onPressed: hasTracks
-              ? () => startInstantMix(context, ref, itemId: artist.id)
+              ? () => openInstantMixPage(
+                  context,
+                  ref,
+                  itemId: artist.id,
+                  kind: InstantMixSeedKind.artist,
+                  title: artist.name,
+                )
               : null,
         ),
         ArtistDownloadButton(artist: artist),

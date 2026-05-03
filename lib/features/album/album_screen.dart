@@ -576,7 +576,13 @@ class _ActionBar extends ConsumerWidget {
             icon: const Icon(Icons.auto_awesome_rounded),
             onPressed: album.tracks.isEmpty
                 ? null
-                : () => startInstantMix(context, ref, itemId: album.id),
+                : () => openInstantMixPage(
+                    context,
+                    ref,
+                    itemId: album.id,
+                    kind: InstantMixSeedKind.album,
+                    title: album.name,
+                  ),
           ),
           AlbumDownloadButton(album: album),
           IconButton(
