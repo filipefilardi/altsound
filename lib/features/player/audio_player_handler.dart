@@ -246,6 +246,24 @@ class JellymusicAudioHandler extends BaseAudioHandler with SeekHandler {
     );
   }
 
+  /// Append [items] to the end of the queue without marking them as user-queued.
+  /// Used by automatic mix extension so they participate in shuffle and don't
+  /// hold "Play next" priority slots.
+  Future<void> appendItems(List<MediaItem> items) async {
+    if (items.isEmpty) return;
+    final q = List<MediaItem>.from(queue.value)..addAll(items);
+    queue.add(q);
+    _originalItems = [..._originalItems, ...items];
+    for (final item in items) {
+      await _player.addAudioSource(
+        AudioSource.uri(
+          Uri.parse(item.extras!['streamUrl'] as String),
+          tag: item,
+        ),
+      );
+    }
+  }
+
   Future<void> insertUserQueuedItems(List<MediaItem> items) async {
     if (items.isEmpty) return;
     final q = List<MediaItem>.from(queue.value);

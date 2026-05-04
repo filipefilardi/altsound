@@ -254,6 +254,20 @@ class PlayerController {
     return true;
   }
 
+  /// Append [tracks] to the end of the queue **without** marking them as
+  /// user-queued. Used to extend Instant Mix playback automatically; these
+  /// items participate in shuffle and don't take "Play next" priority slots.
+  Future<void> appendTracks(
+    List<jf.Track> tracks, {
+    String? contextId,
+  }) async {
+    if (tracks.isEmpty || isRemote) return;
+    final items = tracks
+        .map((t) => _toMediaItem(t, contextId: contextId))
+        .toList();
+    await handler.appendItems(items);
+  }
+
   /// Add [tracks] to the user-priority queue segment.
   ///
   /// Items are inserted after the currently playing track and after any

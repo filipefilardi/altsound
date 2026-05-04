@@ -8,6 +8,7 @@ import '../data/jellyfin/jellyfin_repository.dart';
 import '../data/jellyfin/scrobbler.dart';
 import '../data/last_played/last_played_controller.dart';
 import '../features/auth/auth_controller.dart';
+import '../features/player/instant_mix_extender.dart';
 import '../features/player/player_providers.dart';
 import 'router.dart';
 
@@ -20,6 +21,7 @@ class JellymusicApp extends ConsumerStatefulWidget {
 
 class _JellymusicAppState extends ConsumerState<JellymusicApp> {
   bool _scrobblerAttached = false;
+  bool _instantMixExtenderAttached = false;
   String? _searchWarmSessionKey;
 
   void _ensureScrobbler() {
@@ -33,6 +35,12 @@ class _JellymusicAppState extends ConsumerState<JellymusicApp> {
       position: () => handler.player.position,
       isOffline: () => handler.mediaItem.value?.extras?['isOffline'] == true,
     );
+  }
+
+  void _ensureInstantMixExtender() {
+    if (_instantMixExtenderAttached) return;
+    _instantMixExtenderAttached = true;
+    ref.read(instantMixExtenderProvider).attach();
   }
 
   void _ensureSearchWarmup(AuthAuthenticated auth) {
@@ -49,6 +57,7 @@ class _JellymusicAppState extends ConsumerState<JellymusicApp> {
 
     if (auth is AuthAuthenticated) {
       _ensureScrobbler();
+      _ensureInstantMixExtender();
       _ensureSearchWarmup(auth);
       // Eagerly attach the local last-played listener.
       ref.read(lastPlayedProvider);
