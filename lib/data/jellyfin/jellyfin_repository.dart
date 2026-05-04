@@ -536,6 +536,82 @@ class JellyfinRepository {
     }
   }
 
+  /// Top-played audio tracks among those played at least once after [since].
+  /// Sorted by Jellyfin's all-time `PlayCount` descending.
+  ///
+  /// Used as a fallback for the home "For you" picks when the Playback
+  /// Reporting plugin is unavailable or its per-user endpoint fails — the
+  /// semantics aren't identical (plugin = "most played in this window",
+  /// Jellyfin = "all-time favorites the user touched in this window") but
+  /// both make sensible "Because you played" recommendations.
+  Future<List<Track>> topPlayedSince({
+    required DateTime since,
+    int limit = 50,
+  }) async {
+    final s = _session;
+    final res = await _api.dio.get<Map<String, dynamic>>(
+      '/Users/${s.userId}/Items',
+      queryParameters: {
+        'IncludeItemTypes': 'Audio',
+        'SortBy': 'PlayCount',
+        'SortOrder': 'Descending',
+        'Filters': 'IsPlayed',
+        'Recursive': true,
+        'MinDateLastPlayed': since.toUtc().toIso8601String(),
+        'Limit': limit,
+        'Fields': _trackFields,
+        'EnableUserData': true,
+      },
+      options: Options(listFormat: ListFormat.multi),
+    );
+    final items = ((res.data?['Items'] as List?) ?? const [])
+        .cast<Map<String, dynamic>>()
+        .where((json) => (json['UserData']?['PlayCount'] as int? ?? 0) > 0)
+        .toList();
+    return items.map(Track.fromJson).toList();
+  }
+
+  /// Fetch multiple tracks by id in a single call, preserving the input order.
+  /// Used by the home "For you" picks to resolve top-played item ids returned
+  /// by the Playback Reporting plugin into Track objects with artist info.
+  Future<List<Track>> tracksByIds(List<String> ids) async {
+    if (ids.isEmpty) return const [];
+    final s = _session;
+    final res = await _api.dio.get<Map<String, dynamic>>(
+      '/Users/${s.userId}/Items',
+      queryParameters: {
+        'Ids': ids.join(','),
+        'IncludeItemTypes': 'Audio',
+        'Fields': _trackFields,
+        'EnableUserData': true,
+      },
+    );
+    final byId = {
+      for (final raw in (res.data?['Items'] as List?) ?? const [])
+        (raw as Map<String, dynamic>)['Id'] as String: Track.fromJson(raw),
+    };
+    return [for (final id in ids) if (byId[id] != null) byId[id]!];
+  }
+
+  /// Fetch multiple browse items (artists/albums/playlists) by id in a single
+  /// call, preserving the input order.
+  Future<List<BrowseItem>> itemsByIds(List<String> ids) async {
+    if (ids.isEmpty) return const [];
+    final s = _session;
+    final res = await _api.dio.get<Map<String, dynamic>>(
+      '/Users/${s.userId}/Items',
+      queryParameters: {
+        'Ids': ids.join(','),
+        'Fields': 'AlbumArtist,Artists',
+      },
+    );
+    final byId = {
+      for (final raw in (res.data?['Items'] as List?) ?? const [])
+        (raw as Map<String, dynamic>)['Id'] as String: BrowseItem.fromJson(raw),
+    };
+    return [for (final id in ids) if (byId[id] != null) byId[id]!];
+  }
+
   Future<Track> track(String trackId) async {
     final s = _session;
     final res = await _api.dio.get<Map<String, dynamic>>(

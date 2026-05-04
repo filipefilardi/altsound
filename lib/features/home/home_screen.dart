@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/header_action_buttons.dart';
 import '../../core/widgets/local_or_network_image.dart';
+import '../../data/jellyfin/auth_repository.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
 import '../../data/last_played/last_played_controller.dart';
 import '../../data/last_played/last_played_record.dart';
@@ -14,6 +15,7 @@ import '../downloads/offline_library_view.dart';
 import '../player/instant_mix.dart';
 import '../player/player_providers.dart';
 import 'home_controller.dart';
+import 'recommendations_cache.dart';
 import 'recommendations_provider.dart';
 import 'widgets/shelf.dart';
 
@@ -38,6 +40,7 @@ class HomeScreen extends ConsumerWidget {
               padding: EdgeInsets.fromLTRB(20, 8, 20, 8),
               sliver: SliverToBoxAdapter(child: _ResumeCard()),
             ),
+            const SliverToBoxAdapter(child: _ForYouSection()),
             const SliverFillRemaining(child: OfflineLibraryView()),
           ],
         ),
@@ -47,6 +50,15 @@ class HomeScreen extends ConsumerWidget {
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: () async {
+          // Bust today's For You cache so the user can force a fresh fetch
+          // instead of waiting until tomorrow.
+          final session = ref.read(jellyfinApiProvider).session;
+          if (session != null) {
+            await ref.read(recommendationsCacheProvider).clear(
+                  session.serverId,
+                  session.userId,
+                );
+          }
           ref.invalidate(recentlyAddedProvider);
           ref.invalidate(recentlyPlayedProvider);
           ref.invalidate(mostPlayedProvider);
@@ -219,86 +231,63 @@ class _ResumeArtFallback extends StatelessWidget {
   }
 }
 
-/// Personalized "for you" recommendations on Home: last Instant Mix,
-/// "Because you played" picks (daily-rotated by [homeRecommendationsProvider]),
-/// and Forgotten favorites. Hides itself entirely when no tile has data
-/// and on offline (none of these are reachable without the server).
+/// Personalized "for you" recommendations on Home: a "Because you played"
+/// anchor (the user's #1 song from the last 7 days) plus 4 "Inspired by"
+/// artist mixes (drawn daily from the user's top 8 of the same window) and
+/// Forgotten favorites. Hides itself entirely when there's no data — i.e.
+/// when the Playback Reporting plugin isn't installed and there's no cached
+/// snapshot from a previous online session.
 class _ForYouSection extends ConsumerWidget {
   const _ForYouSection();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isOffline = ref.watch(isOfflineProvider);
     final recs = ref.watch(homeRecommendationsProvider).value;
-
-    if (isOffline) return const SizedBox.shrink();
+    if (recs == null) return const SizedBox.shrink();
 
     final repo = ref.read(jellyfinRepositoryProvider);
     final tiles = <Widget>[];
 
-    final becauseAlbum = recs?.becauseAlbum;
-    if (becauseAlbum != null) {
+    final topSong = recs.topSong;
+    if (topSong != null) {
       tiles.add(_ForYouCard(
         eyebrow: 'BECAUSE YOU PLAYED',
-        title: becauseAlbum.name,
-        subtitle: becauseAlbum.subtitle ?? 'Mix from album',
-        imageUrl: becauseAlbum.imageTag == null
+        title: topSong.name,
+        subtitle: topSong.artistName,
+        imageUrl: topSong.imageTag == null
             ? null
-            : repo.imageUrl(becauseAlbum.id, imageTag: becauseAlbum.imageTag),
-        fallbackIcon: Icons.album_rounded,
-        onTap: () => openInstantMixPage(
-          context,
-          ref,
-          itemId: becauseAlbum.id,
-          kind: InstantMixSeedKind.album,
-          title: becauseAlbum.name,
-        ),
-      ));
-    }
-
-    final becauseTrack = recs?.becauseTrack;
-    if (becauseTrack != null) {
-      tiles.add(_ForYouCard(
-        eyebrow: 'BECAUSE YOU PLAYED',
-        title: becauseTrack.name,
-        subtitle: becauseTrack.artistName,
-        imageUrl: becauseTrack.imageTag == null
-            ? null
-            : repo.imageUrl(becauseTrack.imageItemId,
-                imageTag: becauseTrack.imageTag),
+            : repo.imageUrl(topSong.imageItemId, imageTag: topSong.imageTag),
         fallbackIcon: Icons.music_note_rounded,
         onTap: () => openInstantMixPage(
           context,
           ref,
-          itemId: becauseTrack.id,
+          itemId: topSong.id,
           kind: InstantMixSeedKind.track,
-          title: becauseTrack.name,
+          title: topSong.name,
         ),
       ));
     }
 
-    final becauseArtist = recs?.becauseArtist;
-    if (becauseArtist != null) {
+    for (final artist in recs.topArtists) {
       tiles.add(_ForYouCard(
         eyebrow: 'INSPIRED BY',
-        title: becauseArtist.name,
+        title: artist.name,
         subtitle: 'Mix from artist',
-        imageUrl: becauseArtist.imageTag == null
+        imageUrl: artist.imageTag == null
             ? null
-            : repo.imageUrl(becauseArtist.id,
-                imageTag: becauseArtist.imageTag),
+            : repo.imageUrl(artist.id, imageTag: artist.imageTag),
         fallbackIcon: Icons.person_rounded,
         onTap: () => openInstantMixPage(
           context,
           ref,
-          itemId: becauseArtist.id,
+          itemId: artist.id,
           kind: InstantMixSeedKind.artist,
-          title: becauseArtist.name,
+          title: artist.name,
         ),
       ));
     }
 
-    final forgotten = recs?.forgottenFavorites ?? const [];
+    final forgotten = recs.forgottenFavorites;
     if (forgotten.isNotEmpty) {
       final cover = forgotten.firstWhere(
         (t) => t.imageTag != null && t.imageTag!.isNotEmpty,
