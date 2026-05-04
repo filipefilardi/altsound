@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -28,8 +30,14 @@ class InstantMixDetail {
   final String? artworkUrl;
 }
 
+const _instantMixCacheTtl = Duration(minutes: 10);
+
 final instantMixTracksProvider = FutureProvider.autoDispose
     .family<InstantMixDetail, _InstantMixRequest>((ref, request) async {
+      final keepAlive = ref.keepAlive();
+      final timer = Timer(_instantMixCacheTtl, keepAlive.close);
+      ref.onDispose(timer.cancel);
+
       final repo = ref.read(jellyfinRepositoryProvider);
       final mixTracks = await repo.instantMix(request.itemId);
       if (request.kind != InstantMixSeedKind.track) {
@@ -117,6 +125,7 @@ class InstantMixScreen extends ConsumerWidget {
                 SliverToBoxAdapter(
                   child: _InstantMixActionRow(
                     seedItemId: seedItemId,
+                    seedKind: seedKind,
                     seedTitle: seedTitle,
                     tracks: detail.tracks,
                   ),
@@ -241,11 +250,13 @@ class _InstantMixArtFallback extends StatelessWidget {
 class _InstantMixActionRow extends ConsumerWidget {
   const _InstantMixActionRow({
     required this.seedItemId,
+    required this.seedKind,
     required this.seedTitle,
     required this.tracks,
   });
 
   final String seedItemId;
+  final InstantMixSeedKind? seedKind;
   final String? seedTitle;
   final List<Track> tracks;
 
@@ -289,6 +300,14 @@ class _InstantMixActionRow extends ConsumerWidget {
               color: shuffleEnabled ? AppColors.primary : AppColors.textPrimary,
             ),
             onPressed: () => ref.read(playerControllerProvider).toggleShuffle(),
+          ),
+          IconButton(
+            tooltip: 'Regenerate mix',
+            icon: const Icon(Icons.refresh_rounded),
+            onPressed: () {
+              final request = (itemId: seedItemId, kind: seedKind);
+              ref.invalidate(instantMixTracksProvider(request));
+            },
           ),
           IconButton(
             tooltip: 'More actions',
