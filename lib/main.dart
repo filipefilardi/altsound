@@ -5,6 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'app/app.dart';
+import 'data/jellyfin/auth_repository.dart';
+import 'data/jellyfin/client_metadata.dart';
+import 'data/jellyfin/jellyfin_api.dart';
 import 'features/player/audio_player_handler.dart';
 import 'features/player/player_providers.dart';
 
@@ -23,6 +26,11 @@ Future<void> main() async {
   // Toggling gapless from settings persists immediately but only takes effect
   // on the next launch.
   final gapless = await _readGaplessPreference();
+  final metadata = await loadClientMetadata();
+  final api = JellyfinApi(
+    deviceName: metadata.deviceName,
+    appVersion: metadata.appVersion,
+  );
 
   final handler = await AudioService.init(
     builder: () => JellymusicAudioHandler(gaplessPlayback: gapless),
@@ -36,7 +44,10 @@ Future<void> main() async {
 
   runApp(
     ProviderScope(
-      overrides: [audioHandlerProvider.overrideWithValue(handler)],
+      overrides: [
+        audioHandlerProvider.overrideWithValue(handler),
+        jellyfinApiProvider.overrideWithValue(api),
+      ],
       child: const JellymusicApp(),
     ),
   );
