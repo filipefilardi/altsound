@@ -14,7 +14,6 @@ import '../../core/widgets/skeleton.dart';
 import '../../data/downloads/download_manager.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
 import '../../data/jellyfin/models/media_item.dart';
-import '../../data/last_instant_mix/last_instant_mix_controller.dart';
 import '../playlist/playlist_providers.dart';
 import 'instant_mix.dart';
 import 'player_providers.dart';
@@ -64,7 +63,7 @@ final instantMixTracksProvider = FutureProvider.autoDispose
       );
     });
 
-class InstantMixScreen extends ConsumerStatefulWidget {
+class InstantMixScreen extends ConsumerWidget {
   const InstantMixScreen({
     required this.seedItemId,
     required this.seedKind,
@@ -77,46 +76,9 @@ class InstantMixScreen extends ConsumerStatefulWidget {
   final String? seedTitle;
 
   @override
-  ConsumerState<InstantMixScreen> createState() => _InstantMixScreenState();
-}
-
-class _InstantMixScreenState extends ConsumerState<InstantMixScreen> {
-  bool _persistedThisVisit = false;
-
-  String get seedItemId => widget.seedItemId;
-  InstantMixSeedKind? get seedKind => widget.seedKind;
-  String? get seedTitle => widget.seedTitle;
-
-  void _persistRecord(String? artworkUrl) {
-    if (_persistedThisVisit) return;
-    _persistedThisVisit = true;
-    ref.read(lastInstantMixProvider.notifier).save(
-          seedItemId: seedItemId,
-          seedKind: (seedKind ?? InstantMixSeedKind.track).queryValue,
-          seedTitle: seedTitle,
-          artworkUrl: artworkUrl,
-        );
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final request = (itemId: seedItemId, kind: seedKind);
     final mixAsync = ref.watch(instantMixTracksProvider(request));
-
-    ref.listen<AsyncValue<InstantMixDetail>>(
-      instantMixTracksProvider(request),
-      (_, next) {
-        final detail = next.value;
-        if (detail == null) return;
-        _persistRecord(detail.artworkUrl);
-      },
-    );
-    final cached = mixAsync.value;
-    if (cached != null && !_persistedThisVisit) {
-      WidgetsBinding.instance.addPostFrameCallback(
-        (_) => _persistRecord(cached.artworkUrl),
-      );
-    }
 
     return Scaffold(
       backgroundColor: AppColors.background,

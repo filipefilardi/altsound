@@ -142,6 +142,114 @@ class JellyfinRepository {
     return items.cast<Map<String, dynamic>>().map(BrowseItem.fromJson).toList();
   }
 
+  Future<List<Track>> recentlyPlayedTracks({int limit = 20}) async {
+    final s = _session;
+    final res = await _api.dio.get<Map<String, dynamic>>(
+      '/Users/${s.userId}/Items',
+      queryParameters: {
+        'IncludeItemTypes': 'Audio',
+        'SortBy': 'DatePlayed',
+        'SortOrder': 'Descending',
+        'Filters': 'IsPlayed',
+        'Recursive': true,
+        'Limit': limit,
+        'Fields': const ['MediaSources', 'DateCreated'],
+        'EnableUserData': true,
+      },
+      options: Options(listFormat: ListFormat.multi),
+    );
+    final items = ((res.data?['Items'] as List?) ?? const [])
+        .cast<Map<String, dynamic>>();
+    return items.map(Track.fromJson).toList();
+  }
+
+  Future<List<BrowseItem>> recentlyPlayedArtists({int limit = 20}) async {
+    final s = _session;
+    final res = await _api.dio.get<Map<String, dynamic>>(
+      '/Users/${s.userId}/Items',
+      queryParameters: {
+        'IncludeItemTypes': 'MusicArtist',
+        'SortBy': 'DatePlayed',
+        'SortOrder': 'Descending',
+        'Recursive': true,
+        'Limit': limit,
+        'EnableUserData': true,
+      },
+    );
+    final items = ((res.data?['Items'] as List?) ?? const [])
+        .cast<Map<String, dynamic>>()
+        .where((json) => (json['UserData']?['PlayCount'] as int? ?? 0) > 0)
+        .toList();
+    if (items.isNotEmpty) {
+      return items.map(BrowseItem.fromJson).toList();
+    }
+
+    // Fallback: derive recent artists from recently played tracks when the
+    // server doesn't return MusicArtist sorted by DatePlayed reliably.
+    final tracks = await recentlyPlayedTracks(limit: limit * 5);
+    final seen = <String>{};
+    final ordered = <String>[];
+    for (final t in tracks) {
+      final id = t.artistId;
+      if (id == null || id.isEmpty) continue;
+      if (seen.add(id)) {
+        ordered.add(id);
+        if (ordered.length >= limit) break;
+      }
+    }
+    if (ordered.isEmpty) return const [];
+
+    final artistJson = await Future.wait(ordered.map((id) async {
+      final r = await _api.dio.get<Map<String, dynamic>>(
+        '/Users/${s.userId}/Items/$id',
+      );
+      return r.data;
+    }));
+    return artistJson
+        .whereType<Map<String, dynamic>>()
+        .map(BrowseItem.fromJson)
+        .toList();
+  }
+
+  /// High-played tracks the user hasn't listened to in [coldFor]. The Jellyfin
+  /// API exposes `MinDateLastPlayed` but not a "max" filter, so we sort by
+  /// PlayCount, fetch a wider window, and filter client-side on
+  /// `UserData.LastPlayedDate`. Tracks never played are excluded.
+  Future<List<Track>> forgottenFavorites({
+    int limit = 30,
+    Duration coldFor = const Duration(days: 180),
+  }) async {
+    final s = _session;
+    final res = await _api.dio.get<Map<String, dynamic>>(
+      '/Users/${s.userId}/Items',
+      queryParameters: {
+        'IncludeItemTypes': 'Audio',
+        'SortBy': 'PlayCount',
+        'SortOrder': 'Descending',
+        'Filters': 'IsPlayed',
+        'Recursive': true,
+        'Limit': limit * 6,
+        'Fields': const ['MediaSources', 'DateCreated', 'UserDataLastPlayedDate'],
+        'EnableUserData': true,
+      },
+      options: Options(listFormat: ListFormat.multi),
+    );
+    final cutoff = DateTime.now().toUtc().subtract(coldFor);
+    final items = ((res.data?['Items'] as List?) ?? const [])
+        .cast<Map<String, dynamic>>()
+        .where((json) {
+          final lastPlayedRaw =
+              json['UserData']?['LastPlayedDate'] as String?;
+          if (lastPlayedRaw == null) return false;
+          final lastPlayed = DateTime.tryParse(lastPlayedRaw);
+          if (lastPlayed == null) return false;
+          return lastPlayed.toUtc().isBefore(cutoff);
+        })
+        .take(limit)
+        .toList();
+    return items.map(Track.fromJson).toList();
+  }
+
   Future<List<BrowseItem>> search(String term) async {
     final t = term.trim();
     if (t.isEmpty) return const [];
