@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/theme/app_theme.dart';
 import '../data/jellyfin/jellyfin_repository.dart';
 import '../data/jellyfin/scrobbler.dart';
-import '../data/last_instant_mix/last_instant_mix_controller.dart';
 import '../data/last_played/last_played_controller.dart';
 import '../features/auth/auth_controller.dart';
 import '../features/player/instant_mix_extender.dart';
@@ -62,8 +61,6 @@ class _JellymusicAppState extends ConsumerState<JellymusicApp> {
       _ensureSearchWarmup(auth);
       // Eagerly attach the local last-played listener.
       ref.read(lastPlayedProvider);
-      // Eagerly load the persisted instant-mix record for the Home card.
-      ref.read(lastInstantMixProvider);
     } else {
       _searchWarmSessionKey = null;
     }

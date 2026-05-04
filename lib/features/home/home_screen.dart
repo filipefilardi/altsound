@@ -5,15 +5,16 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/header_action_buttons.dart';
 import '../../core/widgets/local_or_network_image.dart';
-import '../../data/last_instant_mix/last_instant_mix_controller.dart';
-import '../../data/last_instant_mix/last_instant_mix_record.dart';
+import '../../data/jellyfin/jellyfin_repository.dart';
 import '../../data/last_played/last_played_controller.dart';
 import '../../data/last_played/last_played_record.dart';
 import '../../data/local/connectivity_provider.dart';
 import '../auth/auth_controller.dart';
 import '../downloads/offline_library_view.dart';
 import '../player/instant_mix.dart';
+import '../player/player_providers.dart';
 import 'home_controller.dart';
+import 'recommendations_provider.dart';
 import 'widgets/shelf.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -49,10 +50,12 @@ class HomeScreen extends ConsumerWidget {
           ref.invalidate(recentlyAddedProvider);
           ref.invalidate(recentlyPlayedProvider);
           ref.invalidate(mostPlayedProvider);
+          ref.invalidate(homeRecommendationsProvider);
           await Future.wait([
             ref.read(recentlyAddedProvider.future),
             ref.read(recentlyPlayedProvider.future),
             ref.read(mostPlayedProvider.future),
+            ref.read(homeRecommendationsProvider.future),
           ]);
         },
         child: CustomScrollView(
@@ -216,20 +219,108 @@ class _ResumeArtFallback extends StatelessWidget {
   }
 }
 
-/// Personalized "for you" recommendations on Home. Currently surfaces the
-/// last opened Instant Mix; designed as a section so future tiles
-/// (daily mix, suggested artists, etc.) can sit next to it without
-/// restructuring the screen.
+/// Personalized "for you" recommendations on Home: last Instant Mix,
+/// "Because you played" picks (daily-rotated by [homeRecommendationsProvider]),
+/// and Forgotten favorites. Hides itself entirely when no tile has data
+/// and on offline (none of these are reachable without the server).
 class _ForYouSection extends ConsumerWidget {
   const _ForYouSection();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final lastMix = ref.watch(lastInstantMixProvider);
     final isOffline = ref.watch(isOfflineProvider);
+    final recs = ref.watch(homeRecommendationsProvider).value;
 
-    final hasContent = lastMix != null && !isOffline;
-    if (!hasContent) return const SizedBox.shrink();
+    if (isOffline) return const SizedBox.shrink();
+
+    final repo = ref.read(jellyfinRepositoryProvider);
+    final tiles = <Widget>[];
+
+    final becauseAlbum = recs?.becauseAlbum;
+    if (becauseAlbum != null) {
+      tiles.add(_ForYouCard(
+        eyebrow: 'BECAUSE YOU PLAYED',
+        title: becauseAlbum.name,
+        subtitle: becauseAlbum.subtitle ?? 'Mix from album',
+        imageUrl: becauseAlbum.imageTag == null
+            ? null
+            : repo.imageUrl(becauseAlbum.id, imageTag: becauseAlbum.imageTag),
+        fallbackIcon: Icons.album_rounded,
+        onTap: () => openInstantMixPage(
+          context,
+          ref,
+          itemId: becauseAlbum.id,
+          kind: InstantMixSeedKind.album,
+          title: becauseAlbum.name,
+        ),
+      ));
+    }
+
+    final becauseTrack = recs?.becauseTrack;
+    if (becauseTrack != null) {
+      tiles.add(_ForYouCard(
+        eyebrow: 'BECAUSE YOU PLAYED',
+        title: becauseTrack.name,
+        subtitle: becauseTrack.artistName,
+        imageUrl: becauseTrack.imageTag == null
+            ? null
+            : repo.imageUrl(becauseTrack.imageItemId,
+                imageTag: becauseTrack.imageTag),
+        fallbackIcon: Icons.music_note_rounded,
+        onTap: () => openInstantMixPage(
+          context,
+          ref,
+          itemId: becauseTrack.id,
+          kind: InstantMixSeedKind.track,
+          title: becauseTrack.name,
+        ),
+      ));
+    }
+
+    final becauseArtist = recs?.becauseArtist;
+    if (becauseArtist != null) {
+      tiles.add(_ForYouCard(
+        eyebrow: 'INSPIRED BY',
+        title: becauseArtist.name,
+        subtitle: 'Mix from artist',
+        imageUrl: becauseArtist.imageTag == null
+            ? null
+            : repo.imageUrl(becauseArtist.id,
+                imageTag: becauseArtist.imageTag),
+        fallbackIcon: Icons.person_rounded,
+        onTap: () => openInstantMixPage(
+          context,
+          ref,
+          itemId: becauseArtist.id,
+          kind: InstantMixSeedKind.artist,
+          title: becauseArtist.name,
+        ),
+      ));
+    }
+
+    final forgotten = recs?.forgottenFavorites ?? const [];
+    if (forgotten.isNotEmpty) {
+      final cover = forgotten.firstWhere(
+        (t) => t.imageTag != null && t.imageTag!.isNotEmpty,
+        orElse: () => forgotten.first,
+      );
+      tiles.add(_ForYouCard(
+        eyebrow: 'FORGOTTEN FAVORITES',
+        title: 'Songs you used to love',
+        subtitle:
+            '${forgotten.length} song${forgotten.length == 1 ? '' : 's'}',
+        imageUrl: cover.imageTag == null
+            ? null
+            : repo.imageUrl(cover.imageItemId, imageTag: cover.imageTag),
+        fallbackIcon: Icons.history_rounded,
+        onTap: () => ref.read(playerControllerProvider).playTracks(
+              forgotten,
+              contextId: 'forgotten-favorites',
+            ),
+      ));
+    }
+
+    if (tiles.isEmpty) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -241,104 +332,128 @@ class _ForYouSection extends ConsumerWidget {
             style: Theme.of(context).textTheme.headlineSmall,
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: _LastInstantMixCard(record: lastMix),
+        SizedBox(
+          height: 248,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: tiles.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 6),
+            itemBuilder: (_, i) => tiles[i],
+          ),
         ),
       ],
     );
   }
+
 }
 
-class _LastInstantMixCard extends ConsumerWidget {
-  const _LastInstantMixCard({required this.record});
+class _ForYouCard extends StatelessWidget {
+  const _ForYouCard({
+    required this.eyebrow,
+    required this.title,
+    required this.subtitle,
+    required this.imageUrl,
+    required this.fallbackIcon,
+    required this.onTap,
+  });
 
-  final LastInstantMixRecord record;
+  static const double width = 168;
+
+  final String eyebrow;
+  final String title;
+  final String subtitle;
+  final String? imageUrl;
+  final IconData fallbackIcon;
+  final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
+    final fallback = _ForYouCardArtFallback(icon: fallbackIcon);
     return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: () => openInstantMixPage(
-        context,
-        ref,
-        itemId: record.seedItemId,
-        kind: InstantMixSeedKind.fromQuery(record.seedKind) ??
-            InstantMixSeedKind.track,
-        title: record.seedTitle,
-      ),
-      child: Container(
-        height: 96,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          color: AppColors.surface,
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Row(
-          children: [
-            SizedBox(
-              width: 92,
-              height: 92,
-              child: LocalOrNetworkImage(
-                source: record.artworkUrl,
-                placeholderBuilder: (_) => const _InstantMixCardArtFallback(),
-                errorBuilder: (_) => const _InstantMixCardArtFallback(),
+      borderRadius: BorderRadius.circular(12),
+      splashColor: AppColors.primary.withValues(alpha: 0.06),
+      highlightColor: AppColors.primary.withValues(alpha: 0.03),
+      onTap: onTap,
+      child: SizedBox(
+        width: width,
+        child: Padding(
+          padding: const EdgeInsets.all(4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AspectRatio(
+                aspectRatio: 1,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.4),
+                          blurRadius: 14,
+                          offset: const Offset(0, 6),
+                          spreadRadius: -4,
+                        ),
+                      ],
+                    ),
+                    child: imageUrl == null
+                        ? fallback
+                        : LocalOrNetworkImage(
+                            source: imageUrl,
+                            placeholderBuilder: (_) => fallback,
+                            errorBuilder: (_) => fallback,
+                          ),
+                  ),
+                ),
               ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'YOUR LAST INSTANT MIX',
-                    style: Theme.of(context).textTheme.labelLarge,
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    record.seedTitle?.trim().isNotEmpty == true
-                        ? record.seedTitle!.trim()
-                        : 'Instant Mix',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  Text(
-                    _seedKindLabel(record),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ],
+              const SizedBox(height: 10),
+              Text(
+                eyebrow,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.labelLarge,
               ),
-            ),
-            const SizedBox(width: 12),
-          ],
+              const SizedBox(height: 4),
+              Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
-
-  String _seedKindLabel(LastInstantMixRecord r) => switch (r.seedKind) {
-        'album' => 'Mix from album',
-        'artist' => 'Mix from artist',
-        'playlist' => 'Mix from playlist',
-        _ => 'Mix from song',
-      };
 }
 
-class _InstantMixCardArtFallback extends StatelessWidget {
-  const _InstantMixCardArtFallback();
+class _ForYouCardArtFallback extends StatelessWidget {
+  const _ForYouCardArtFallback({required this.icon});
+
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
-    return const ColoredBox(
-      color: AppColors.surface,
-      child: Icon(
-        Icons.auto_awesome_rounded,
-        color: AppColors.primary,
-        size: 32,
+    return ColoredBox(
+      color: AppColors.surfaceElevated,
+      child: Center(
+        child: Icon(icon, color: AppColors.primary, size: 48),
       ),
     );
   }
