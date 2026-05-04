@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/jellyfin/auth_repository.dart';
 import '../../data/jellyfin/jellyfin_api.dart';
 import '../../data/jellyfin/models/jellyfin_session.dart';
+import '../../data/last_instant_mix/last_instant_mix_controller.dart';
 import '../../data/last_played/last_played_controller.dart';
 
 sealed class AuthState {
@@ -71,6 +72,7 @@ class AuthController extends Notifier<AuthState> {
   Future<void> logout() async {
     await ref.read(authRepositoryProvider).logout();
     await ref.read(lastPlayedProvider.notifier).clear();
+    await ref.read(lastInstantMixProvider.notifier).clear();
     state = const AuthUnauthenticated();
   }
 

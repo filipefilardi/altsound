@@ -5,11 +5,14 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/header_action_buttons.dart';
 import '../../core/widgets/local_or_network_image.dart';
+import '../../data/last_instant_mix/last_instant_mix_controller.dart';
+import '../../data/last_instant_mix/last_instant_mix_record.dart';
 import '../../data/last_played/last_played_controller.dart';
 import '../../data/last_played/last_played_record.dart';
 import '../../data/local/connectivity_provider.dart';
 import '../auth/auth_controller.dart';
 import '../downloads/offline_library_view.dart';
+import '../player/instant_mix.dart';
 import 'home_controller.dart';
 import 'widgets/shelf.dart';
 
@@ -62,6 +65,7 @@ class HomeScreen extends ConsumerWidget {
               padding: EdgeInsets.fromLTRB(20, 8, 20, 8),
               sliver: SliverToBoxAdapter(child: _ResumeCard()),
             ),
+            const SliverToBoxAdapter(child: _ForYouSection()),
             SliverList.list(
               children: [
                 const SizedBox(height: 8),
@@ -208,6 +212,134 @@ class _ResumeArtFallback extends StatelessWidget {
     return const ColoredBox(
       color: AppColors.surface,
       child: Icon(Icons.album_rounded, color: AppColors.textTertiary, size: 32),
+    );
+  }
+}
+
+/// Personalized "for you" recommendations on Home. Currently surfaces the
+/// last opened Instant Mix; designed as a section so future tiles
+/// (daily mix, suggested artists, etc.) can sit next to it without
+/// restructuring the screen.
+class _ForYouSection extends ConsumerWidget {
+  const _ForYouSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lastMix = ref.watch(lastInstantMixProvider);
+    final isOffline = ref.watch(isOfflineProvider);
+
+    final hasContent = lastMix != null && !isOffline;
+    if (!hasContent) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 14),
+          child: Text(
+            'For you',
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: _LastInstantMixCard(record: lastMix),
+        ),
+      ],
+    );
+  }
+}
+
+class _LastInstantMixCard extends ConsumerWidget {
+  const _LastInstantMixCard({required this.record});
+
+  final LastInstantMixRecord record;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () => openInstantMixPage(
+        context,
+        ref,
+        itemId: record.seedItemId,
+        kind: InstantMixSeedKind.fromQuery(record.seedKind) ??
+            InstantMixSeedKind.track,
+        title: record.seedTitle,
+      ),
+      child: Container(
+        height: 96,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          color: AppColors.surface,
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Row(
+          children: [
+            SizedBox(
+              width: 92,
+              height: 92,
+              child: LocalOrNetworkImage(
+                source: record.artworkUrl,
+                placeholderBuilder: (_) => const _InstantMixCardArtFallback(),
+                errorBuilder: (_) => const _InstantMixCardArtFallback(),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'YOUR LAST INSTANT MIX',
+                    style: Theme.of(context).textTheme.labelLarge,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    record.seedTitle?.trim().isNotEmpty == true
+                        ? record.seedTitle!.trim()
+                        : 'Instant Mix',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  Text(
+                    _seedKindLabel(record),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _seedKindLabel(LastInstantMixRecord r) => switch (r.seedKind) {
+        'album' => 'Mix from album',
+        'artist' => 'Mix from artist',
+        'playlist' => 'Mix from playlist',
+        _ => 'Mix from song',
+      };
+}
+
+class _InstantMixCardArtFallback extends StatelessWidget {
+  const _InstantMixCardArtFallback();
+
+  @override
+  Widget build(BuildContext context) {
+    return const ColoredBox(
+      color: AppColors.surface,
+      child: Icon(
+        Icons.auto_awesome_rounded,
+        color: AppColors.primary,
+        size: 32,
+      ),
     );
   }
 }
