@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
@@ -443,10 +444,11 @@ class JellyfinRepository {
       queryParameters: {
         'UserId': s.userId,
         'Limit': limit,
-        'Fields': _trackFields,
+        'Fields': const ['MediaSources', 'DateCreated'],
         'EnableImages': true,
         'EnableUserData': true,
       },
+      options: Options(listFormat: ListFormat.multi),
     );
     final items = ((res.data?['Items'] as List?) ?? const [])
         .cast<Map<String, dynamic>>();
