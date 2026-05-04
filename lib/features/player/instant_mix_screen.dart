@@ -14,6 +14,7 @@ import '../../core/widgets/skeleton.dart';
 import '../../data/downloads/download_manager.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
 import '../../data/jellyfin/models/media_item.dart';
+import '../../data/last_instant_mix/last_instant_mix_controller.dart';
 import '../playlist/playlist_providers.dart';
 import 'instant_mix.dart';
 import 'player_providers.dart';
@@ -63,7 +64,7 @@ final instantMixTracksProvider = FutureProvider.autoDispose
       );
     });
 
-class InstantMixScreen extends ConsumerWidget {
+class InstantMixScreen extends ConsumerStatefulWidget {
   const InstantMixScreen({
     required this.seedItemId,
     required this.seedKind,
@@ -76,9 +77,46 @@ class InstantMixScreen extends ConsumerWidget {
   final String? seedTitle;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<InstantMixScreen> createState() => _InstantMixScreenState();
+}
+
+class _InstantMixScreenState extends ConsumerState<InstantMixScreen> {
+  bool _persistedThisVisit = false;
+
+  String get seedItemId => widget.seedItemId;
+  InstantMixSeedKind? get seedKind => widget.seedKind;
+  String? get seedTitle => widget.seedTitle;
+
+  void _persistRecord(String? artworkUrl) {
+    if (_persistedThisVisit) return;
+    _persistedThisVisit = true;
+    ref.read(lastInstantMixProvider.notifier).save(
+          seedItemId: seedItemId,
+          seedKind: (seedKind ?? InstantMixSeedKind.track).queryValue,
+          seedTitle: seedTitle,
+          artworkUrl: artworkUrl,
+        );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final request = (itemId: seedItemId, kind: seedKind);
     final mixAsync = ref.watch(instantMixTracksProvider(request));
+
+    ref.listen<AsyncValue<InstantMixDetail>>(
+      instantMixTracksProvider(request),
+      (_, next) {
+        final detail = next.value;
+        if (detail == null) return;
+        _persistRecord(detail.artworkUrl);
+      },
+    );
+    final cached = mixAsync.value;
+    if (cached != null && !_persistedThisVisit) {
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _persistRecord(cached.artworkUrl),
+      );
+    }
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -87,6 +125,7 @@ class InstantMixScreen extends ConsumerWidget {
         reserveSpaceWhenEmpty: true,
       ),
       body: mixAsync.when(
+        skipLoadingOnReload: true,
         loading: () => const _InstantMixLoading(),
         error: (e, _) => ErrorStateView(
           title: "Couldn't load Instant Mix",
@@ -270,6 +309,9 @@ class _InstantMixActionRow extends ConsumerWidget {
     final isMixPlaying =
         playbackState?.playing == true &&
         (currentMediaItem?.extras?['contextId'] as String?) == contextId;
+    final request = (itemId: seedItemId, kind: seedKind);
+    final mixAsync = ref.watch(instantMixTracksProvider(request));
+    final isRegenerating = mixAsync.isLoading && mixAsync.hasValue;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -302,12 +344,20 @@ class _InstantMixActionRow extends ConsumerWidget {
             onPressed: () => ref.read(playerControllerProvider).toggleShuffle(),
           ),
           IconButton(
-            tooltip: 'Regenerate mix',
-            icon: const Icon(Icons.refresh_rounded),
-            onPressed: () {
-              final request = (itemId: seedItemId, kind: seedKind);
-              ref.invalidate(instantMixTracksProvider(request));
-            },
+            tooltip: isRegenerating ? 'Regenerating mix' : 'Regenerate mix',
+            icon: isRegenerating
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.primary,
+                    ),
+                  )
+                : const Icon(Icons.refresh_rounded),
+            onPressed: isRegenerating
+                ? null
+                : () => ref.invalidate(instantMixTracksProvider(request)),
           ),
           IconButton(
             tooltip: 'More actions',
