@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/navigation/app_navigation.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/artwork_placeholder.dart';
 import '../../core/widgets/play_pill.dart';
@@ -596,7 +597,7 @@ class _PopularTrackTile extends ConsumerWidget {
             current.extras?['jellyfinId'] == track.id &&
             current.extras?['contextId'] == contextId;
         if (isCurrentInContext) {
-          context.push('/now-playing');
+          context.pushNowPlayingIfNeeded();
           return;
         }
         ref

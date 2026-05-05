@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:palette_generator/palette_generator.dart';
 
+import '../../core/navigation/app_navigation.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/play_pill.dart';
 import '../../core/utils/format.dart';
@@ -350,7 +351,7 @@ class _AlbumViewState extends ConsumerState<_AlbumView> {
                       current.extras?['jellyfinId'] == track.id &&
                       current.extras?['contextId'] == album.id;
                   if (isCurrentInContext) {
-                    context.push('/now-playing');
+                    context.pushNowPlayingIfNeeded();
                     return;
                   }
                   ref

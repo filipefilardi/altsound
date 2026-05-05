@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
+import '../../core/navigation/app_navigation.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/format.dart';
 import '../../core/widgets/empty_state.dart';
@@ -437,7 +437,7 @@ class _InstantMixTrackTile extends ConsumerWidget {
       visualDensity: VisualDensity.compact,
       onTap: () {
         if (isCurrentInContext) {
-          context.push('/now-playing');
+          context.pushNowPlayingIfNeeded();
           return;
         }
         ref
