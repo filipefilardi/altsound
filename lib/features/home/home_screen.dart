@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/layout/adaptive_breakpoints.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/header_action_buttons.dart';
 import '../../core/widgets/local_or_network_image.dart';
@@ -36,6 +37,7 @@ class HomeContent extends ConsumerWidget {
     final state = ref.watch(authControllerProvider);
     final username = state is AuthAuthenticated ? state.session.username : '';
     final isOffline = ref.watch(isOfflineProvider);
+    final desktop = isDesktopLayout(context);
 
     if (isOffline) {
       return CustomScrollView(
@@ -44,10 +46,11 @@ class HomeContent extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
             sliver: SliverToBoxAdapter(child: _Greeting(username: username)),
           ),
-          const SliverPadding(
-            padding: EdgeInsets.fromLTRB(20, 8, 20, 8),
-            sliver: SliverToBoxAdapter(child: _ResumeCard()),
-          ),
+          if (!desktop)
+            const SliverPadding(
+              padding: EdgeInsets.fromLTRB(20, 8, 20, 8),
+              sliver: SliverToBoxAdapter(child: _ResumeCard()),
+            ),
           const SliverToBoxAdapter(child: _ForYouSection()),
           const SliverFillRemaining(child: OfflineLibraryView()),
         ],
@@ -81,10 +84,11 @@ class HomeContent extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
             sliver: SliverToBoxAdapter(child: _Greeting(username: username)),
           ),
-          const SliverPadding(
-            padding: EdgeInsets.fromLTRB(20, 8, 20, 8),
-            sliver: SliverToBoxAdapter(child: _ResumeCard()),
-          ),
+          if (!desktop)
+            const SliverPadding(
+              padding: EdgeInsets.fromLTRB(20, 8, 20, 8),
+              sliver: SliverToBoxAdapter(child: _ResumeCard()),
+            ),
           const SliverToBoxAdapter(child: _ForYouSection()),
           SliverList.list(
             children: [
@@ -130,7 +134,7 @@ class _Greeting extends StatelessWidget {
             ],
           ),
         ),
-        const HeaderActionButtons(),
+        if (!isDesktopLayout(context)) const HeaderActionButtons(),
       ],
     );
   }
