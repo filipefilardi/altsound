@@ -14,92 +14,99 @@ class LibraryScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    return const Scaffold(body: LibraryContent());
+  }
+}
+
+class LibraryContent extends ConsumerWidget {
+  const LibraryContent({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final likedSongsAsync = ref.watch(likedSongsPlaylistProvider);
     final playlistsAsync = ref.watch(playlistsProvider);
 
-    return Scaffold(
-      body: RefreshIndicator(
-        onRefresh: () async {
-          ref.invalidate(likedSongsPlaylistProvider);
-          ref.invalidate(playlistsProvider);
-          await Future.wait([
-            ref.read(likedSongsPlaylistProvider.future),
-            ref.read(playlistsProvider.future),
-          ]);
-        },
-        child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-              sliver: const SliverToBoxAdapter(child: _LibraryHeader()),
+    return RefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(likedSongsPlaylistProvider);
+        ref.invalidate(playlistsProvider);
+        await Future.wait([
+          ref.read(likedSongsPlaylistProvider.future),
+          ref.read(playlistsProvider.future),
+        ]);
+      },
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+            sliver: const SliverToBoxAdapter(child: _LibraryHeader()),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+            sliver: SliverToBoxAdapter(
+              child: _LibraryCategories(
+                onAlbums: () => context.push('/library/albums'),
+                onArtists: () => context.push('/library/artists'),
+              ),
             ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-              sliver: SliverToBoxAdapter(
-                child: _LibraryCategories(
-                  onAlbums: () => context.push('/library/albums'),
-                  onArtists: () => context.push('/library/artists'),
+          ),
+          SliverToBoxAdapter(
+            child: _PlaylistsHeader(
+              onCreatePlaylist: () => _createPlaylist(context, ref),
+            ),
+          ),
+          playlistsAsync.when<Widget>(
+            loading: () =>
+                const SliverToBoxAdapter(child: _LibraryLoadingRows()),
+            error: (e, _) => SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  'Could not load playlists: $e',
+                  style: const TextStyle(color: AppColors.textSecondary),
+                  textAlign: TextAlign.center,
                 ),
               ),
             ),
-            SliverToBoxAdapter(
-              child: _PlaylistsHeader(
-                onCreatePlaylist: () => _createPlaylist(context, ref),
-              ),
-            ),
-            playlistsAsync.when<Widget>(
-              loading: () =>
-                  const SliverToBoxAdapter(child: _LibraryLoadingRows()),
-              error: (e, _) => SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Text(
-                    'Could not load playlists: $e',
-                    style: const TextStyle(color: AppColors.textSecondary),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-              data: (playlists) {
-                final liked = likedSongsAsync.value;
-                final rest = playlists
-                    .where(
-                      (p) =>
-                          p.kind == MediaKind.playlist &&
-                          p.id != liked?.id &&
-                          p.name.toLowerCase().trim() != 'liked songs',
-                    )
-                    .toList();
+            data: (playlists) {
+              final liked = likedSongsAsync.value;
+              final rest = playlists
+                  .where(
+                    (p) =>
+                        p.kind == MediaKind.playlist &&
+                        p.id != liked?.id &&
+                        p.name.toLowerCase().trim() != 'liked songs',
+                  )
+                  .toList();
 
-                return SliverPadding(
-                  padding: const EdgeInsets.only(bottom: 96),
-                  sliver: SliverList.list(
-                    children: [
-                      _SectionTile(
-                        icon: Icons.favorite_rounded,
-                        iconColor: AppColors.error,
-                        title: 'Liked Songs',
-                        subtitle: liked == null
-                            ? 'Playlist'
-                            : _playlistSubtitle(liked.childCount),
-                        onTap: () => _openLikedSongs(context, ref),
+              return SliverPadding(
+                padding: const EdgeInsets.only(bottom: 96),
+                sliver: SliverList.list(
+                  children: [
+                    _SectionTile(
+                      icon: Icons.favorite_rounded,
+                      iconColor: AppColors.error,
+                      title: 'Liked Songs',
+                      subtitle: liked == null
+                          ? 'Playlist'
+                          : _playlistSubtitle(liked.childCount),
+                      onTap: () => _openLikedSongs(context, ref),
+                    ),
+                    ...rest.map(
+                      (playlist) => _SectionTile(
+                        icon: Icons.queue_music_rounded,
+                        title: playlist.name,
+                        subtitle: _playlistSubtitle(playlist.childCount),
+                        onTap: () => context.push('/playlist/${playlist.id}'),
                       ),
-                      ...rest.map(
-                        (playlist) => _SectionTile(
-                          icon: Icons.queue_music_rounded,
-                          title: playlist.name,
-                          subtitle: _playlistSubtitle(playlist.childCount),
-                          onTap: () => context.push('/playlist/${playlist.id}'),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ],
-        ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }

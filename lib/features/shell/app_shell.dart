@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/layout/adaptive_breakpoints.dart';
 import '../../core/theme/app_colors.dart';
 import '../../data/local/connectivity_provider.dart';
 import '../player/widgets/mini_player_slot.dart';
 import '../player/player_providers.dart';
+import 'desktop_shell.dart';
 
 class AppShell extends ConsumerStatefulWidget {
   const AppShell({required this.navigationShell, super.key});
@@ -50,6 +52,9 @@ class _AppShellState extends ConsumerState<AppShell> {
   @override
   Widget build(BuildContext context) {
     final isOffline = ref.watch(isOfflineProvider);
+    if (isDesktopLayout(context)) {
+      return DesktopShell(navigationShell: widget.navigationShell);
+    }
 
     return Scaffold(
       body: SafeArea(
