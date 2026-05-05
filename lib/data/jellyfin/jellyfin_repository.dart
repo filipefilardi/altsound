@@ -142,6 +142,32 @@ class JellyfinRepository {
     return items.cast<Map<String, dynamic>>().map(BrowseItem.fromJson).toList();
   }
 
+  /// Most-played albums touched since [since] for the current user.
+  Future<List<BrowseItem>> mostPlayedAlbumsSince({
+    required DateTime since,
+    int limit = 20,
+  }) async {
+    final s = _session;
+    final res = await _api.dio.get<Map<String, dynamic>>(
+      '/Users/${s.userId}/Items',
+      queryParameters: {
+        'IncludeItemTypes': 'MusicAlbum',
+        'SortBy': 'PlayCount',
+        'SortOrder': 'Descending',
+        'Filters': 'IsPlayed',
+        'Recursive': true,
+        'MinDateLastPlayed': since.toUtc().toIso8601String(),
+        'Limit': limit,
+        'EnableUserData': true,
+      },
+    );
+    final items = ((res.data?['Items'] as List?) ?? const [])
+        .cast<Map<String, dynamic>>()
+        .where((json) => (json['UserData']?['PlayCount'] as int? ?? 0) > 0)
+        .toList();
+    return items.map(BrowseItem.fromJson).toList();
+  }
+
   Future<List<Track>> recentlyPlayedTracks({int limit = 20}) async {
     final s = _session;
     final res = await _api.dio.get<Map<String, dynamic>>(
