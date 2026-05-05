@@ -107,8 +107,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       StatefulShellRoute.indexedStack(
         parentNavigatorKey: _rootNavigatorKey,
-        builder: (_, __, shell) =>
-            DesktopRouteFrame(child: AppShell(navigationShell: shell)),
+        pageBuilder: (context, state, shell) => desktopAwarePage(
+          context: context,
+          state: state,
+          child: DesktopRouteFrame(child: AppShell(navigationShell: shell)),
+        ),
         branches: [
           StatefulShellBranch(
             navigatorKey: _homeBranchNavigatorKey,
