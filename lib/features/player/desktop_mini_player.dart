@@ -19,12 +19,12 @@ class DesktopMiniPlayer extends ConsumerWidget {
 
   final bool edgeToEdge;
   static const _controlButtonConstraints = BoxConstraints.tightFor(
-    width: 38,
-    height: 38,
+    width: 40,
+    height: 40,
   );
   static const _auxButtonConstraints = BoxConstraints.tightFor(
-    width: 32,
-    height: 32,
+    width: 34,
+    height: 34,
   );
 
   @override
@@ -75,7 +75,7 @@ class DesktopMiniPlayer extends ConsumerWidget {
       child: SizedBox(
         height: 82,
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: horizontal, vertical: 8),
+          padding: EdgeInsets.symmetric(horizontal: horizontal, vertical: 6),
           child: Row(
             children: [
               SizedBox(
@@ -165,7 +165,7 @@ class DesktopMiniPlayer extends ConsumerWidget {
                             playing
                                 ? Icons.pause_circle_filled_rounded
                                 : Icons.play_circle_fill_rounded,
-                            size: 40,
+                            size: 42,
                           ),
                           onPressed: controller.togglePlay,
                           tooltip: playing ? 'Pause' : 'Play',
@@ -203,7 +203,7 @@ class DesktopMiniPlayer extends ConsumerWidget {
                     const SizedBox(height: 4),
                     Center(
                       child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 680),
+                        constraints: const BoxConstraints(maxWidth: 560),
                         child: Row(
                           children: [
                             SizedBox(
@@ -222,15 +222,15 @@ class DesktopMiniPlayer extends ConsumerWidget {
                               child: SliderTheme(
                                 data: SliderTheme.of(context).copyWith(
                                   trackHeight: 2,
-                                  activeTrackColor: AppColors.textPrimary,
+                                  activeTrackColor: AppColors.primary,
                                   inactiveTrackColor: AppColors.divider
                                       .withValues(alpha: 0.35),
-                                  thumbColor: AppColors.textPrimary,
+                                  thumbColor: AppColors.primary,
                                   thumbShape: const RoundSliderThumbShape(
-                                    enabledThumbRadius: 4,
+                                    enabledThumbRadius: 3.5,
                                   ),
                                   overlayShape: const RoundSliderOverlayShape(
-                                    overlayRadius: 10,
+                                    overlayRadius: 9,
                                   ),
                                 ),
                                 child: Slider(
@@ -248,88 +248,114 @@ class DesktopMiniPlayer extends ConsumerWidget {
                               width: 40,
                               child: Text(
                                 formatDuration(duration),
+                                textAlign: TextAlign.left,
                                 style: const TextStyle(
                                   color: AppColors.textSecondary,
                                   fontSize: 11,
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 10),
-                            IconButton(
-                              icon: const Icon(
-                                Icons.auto_awesome_rounded,
-                                size: 20,
-                              ),
-                              onPressed: () => openInstantMixPage(
-                                context,
-                                ref,
-                                itemId: mediaItem.id,
-                                kind: InstantMixSeedKind.track,
-                                title: mediaItem.title,
-                              ),
-                              tooltip: 'Instant Mix',
-                              padding: EdgeInsets.zero,
-                              constraints: _auxButtonConstraints,
-                              visualDensity: VisualDensity.compact,
-                              color: AppColors.textSecondary,
-                            ),
-                            const SizedBox(width: 2),
-                            IconButton(
-                              icon: Icon(
-                                muted
-                                    ? Icons.volume_off_rounded
-                                    : Icons.volume_up_rounded,
-                                size: 20,
-                              ),
-                              onPressed: controller.toggleMute,
-                              tooltip: muted ? 'Unmute' : 'Mute',
-                              padding: EdgeInsets.zero,
-                              constraints: _auxButtonConstraints,
-                              visualDensity: VisualDensity.compact,
-                              color: muted
-                                  ? AppColors.primary
-                                  : AppColors.textSecondary,
-                            ),
-                            const SizedBox(width: 2),
-                            IconButton(
-                              icon: const Icon(
-                                Icons.queue_music_rounded,
-                                size: 20,
-                              ),
-                              onPressed: () =>
-                                  showQueueBottomSheet(context, ref),
-                              tooltip: 'Queue',
-                              padding: EdgeInsets.zero,
-                              constraints: _auxButtonConstraints,
-                              visualDensity: VisualDensity.compact,
-                              color: AppColors.textSecondary,
-                            ),
-                            const SizedBox(width: 2),
-                            IconButton(
-                              icon: Icon(
-                                saved
-                                    ? Icons.playlist_add_check_rounded
-                                    : Icons.playlist_add_rounded,
-                                size: 20,
-                                color: saved
-                                    ? AppColors.primary
-                                    : AppColors.textSecondary,
-                              ),
-                              onPressed: () => unawaited(
-                                _onDesktopPlaylistTap(
-                                  context,
-                                  ref,
-                                  trackId: mediaItem.id,
-                                ),
-                              ),
-                              tooltip: 'Add to playlist',
-                              padding: EdgeInsets.zero,
-                              constraints: _auxButtonConstraints,
-                              visualDensity: VisualDensity.compact,
-                            ),
                           ],
                         ),
                       ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(
+                width: 260,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.auto_awesome_rounded, size: 20),
+                      onPressed: () => openInstantMixPage(
+                        context,
+                        ref,
+                        itemId: mediaItem.id,
+                        kind: InstantMixSeedKind.track,
+                        title: mediaItem.title,
+                      ),
+                      tooltip: 'Instant Mix',
+                      padding: EdgeInsets.zero,
+                      constraints: _auxButtonConstraints,
+                      visualDensity: VisualDensity.compact,
+                      color: AppColors.textSecondary,
+                    ),
+                    const SizedBox(width: 2),
+                    IconButton(
+                      icon: Icon(
+                        muted
+                            ? Icons.volume_off_rounded
+                            : Icons.volume_up_rounded,
+                        size: 20,
+                      ),
+                      onPressed: controller.toggleMute,
+                      tooltip: muted ? 'Unmute' : 'Mute',
+                      padding: EdgeInsets.zero,
+                      constraints: _auxButtonConstraints,
+                      visualDensity: VisualDensity.compact,
+                      color: muted
+                          ? AppColors.primary
+                          : AppColors.textSecondary,
+                    ),
+                    SizedBox(
+                      width: 82,
+                      child: SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          trackHeight: 2,
+                          activeTrackColor: AppColors.textPrimary,
+                          inactiveTrackColor: AppColors.divider.withValues(
+                            alpha: 0.35,
+                          ),
+                          thumbColor: AppColors.textPrimary,
+                          thumbShape: const RoundSliderThumbShape(
+                            enabledThumbRadius: 3,
+                          ),
+                          overlayShape: const RoundSliderOverlayShape(
+                            overlayRadius: 8,
+                          ),
+                        ),
+                        child: Slider(
+                          value: volume.clamp(0.0, 1.0),
+                          min: 0,
+                          max: 1,
+                          onChanged: controller.setVolume,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 2),
+                    IconButton(
+                      icon: const Icon(Icons.queue_music_rounded, size: 20),
+                      onPressed: () => showQueueBottomSheet(context, ref),
+                      tooltip: 'Queue',
+                      padding: EdgeInsets.zero,
+                      constraints: _auxButtonConstraints,
+                      visualDensity: VisualDensity.compact,
+                      color: AppColors.textSecondary,
+                    ),
+                    const SizedBox(width: 2),
+                    IconButton(
+                      icon: Icon(
+                        saved
+                            ? Icons.playlist_add_check_rounded
+                            : Icons.playlist_add_rounded,
+                        size: 20,
+                        color: saved
+                            ? AppColors.primary
+                            : AppColors.textSecondary,
+                      ),
+                      onPressed: () => unawaited(
+                        _onDesktopPlaylistTap(
+                          context,
+                          ref,
+                          trackId: mediaItem.id,
+                        ),
+                      ),
+                      tooltip: 'Add to playlist',
+                      padding: EdgeInsets.zero,
+                      constraints: _auxButtonConstraints,
+                      visualDensity: VisualDensity.compact,
                     ),
                   ],
                 ),

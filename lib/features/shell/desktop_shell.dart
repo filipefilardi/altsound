@@ -100,7 +100,6 @@ class _DesktopTopNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
-    final theme = Theme.of(context);
 
     bool selected(String prefix) =>
         location == prefix || location.startsWith('$prefix/');
@@ -113,26 +112,41 @@ class _DesktopTopNavBar extends StatelessWidget {
           bottom: BorderSide(color: AppColors.divider, width: 0.5),
         ),
       ),
-      child: Row(
+      child: Stack(
         children: [
-          Text('AltSound', style: theme.textTheme.titleMedium),
-          const SizedBox(width: 20),
-          _TopNavButton(
-            label: 'Home',
-            isSelected: selected('/'),
-            onTap: () => context.go('/'),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'AltSound',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
           ),
-          const SizedBox(width: 8),
-          _TopNavButton(
-            label: 'Search',
-            isSelected: selected('/search'),
-            onTap: () => context.go('/search'),
+          Align(
+            alignment: Alignment.center,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _TopNavButton(
+                  label: 'Home',
+                  isSelected: selected('/'),
+                  onTap: () => context.go('/'),
+                ),
+                const SizedBox(width: 12),
+                _TopNavButton(
+                  label: 'Search',
+                  isSelected: selected('/search'),
+                  onTap: () => context.go('/search'),
+                ),
+              ],
+            ),
           ),
-          const Spacer(),
-          _TopNavButton(
-            label: 'Settings',
-            isSelected: selected('/settings'),
-            onTap: () => context.go('/settings'),
+          Align(
+            alignment: Alignment.centerRight,
+            child: _TopNavButton(
+              label: 'Settings',
+              isSelected: selected('/settings'),
+              onTap: () => context.go('/settings'),
+            ),
           ),
         ],
       ),
@@ -160,7 +174,10 @@ class _TopNavButton extends StatelessWidget {
             ? AppColors.primary
             : AppColors.textSecondary,
       ),
-      child: Text(label),
+      child: Text(
+        label,
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+      ),
     );
   }
 }

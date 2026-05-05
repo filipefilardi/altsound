@@ -9,6 +9,7 @@ import '../data/jellyfin/scrobbler.dart';
 import '../data/last_played/last_played_controller.dart';
 import '../features/auth/auth_controller.dart';
 import '../features/player/instant_mix_extender.dart';
+import '../features/player/playback_session_persistence.dart';
 import '../features/player/player_providers.dart';
 import 'router.dart';
 
@@ -22,6 +23,7 @@ class JellymusicApp extends ConsumerStatefulWidget {
 class _JellymusicAppState extends ConsumerState<JellymusicApp> {
   bool _scrobblerAttached = false;
   bool _instantMixExtenderAttached = false;
+  bool _playbackPersistenceAttached = false;
   String? _searchWarmSessionKey;
 
   void _ensureScrobbler() {
@@ -50,10 +52,24 @@ class _JellymusicAppState extends ConsumerState<JellymusicApp> {
     unawaited(ref.read(jellyfinRepositoryProvider).warmSearchCatalog());
   }
 
+  void _ensurePlaybackPersistence() {
+    if (_playbackPersistenceAttached) return;
+    _playbackPersistenceAttached = true;
+    ref.read(playbackSessionPersistenceProvider).attach();
+  }
+
+  @override
+  void dispose() {
+    unawaited(ref.read(playbackSessionPersistenceProvider).persistNow());
+    unawaited(ref.read(playbackSessionPersistenceProvider).close());
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
     final auth = ref.watch(authControllerProvider);
+    _ensurePlaybackPersistence();
 
     if (auth is AuthAuthenticated) {
       _ensureScrobbler();

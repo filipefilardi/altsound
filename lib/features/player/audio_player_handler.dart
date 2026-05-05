@@ -12,7 +12,7 @@ class PlayerError {
 
 class JellymusicAudioHandler extends BaseAudioHandler with SeekHandler {
   JellymusicAudioHandler({bool gaplessPlayback = true})
-      : _player = AudioPlayer(useLazyPreparation: !gaplessPlayback) {
+    : _player = AudioPlayer(useLazyPreparation: !gaplessPlayback) {
     _player.playbackEventStream.listen(
       (_) => _syncPlaybackState(),
       onError: (Object e, StackTrace st) => _emitError(e),
@@ -52,6 +52,101 @@ class JellymusicAudioHandler extends BaseAudioHandler with SeekHandler {
   static const _skipPreviousRestartThreshold = Duration(seconds: 3);
 
   AudioPlayer get player => _player;
+
+  Map<String, dynamic>? buildPersistenceSnapshot() {
+    final currentQueue = queue.value;
+    if (currentQueue.isEmpty) return null;
+    return {
+      'schema': 1,
+      'queue': currentQueue.map(_encodeMediaItem).toList(growable: false),
+      'currentIndex': _player.currentIndex ?? 0,
+      'positionMs': _player.position.inMilliseconds,
+      'playing': _player.playing,
+      'volume': _player.volume,
+      'volumeBeforeMute': _volumeBeforeMute,
+      'shuffleEnabled': _player.shuffleModeEnabled,
+      'loopMode': _player.loopMode.name,
+      'userQueuedIds': _userQueuedIds.value.toList(growable: false),
+    };
+  }
+
+  Future<bool> restorePersistenceSnapshot(Map<String, dynamic> snapshot) async {
+    final rawQueue = snapshot['queue'];
+    if (rawQueue is! List || rawQueue.isEmpty) return false;
+    final restored = rawQueue
+        .whereType<Map>()
+        .map((m) => _decodeMediaItem(Map<String, dynamic>.from(m)))
+        .whereType<MediaItem>()
+        .toList(growable: false);
+    if (restored.isEmpty) return false;
+
+    final sources = restored
+        .map((m) {
+          final streamUrl = m.extras?['streamUrl'];
+          if (streamUrl is! String || streamUrl.isEmpty) return null;
+          return AudioSource.uri(Uri.parse(streamUrl), tag: m);
+        })
+        .whereType<AudioSource>()
+        .toList(growable: false);
+    if (sources.isEmpty) return false;
+
+    final savedIndex = snapshot['currentIndex'];
+    final initialIndex = savedIndex is int
+        ? savedIndex.clamp(0, sources.length - 1)
+        : 0;
+    final savedPositionMs = snapshot['positionMs'];
+    final initialPosition = savedPositionMs is int && savedPositionMs > 0
+        ? Duration(milliseconds: savedPositionMs)
+        : Duration.zero;
+
+    await _player.setAudioSources(
+      sources,
+      initialIndex: initialIndex,
+      initialPosition: initialPosition,
+    );
+
+    _originalItems = List<MediaItem>.from(restored);
+    queue.add(restored);
+    mediaItem.add(restored[initialIndex]);
+
+    final savedUserQueued = snapshot['userQueuedIds'];
+    if (savedUserQueued is List) {
+      _userQueuedIds.add(savedUserQueued.whereType<String>().toSet());
+    } else {
+      _userQueuedIds.add(const {});
+    }
+
+    final savedVolume = snapshot['volume'];
+    if (savedVolume is num) {
+      await _player.setVolume(savedVolume.toDouble().clamp(0.0, 1.0));
+    }
+    final savedVolumeBeforeMute = snapshot['volumeBeforeMute'];
+    if (savedVolumeBeforeMute is num) {
+      _volumeBeforeMute = savedVolumeBeforeMute.toDouble().clamp(0.0, 1.0);
+    }
+
+    final savedLoopMode = snapshot['loopMode'];
+    final loopMode = switch (savedLoopMode) {
+      'one' => LoopMode.one,
+      'all' => LoopMode.all,
+      _ => LoopMode.off,
+    };
+    await _player.setLoopMode(loopMode);
+
+    final savedShuffle = snapshot['shuffleEnabled'];
+    if (savedShuffle is bool) {
+      await _player.setShuffleModeEnabled(savedShuffle);
+    }
+
+    final shouldPlay = snapshot['playing'] == true;
+    if (shouldPlay) {
+      await _player.play();
+    } else {
+      await _player.pause();
+    }
+    _syncPlaybackState();
+    return true;
+  }
 
   /// Effective mute: player volume is essentially 0.
   bool get isEffectivelyMuted => _player.volume < 0.001;
@@ -128,9 +223,11 @@ class JellymusicAudioHandler extends BaseAudioHandler with SeekHandler {
       }
       reordered = List<MediaItem>.from(nonUserItems)
         ..sort((a, b) {
-          final ai = origIndexById[a.extras?['jellyfinId'] as String?] ??
+          final ai =
+              origIndexById[a.extras?['jellyfinId'] as String?] ??
               _originalItems.length;
-          final bi = origIndexById[b.extras?['jellyfinId'] as String?] ??
+          final bi =
+              origIndexById[b.extras?['jellyfinId'] as String?] ??
               _originalItems.length;
           return ai.compareTo(bi);
         });
@@ -185,7 +282,9 @@ class JellymusicAudioHandler extends BaseAudioHandler with SeekHandler {
     final List<MediaItem> toLoad;
     final int loadInitialIndex;
     if (_player.shuffleModeEnabled && items.length > 1) {
-      final startIdx = randomizeStart ? Random().nextInt(items.length) : safeIndex;
+      final startIdx = randomizeStart
+          ? Random().nextInt(items.length)
+          : safeIndex;
       final startItem = items[startIdx];
       final rest = List<MediaItem>.from(items)
         ..removeAt(startIdx)
@@ -198,10 +297,12 @@ class JellymusicAudioHandler extends BaseAudioHandler with SeekHandler {
     }
 
     final sources = toLoad
-        .map((m) => AudioSource.uri(
-              Uri.parse(m.extras!['streamUrl'] as String),
-              tag: m,
-            ))
+        .map(
+          (m) => AudioSource.uri(
+            Uri.parse(m.extras!['streamUrl'] as String),
+            tag: m,
+          ),
+        )
         .toList();
     try {
       await _player.setAudioSources(
@@ -237,7 +338,10 @@ class JellymusicAudioHandler extends BaseAudioHandler with SeekHandler {
   Future<void> appendToQueue(MediaItem item) async {
     final q = List<MediaItem>.from(queue.value)..add(item);
     queue.add(q);
-    _userQueuedIds.add({..._userQueuedIds.value, item.extras!['jellyfinId'] as String});
+    _userQueuedIds.add({
+      ..._userQueuedIds.value,
+      item.extras!['jellyfinId'] as String,
+    });
     await _player.addAudioSource(
       AudioSource.uri(
         Uri.parse(item.extras!['streamUrl'] as String),
@@ -302,7 +406,10 @@ class JellymusicAudioHandler extends BaseAudioHandler with SeekHandler {
     final insertAt = (_player.currentIndex ?? 0) + 1;
     final q = List<MediaItem>.from(queue.value)..insert(insertAt, item);
     queue.add(q);
-    _userQueuedIds.add({..._userQueuedIds.value, item.extras!['jellyfinId'] as String});
+    _userQueuedIds.add({
+      ..._userQueuedIds.value,
+      item.extras!['jellyfinId'] as String,
+    });
     await _player.insertAudioSource(
       insertAt,
       AudioSource.uri(
@@ -385,10 +492,9 @@ class JellymusicAudioHandler extends BaseAudioHandler with SeekHandler {
 
   void _emitError(Object e, {String? title}) {
     final current = title ?? mediaItem.value?.title ?? 'this track';
-    _errors.add(PlayerError(
-      title: "Couldn't play “$current”",
-      message: e.toString(),
-    ));
+    _errors.add(
+      PlayerError(title: "Couldn't play “$current”", message: e.toString()),
+    );
   }
 
   void _syncPlaybackState() {
@@ -411,28 +517,66 @@ class JellymusicAudioHandler extends BaseAudioHandler with SeekHandler {
       MediaAction.setShuffleMode,
     };
 
-    playbackState.add(playbackState.value.copyWith(
-      controls: [
-        MediaControl.skipToPrevious,
-        if (playing) MediaControl.pause else MediaControl.play,
-        MediaControl.skipToNext,
-      ],
-      systemActions: systemActions,
-      androidCompactActionIndices: const [0, 1, 2],
-      processingState: const {
-        ProcessingState.idle: AudioProcessingState.idle,
-        ProcessingState.loading: AudioProcessingState.loading,
-        ProcessingState.buffering: AudioProcessingState.buffering,
-        ProcessingState.ready: AudioProcessingState.ready,
-        ProcessingState.completed: AudioProcessingState.completed,
-      }[_player.processingState]!,
-      playing: playing,
-      updatePosition: _player.position,
-      bufferedPosition: _player.bufferedPosition,
-      speed: _player.speed,
-      queueIndex: _player.currentIndex,
-      repeatMode: audioRepeatMode,
-      shuffleMode: audioShuffleMode,
-    ));
+    playbackState.add(
+      playbackState.value.copyWith(
+        controls: [
+          MediaControl.skipToPrevious,
+          if (playing) MediaControl.pause else MediaControl.play,
+          MediaControl.skipToNext,
+        ],
+        systemActions: systemActions,
+        androidCompactActionIndices: const [0, 1, 2],
+        processingState: const {
+          ProcessingState.idle: AudioProcessingState.idle,
+          ProcessingState.loading: AudioProcessingState.loading,
+          ProcessingState.buffering: AudioProcessingState.buffering,
+          ProcessingState.ready: AudioProcessingState.ready,
+          ProcessingState.completed: AudioProcessingState.completed,
+        }[_player.processingState]!,
+        playing: playing,
+        updatePosition: _player.position,
+        bufferedPosition: _player.bufferedPosition,
+        speed: _player.speed,
+        queueIndex: _player.currentIndex,
+        repeatMode: audioRepeatMode,
+        shuffleMode: audioShuffleMode,
+      ),
+    );
+  }
+
+  Map<String, dynamic> _encodeMediaItem(MediaItem item) {
+    return {
+      'id': item.id,
+      'title': item.title,
+      'album': item.album,
+      'artist': item.artist,
+      'durationMs': item.duration?.inMilliseconds,
+      'artUri': item.artUri?.toString(),
+      'extras': item.extras ?? const <String, dynamic>{},
+    };
+  }
+
+  MediaItem? _decodeMediaItem(Map<String, dynamic> json) {
+    final id = json['id'];
+    final title = json['title'];
+    if (id is! String || title is! String || id.isEmpty || title.isEmpty) {
+      return null;
+    }
+    final durationMs = json['durationMs'];
+    final artUriString = json['artUri'];
+    final extrasRaw = json['extras'];
+    return MediaItem(
+      id: id,
+      title: title,
+      album: json['album'] as String?,
+      artist: json['artist'] as String?,
+      duration: durationMs is int ? Duration(milliseconds: durationMs) : null,
+      artUri: artUriString is String && artUriString.isNotEmpty
+          ? Uri.tryParse(artUriString)
+          : null,
+      extras: extrasRaw is Map
+          ? Map<String, dynamic>.from(extrasRaw.cast<dynamic, dynamic>())
+          : const <String, dynamic>{},
+    );
   }
 }
