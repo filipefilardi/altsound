@@ -1529,9 +1529,7 @@ class _PlaylistTrackTile extends ConsumerWidget {
                   style: TextStyle(
                     color: inSelection
                         ? AppColors.textTertiary
-                        : (track.albumId == null || track.albumId!.isEmpty
-                              ? AppColors.textSecondary
-                              : AppColors.primary),
+                        : AppColors.textSecondary,
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                   ),
@@ -1552,11 +1550,7 @@ class _PlaylistTrackTile extends ConsumerWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
-            color: inSelection
-                ? AppColors.textSecondary
-                : (track.artistId == null || track.artistId!.isEmpty
-                      ? AppColors.textSecondary
-                      : AppColors.primary),
+            color: AppColors.textSecondary,
             fontSize: 12,
           ),
         ),
