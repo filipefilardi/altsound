@@ -91,7 +91,9 @@ class PlaybackSessionStore {
   Future<void> write(Map<String, dynamic> payload) async {
     final file = await _file();
     await file.parent.create(recursive: true);
-    await file.writeAsString(jsonEncode(payload), flush: true);
+    final tmp = File('${file.path}.tmp');
+    await tmp.writeAsString(jsonEncode(payload), flush: true);
+    await tmp.rename(file.path);
   }
 
   Future<void> clear() async {

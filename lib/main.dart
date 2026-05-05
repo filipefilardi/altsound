@@ -45,7 +45,13 @@ Future<void> main() async {
 
   final snapshot = await readPlaybackSessionSnapshot();
   if (snapshot != null) {
-    await handler.restorePersistenceSnapshot(snapshot);
+    try {
+      await handler
+          .restorePersistenceSnapshot(snapshot)
+          .timeout(const Duration(seconds: 3));
+    } catch (_) {
+      // Best effort restore: never block boot on a stale/corrupt session.
+    }
   }
 
   runApp(
