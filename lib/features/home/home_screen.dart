@@ -99,7 +99,10 @@ class HomeContent extends ConsumerWidget {
                 items: ref.watch(recentlyAddedProvider),
                 onSeeAll: () => context.push('/recently-added'),
               ),
-              Shelf(title: 'Most played', items: ref.watch(mostPlayedProvider)),
+              Shelf(
+                title: 'Most played this week',
+                items: ref.watch(mostPlayedProvider),
+              ),
               Shelf(
                 title: 'Recently played',
                 items: ref.watch(recentlyPlayedProvider),

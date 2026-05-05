@@ -12,6 +12,18 @@ class PlaybackReportingPlay {
   final int rank;
 }
 
+/// One aggregate row from Playback Reporting breakdown reports.
+class PlaybackReportingBreakdown {
+  const PlaybackReportingBreakdown({
+    required this.label,
+    required this.count,
+    required this.timeSeconds,
+  });
+  final String label;
+  final int count;
+  final int timeSeconds;
+}
+
 final playbackReportingApiProvider = Provider<PlaybackReportingApi>((ref) {
   return PlaybackReportingApi(ref.watch(jellyfinApiProvider));
 });
@@ -146,6 +158,62 @@ class PlaybackReportingApi {
     return plays;
   }
 
+  /// Global (all non-ignored users) item-id activity from the plugin over the
+  /// last [days] days, sorted by [PlaybackReportingBreakdown.count] descending.
+  ///
+  /// Returns `null` only when the plugin route is missing (404).
+  Future<List<PlaybackReportingBreakdown>?> globalItemBreakdown({
+    int days = 7,
+    int limit = 400,
+  }) async {
+    if (_missingCache == true) return null;
+    final safeDays = days < 1 ? 1 : days;
+    final path = '/user_usage_stats/ItemId/BreakdownReport';
+    try {
+      final res = await _api.dio.get<dynamic>(
+        path,
+        queryParameters: {'days': safeDays},
+      );
+      _missingCache = false;
+      final rows = _extractRows(res.data);
+      final parsed = rows
+          .map(_parseBreakdown)
+          .whereType<PlaybackReportingBreakdown>()
+          .where((r) => r.label.isNotEmpty)
+          .toList(growable: false)
+        ..sort((a, b) {
+          final byCount = b.count.compareTo(a.count);
+          return byCount != 0 ? byCount : b.timeSeconds.compareTo(a.timeSeconds);
+        });
+      if (kDebugMode) {
+        debugPrint(
+          '[PlaybackReporting] GET $path?days=$safeDays → ${rows.length} rows, ${parsed.length} parsed',
+        );
+      }
+      if (parsed.length <= limit) return parsed;
+      return parsed.take(limit).toList(growable: false);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        _missingCache = true;
+        if (kDebugMode) {
+          debugPrint('[PlaybackReporting] $path 404 — plugin not installed');
+        }
+        return null;
+      }
+      if (kDebugMode) {
+        debugPrint(
+          '[PlaybackReporting] $path failed: ${e.response?.statusCode} ${e.message}',
+        );
+      }
+      return const [];
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[PlaybackReporting] $path threw: $e');
+      }
+      return const [];
+    }
+  }
+
   /// GetItems expects a UTC date-like route segment in `yyyy-MM-dd`.
   static String _dateParamForDayOffset(int dayOffset) {
     final day = DateTime.now().toUtc().subtract(Duration(days: dayOffset));
@@ -220,6 +288,31 @@ class PlaybackReportingApi {
         ? playCount!
         : (duration != null && duration! > 0 ? duration! : 1);
     return PlaybackReportingPlay(itemId: actualId, rank: rank);
+  }
+
+  PlaybackReportingBreakdown? _parseBreakdown(Map<String, dynamic> e) {
+    String? label;
+    int? count;
+    int? timeSeconds;
+    e.forEach((key, value) {
+      final k = key.toLowerCase();
+      if (label == null && (k == 'label' || k == 'id' || k == 'itemid')) {
+        final v = value?.toString();
+        if (v != null && v.isNotEmpty && v != 'null') label = v;
+      } else if (count == null && (k == 'count' || k == 'playcount')) {
+        count = _toInt(value);
+      } else if (timeSeconds == null &&
+          (k == 'time' || k == 'timeseconds' || k == 'seconds')) {
+        timeSeconds = _toInt(value);
+      }
+    });
+    final actualLabel = label;
+    if (actualLabel == null || actualLabel.isEmpty) return null;
+    return PlaybackReportingBreakdown(
+      label: actualLabel,
+      count: (count ?? 0) < 0 ? 0 : (count ?? 0),
+      timeSeconds: (timeSeconds ?? 0) < 0 ? 0 : (timeSeconds ?? 0),
+    );
   }
 
   /// The plugin returns numbers as strings (`Dictionary<string, string>`),
