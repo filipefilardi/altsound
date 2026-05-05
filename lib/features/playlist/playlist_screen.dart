@@ -1516,22 +1516,25 @@ class _PlaylistTrackTile extends ConsumerWidget {
           if (showAlbumColumn) ...[
             const SizedBox(width: 24),
             Expanded(
-              child: InkWell(
-                onTap: inSelection
-                    ? null
-                    : (track.albumId == null || track.albumId!.isEmpty
-                          ? null
-                          : () => context.push('/album/${track.albumId}')),
-                child: Text(
-                  track.albumName!,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: inSelection
-                        ? AppColors.textTertiary
-                        : AppColors.textSecondary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+              child: Center(
+                child: InkWell(
+                  onTap: inSelection
+                      ? null
+                      : (track.albumId == null || track.albumId!.isEmpty
+                            ? null
+                            : () => context.push('/album/${track.albumId}')),
+                  child: Text(
+                    track.albumName!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: inSelection
+                          ? AppColors.textTertiary
+                          : AppColors.textSecondary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ),
