@@ -167,8 +167,7 @@ Future<List<_RankedTrack>> _rankedRecent(
   // Fallback: Jellyfin built-in. Order from the API is descending PlayCount,
   // so use position as the rank (higher index = higher rank).
   if (kDebugMode) {
-    debugPrint(
-        '[ForYou] plugin yielded nothing usable, falling back to Jellyfin');
+    debugPrint('[ForYou] plugin returned no usable rows; using Jellyfin stats');
   }
   final since = DateTime.now().toUtc().subtract(const Duration(days: _windowDays));
   final tracks = await _safeTopPlayedSince(repo, since);
