@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/layout/adaptive_breakpoints.dart';
 import '../features/album/album_screen.dart';
 import '../features/home/recently_added_screen.dart';
 import '../features/artist/artist_discography_screen.dart';
@@ -55,6 +56,17 @@ class _AuthListenable extends ChangeNotifier {
 final routerProvider = Provider<GoRouter>((ref) {
   final listenable = _AuthListenable(ref);
   ref.onDispose(listenable.dispose);
+
+  Page<void> desktopAwarePage({
+    required BuildContext context,
+    required GoRouterState state,
+    required Widget child,
+  }) {
+    if (isDesktopLayout(context)) {
+      return NoTransitionPage<void>(key: state.pageKey, child: child);
+    }
+    return MaterialPage<void>(key: state.pageKey, child: child);
+  }
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
@@ -127,77 +139,119 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/downloads',
         parentNavigatorKey: _rootNavigatorKey,
-        builder: (_, __) => const DesktopRouteFrame(child: DownloadsScreen()),
+        pageBuilder: (context, state) => desktopAwarePage(
+          context: context,
+          state: state,
+          child: const DesktopRouteFrame(child: DownloadsScreen()),
+        ),
       ),
       GoRoute(
         path: '/recently-added',
         parentNavigatorKey: _rootNavigatorKey,
-        builder: (_, __) =>
-            const DesktopRouteFrame(child: RecentlyAddedScreen()),
+        pageBuilder: (context, state) => desktopAwarePage(
+          context: context,
+          state: state,
+          child: const DesktopRouteFrame(child: RecentlyAddedScreen()),
+        ),
       ),
       GoRoute(
         path: '/settings',
         parentNavigatorKey: _rootNavigatorKey,
-        builder: (_, __) => const DesktopRouteFrame(child: SettingsScreen()),
+        pageBuilder: (context, state) => desktopAwarePage(
+          context: context,
+          state: state,
+          child: const DesktopRouteFrame(child: SettingsScreen()),
+        ),
       ),
       GoRoute(
         path: '/library/albums',
         parentNavigatorKey: _rootNavigatorKey,
-        builder: (_, __) => const DesktopRouteFrame(
-          child: LibraryCollectionScreen(kind: LibraryCollectionKind.albums),
+        pageBuilder: (context, state) => desktopAwarePage(
+          context: context,
+          state: state,
+          child: const DesktopRouteFrame(
+            child: LibraryCollectionScreen(kind: LibraryCollectionKind.albums),
+          ),
         ),
       ),
       GoRoute(
         path: '/library/artists',
         parentNavigatorKey: _rootNavigatorKey,
-        builder: (_, __) => const DesktopRouteFrame(
-          child: LibraryCollectionScreen(kind: LibraryCollectionKind.artists),
+        pageBuilder: (context, state) => desktopAwarePage(
+          context: context,
+          state: state,
+          child: const DesktopRouteFrame(
+            child: LibraryCollectionScreen(kind: LibraryCollectionKind.artists),
+          ),
         ),
       ),
       GoRoute(
         path: '/settings/downloads',
         parentNavigatorKey: _rootNavigatorKey,
-        builder: (_, __) =>
-            const DesktopRouteFrame(child: DownloadsSettingsScreen()),
+        pageBuilder: (context, state) => desktopAwarePage(
+          context: context,
+          state: state,
+          child: const DesktopRouteFrame(child: DownloadsSettingsScreen()),
+        ),
       ),
       GoRoute(
         path: '/artist/:id',
         parentNavigatorKey: _rootNavigatorKey,
-        builder: (_, st) => DesktopRouteFrame(
-          child: ArtistScreen(artistId: st.pathParameters['id']!),
+        pageBuilder: (context, state) => desktopAwarePage(
+          context: context,
+          state: state,
+          child: DesktopRouteFrame(
+            child: ArtistScreen(artistId: state.pathParameters['id']!),
+          ),
         ),
       ),
       GoRoute(
         path: '/artist/:id/discography',
         parentNavigatorKey: _rootNavigatorKey,
-        builder: (_, st) => DesktopRouteFrame(
-          child: ArtistDiscographyScreen(artistId: st.pathParameters['id']!),
+        pageBuilder: (context, state) => desktopAwarePage(
+          context: context,
+          state: state,
+          child: DesktopRouteFrame(
+            child: ArtistDiscographyScreen(artistId: state.pathParameters['id']!),
+          ),
         ),
       ),
       GoRoute(
         path: '/album/:id',
         parentNavigatorKey: _rootNavigatorKey,
-        builder: (_, st) => DesktopRouteFrame(
-          child: AlbumScreen(albumId: st.pathParameters['id']!),
+        pageBuilder: (context, state) => desktopAwarePage(
+          context: context,
+          state: state,
+          child: DesktopRouteFrame(
+            child: AlbumScreen(albumId: state.pathParameters['id']!),
+          ),
         ),
       ),
       GoRoute(
         path: '/playlist/:id',
         parentNavigatorKey: _rootNavigatorKey,
-        builder: (_, st) => DesktopRouteFrame(
-          child: PlaylistScreen(playlistId: st.pathParameters['id']!),
+        pageBuilder: (context, state) => desktopAwarePage(
+          context: context,
+          state: state,
+          child: DesktopRouteFrame(
+            child: PlaylistScreen(playlistId: state.pathParameters['id']!),
+          ),
         ),
       ),
       GoRoute(
         path: '/instant-mix/:id',
         parentNavigatorKey: _rootNavigatorKey,
-        builder: (_, st) => DesktopRouteFrame(
-          child: InstantMixScreen(
-            seedItemId: st.pathParameters['id']!,
-            seedKind: InstantMixSeedKind.fromQuery(
-              st.uri.queryParameters['kind'],
+        pageBuilder: (context, state) => desktopAwarePage(
+          context: context,
+          state: state,
+          child: DesktopRouteFrame(
+            child: InstantMixScreen(
+              seedItemId: state.pathParameters['id']!,
+              seedKind: InstantMixSeedKind.fromQuery(
+                state.uri.queryParameters['kind'],
+              ),
+              seedTitle: state.uri.queryParameters['title'],
             ),
-            seedTitle: st.uri.queryParameters['title'],
           ),
         ),
       ),
