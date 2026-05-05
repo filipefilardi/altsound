@@ -140,7 +140,8 @@ class JellymusicAudioHandler extends BaseAudioHandler with SeekHandler {
 
     final shouldPlay = snapshot['playing'] == true;
     if (shouldPlay) {
-      await _player.play();
+      // Don't block app startup on network/buffering while resuming playback.
+      _player.play().catchError((_) {});
     } else {
       await _player.pause();
     }
