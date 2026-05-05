@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/layout/adaptive_breakpoints.dart';
 import '../../../core/theme/app_colors.dart';
+import '../desktop_mini_player.dart';
 import '../mini_player.dart';
 import '../player_providers.dart';
 
@@ -56,7 +57,9 @@ class MiniPlayerSlot extends ConsumerWidget {
         top: false,
         bottom: applyBottomSafeArea,
         minimum: const EdgeInsets.only(bottom: 6),
-        child: MiniPlayer(edgeToEdge: desktop && edgeToEdgeOnDesktop),
+        child: desktop
+            ? DesktopMiniPlayer(edgeToEdge: edgeToEdgeOnDesktop)
+            : const MiniPlayer(),
       ),
     );
   }
