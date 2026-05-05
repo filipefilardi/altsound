@@ -5,9 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'auth_repository.dart';
 import 'jellyfin_api.dart';
 
-/// One row of the Playback Reporting plugin's `GetItems` report. The plugin
-/// aggregates per-`itemId` server-side, so each row already represents a
-/// single track with a play-frequency rank — we don't count occurrences.
+/// One ranked track built from Playback Reporting `GetItems` rows.
 class PlaybackReportingPlay {
   const PlaybackReportingPlay({required this.itemId, required this.rank});
   final String itemId;
@@ -28,6 +26,8 @@ class PlaybackReportingApi {
 
   final JellyfinApi _api;
   bool? _missingCache;
+  bool _loggedEmptyOnce = false;
+  static const int _maxRangeDays = 31;
 
   /// Audio plays recorded in the last [days] days for the current user.
   ///
@@ -38,73 +38,159 @@ class PlaybackReportingApi {
     if (_missingCache == true) return null;
     final session = _api.session;
     if (session == null) return null;
-    final path = '/user_usage_stats/${session.userId}/$days/GetItems';
-    try {
-      // Don't send `EndDate` (some plugin versions choke on the ISO format
-      // and 500) or `filter` (older versions split it inside SQL and crash on
-      // certain values). The plugin defaults EndDate to "now" and we filter
-      // by track type later via `IncludeItemTypes=Audio` in `tracksByIds`.
-      final res = await _api.dio.get<dynamic>(path);
-      _missingCache = false;
-      final raw = res.data;
-      // Plugin versions vary: older returns a bare list, newer wraps in
-      // `{ "Items": [...] }`. Accept both, plus a few less-common variants.
-      List<dynamic> list = const [];
-      if (raw is List) {
-        list = raw;
-      } else if (raw is Map<String, dynamic>) {
-        for (final k in const ['Items', 'items', 'data', 'Data']) {
-          final v = raw[k];
-          if (v is List) {
-            list = v;
-            break;
-          }
-        }
-      }
-      final dictRows =
-          list.whereType<Map<String, dynamic>>().toList(growable: false);
-      final plays = dictRows
-          .map(_parsePlay)
-          .whereType<PlaybackReportingPlay>()
-          .toList()
-        ..sort((a, b) => b.rank.compareTo(a.rank));
-
+    final safeDays = days < 1 ? 1 : days;
+    if (safeDays > _maxRangeDays) {
+      // This endpoint is single-day; avoid blasting hundreds of requests.
       if (kDebugMode) {
         debugPrint(
-            '[PlaybackReporting] GET $path → ${dictRows.length} rows, ${plays.length} parsed');
-        if (dictRows.isNotEmpty && plays.isEmpty) {
-          debugPrint(
-              '[PlaybackReporting] sample row keys: ${dictRows.first.keys.toList()}');
-          debugPrint(
-              '[PlaybackReporting] sample row: ${dictRows.first}');
-        }
-      }
-      return plays;
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 404) {
-        if (kDebugMode) {
-          debugPrint(
-              '[PlaybackReporting] $path 404 — plugin not installed');
-        }
-        _missingCache = true;
-        return null;
-      }
-      if (kDebugMode) {
-        final body = e.response?.data;
-        final preview = body == null
-            ? '(no body)'
-            : body.toString().substring(0, body.toString().length.clamp(0, 500));
-        debugPrint(
-            '[PlaybackReporting] $path failed: ${e.response?.statusCode} ${e.message}\nbody: $preview');
-      }
-      // Transient — don't cache, let the next call retry.
-      return const [];
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('[PlaybackReporting] $path threw: $e');
+          '[PlaybackReporting] requested $safeDays days; plugin path supports single-day only, skipping and using fallback',
+        );
       }
       return const [];
     }
+
+    final rankByItemId = <String, int>{};
+    var totalRows = 0;
+    var totalParsed = 0;
+
+    for (var dayOffset = 0; dayOffset < safeDays; dayOffset++) {
+      final date = _dateParamForDayOffset(dayOffset);
+      final path = '/user_usage_stats/${session.userId}/$date/GetItems';
+      try {
+        // GetItems requires a type filter in plugin SQL (`ItemType IN (...)`).
+        final res = await _api.dio.get<dynamic>(
+          path,
+          queryParameters: const {'filter': 'Audio'},
+        );
+        _missingCache = false;
+        final raw = res.data;
+        final dictRows = _extractRows(raw);
+        final parsedRows = dictRows
+            .map(_parsePlay)
+            .whereType<PlaybackReportingPlay>()
+            .toList(growable: false);
+        totalRows += dictRows.length;
+        totalParsed += parsedRows.length;
+
+        for (final row in parsedRows) {
+          rankByItemId.update(
+            row.itemId,
+            (existing) => existing + row.rank,
+            ifAbsent: () => row.rank,
+          );
+        }
+
+        if (kDebugMode && dayOffset == 0) {
+          debugPrint(
+            '[PlaybackReporting] GET $path?filter=Audio → ${dictRows.length} rows, ${parsedRows.length} parsed',
+          );
+          if (dictRows.isNotEmpty && parsedRows.isEmpty) {
+            debugPrint(
+              '[PlaybackReporting] sample row keys: ${dictRows.first.keys.toList()}',
+            );
+            debugPrint('[PlaybackReporting] sample row: ${dictRows.first}');
+          }
+          if (dictRows.isEmpty && !_loggedEmptyOnce) {
+            _loggedEmptyOnce = true;
+            final rawType = raw.runtimeType;
+            if (raw is Map) {
+              final keys = raw.keys.map((k) => k.toString()).toList();
+              debugPrint(
+                '[PlaybackReporting] GET $path empty rows (raw type: $rawType, keys: $keys)',
+              );
+            } else {
+              debugPrint(
+                '[PlaybackReporting] GET $path empty rows (raw type: $rawType)',
+              );
+            }
+          }
+        }
+      } on DioException catch (e) {
+        if (e.response?.statusCode == 404) {
+          if (kDebugMode) {
+            debugPrint('[PlaybackReporting] $path 404 — plugin not installed');
+          }
+          _missingCache = true;
+          return null;
+        }
+        if (kDebugMode) {
+          final body = e.response?.data;
+          final preview = body == null
+              ? '(no body)'
+              : body.toString().substring(
+                  0,
+                  body.toString().length.clamp(0, 500),
+                );
+          debugPrint(
+            '[PlaybackReporting] $path failed: ${e.response?.statusCode} ${e.message}\nbody: $preview',
+          );
+        }
+        // Transient day failure — keep other days and fall back if empty.
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('[PlaybackReporting] $path threw: $e');
+        }
+      }
+    }
+
+    final plays = rankByItemId.entries
+        .map((e) => PlaybackReportingPlay(itemId: e.key, rank: e.value))
+        .toList(growable: false)
+      ..sort((a, b) => b.rank.compareTo(a.rank));
+
+    if (kDebugMode && safeDays > 1) {
+      debugPrint(
+        '[PlaybackReporting] aggregated last $safeDays days → $totalRows rows, $totalParsed parsed, ${plays.length} unique items',
+      );
+    }
+    return plays;
+  }
+
+  /// GetItems expects a UTC date-like route segment in `yyyy-MM-dd`.
+  static String _dateParamForDayOffset(int dayOffset) {
+    final day = DateTime.now().toUtc().subtract(Duration(days: dayOffset));
+    final y = day.year.toString().padLeft(4, '0');
+    final m = day.month.toString().padLeft(2, '0');
+    final d = day.day.toString().padLeft(2, '0');
+    return '$y-$m-$d';
+  }
+
+  static List<Map<String, dynamic>> _extractRows(dynamic raw) {
+    List<dynamic> list = const [];
+
+    if (raw is List) {
+      list = raw;
+    } else if (raw is Map) {
+      dynamic match;
+      for (final candidate in const [
+        'Items',
+        'items',
+        'Data',
+        'data',
+        'Results',
+        'results',
+        'Rows',
+        'rows',
+      ]) {
+        if (raw.containsKey(candidate)) {
+          match = raw[candidate];
+          break;
+        }
+      }
+      if (match is List) {
+        list = match;
+      }
+    }
+
+    final rows = <Map<String, dynamic>>[];
+    for (final entry in list) {
+      if (entry is! Map) continue;
+      rows.add({
+        for (final mapEntry in entry.entries)
+          mapEntry.key.toString(): mapEntry.value,
+      });
+    }
+    return rows;
   }
 
   /// Parse a row defensively. The plugin's response keys vary across versions
