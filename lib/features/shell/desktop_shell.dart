@@ -100,6 +100,9 @@ class _DesktopTopNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
+    void goIfNeeded(String target) {
+      if (location != target) context.go(target);
+    }
 
     bool selected(String prefix) =>
         location == prefix || location.startsWith('$prefix/');
@@ -129,13 +132,13 @@ class _DesktopTopNavBar extends StatelessWidget {
                 _TopNavButton(
                   label: 'Home',
                   isSelected: selected('/'),
-                  onTap: () => context.go('/'),
+                  onTap: () => goIfNeeded('/'),
                 ),
                 const SizedBox(width: 12),
                 _TopNavButton(
                   label: 'Search',
                   isSelected: selected('/search'),
-                  onTap: () => context.go('/search'),
+                  onTap: () => goIfNeeded('/search'),
                 ),
               ],
             ),
@@ -145,7 +148,7 @@ class _DesktopTopNavBar extends StatelessWidget {
             child: _TopNavButton(
               label: 'Settings',
               isSelected: selected('/settings'),
-              onTap: () => context.go('/settings'),
+              onTap: () => goIfNeeded('/settings'),
             ),
           ),
         ],
