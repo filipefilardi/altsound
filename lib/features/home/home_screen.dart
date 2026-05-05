@@ -42,10 +42,11 @@ class HomeContent extends ConsumerWidget {
     if (isOffline) {
       return CustomScrollView(
         slivers: [
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-            sliver: SliverToBoxAdapter(child: _Greeting(username: username)),
-          ),
+          if (!desktop)
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              sliver: SliverToBoxAdapter(child: _Greeting(username: username)),
+            ),
           if (!desktop)
             const SliverPadding(
               padding: EdgeInsets.fromLTRB(20, 8, 20, 8),
@@ -80,10 +81,11 @@ class HomeContent extends ConsumerWidget {
       },
       child: CustomScrollView(
         slivers: [
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-            sliver: SliverToBoxAdapter(child: _Greeting(username: username)),
-          ),
+          if (!desktop)
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+              sliver: SliverToBoxAdapter(child: _Greeting(username: username)),
+            ),
           if (!desktop)
             const SliverPadding(
               padding: EdgeInsets.fromLTRB(20, 8, 20, 8),

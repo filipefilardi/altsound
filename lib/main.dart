@@ -9,6 +9,7 @@ import 'data/jellyfin/auth_repository.dart';
 import 'data/jellyfin/client_metadata.dart';
 import 'data/jellyfin/jellyfin_api.dart';
 import 'features/player/audio_player_handler.dart';
+import 'features/player/playback_session_persistence.dart';
 import 'features/player/player_providers.dart';
 
 Future<void> main() async {
@@ -41,6 +42,11 @@ Future<void> main() async {
       androidStopForegroundOnPause: true,
     ),
   );
+
+  final snapshot = await readPlaybackSessionSnapshot();
+  if (snapshot != null) {
+    await handler.restorePersistenceSnapshot(snapshot);
+  }
 
   runApp(
     ProviderScope(
