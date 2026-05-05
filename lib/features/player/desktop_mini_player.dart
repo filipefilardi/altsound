@@ -44,6 +44,7 @@ class DesktopMiniPlayer extends ConsumerWidget {
       _ => false,
     };
     final artistId = mediaItem.extras?['artistId'] as String?;
+    final albumId = mediaItem.extras?['albumId'] as String?;
     final horizontal = edgeToEdge ? 16.0 : 10.0;
     final clampedPosition = position > duration ? duration : position;
     final sliderMax = duration.inMilliseconds.toDouble().clamp(
@@ -89,7 +90,9 @@ class DesktopMiniPlayer extends ConsumerWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           InkWell(
-                            onTap: () => context.push('/now-playing'),
+                            onTap: albumId == null || albumId.isEmpty
+                                ? null
+                                : () => context.push('/album/$albumId'),
                             child: Text(
                               mediaItem.title,
                               maxLines: 1,

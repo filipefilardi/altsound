@@ -29,7 +29,7 @@ class MiniPlayerSlot extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final desktop = isDesktopLayout(context);
     if (desktop && !showOnDesktop) return const SizedBox.shrink();
-    final hasMedia = ref.watch(currentMediaItemProvider).value != null;
+    final hasMedia = ref.watch(effectiveMediaItemProvider) != null;
     final decoration = withTopDivider
         ? const BoxDecoration(
             border: Border(
