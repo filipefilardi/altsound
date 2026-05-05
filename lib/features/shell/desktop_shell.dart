@@ -108,47 +108,63 @@ class _DesktopTopNavBar extends StatelessWidget {
         location == prefix || location.startsWith('$prefix/');
 
     return Container(
-      height: 62,
+      height: 64,
       padding: const EdgeInsets.symmetric(horizontal: 20),
       decoration: const BoxDecoration(
         border: Border(
           bottom: BorderSide(color: AppColors.divider, width: 0.5),
         ),
       ),
-      child: Stack(
+      child: Row(
         children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              'AltSound',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'AltSound',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
             ),
           ),
-          Align(
-            alignment: Alignment.center,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _TopNavButton(
-                  label: 'Home',
-                  isSelected: selected('/'),
-                  onTap: () => goIfNeeded('/'),
-                ),
-                const SizedBox(width: 12),
-                _TopNavButton(
-                  label: 'Search',
-                  isSelected: selected('/search'),
-                  onTap: () => goIfNeeded('/search'),
-                ),
-              ],
-            ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _TopNavPill(
+                icon: Icons.home_rounded,
+                label: 'Home',
+                isSelected: selected('/'),
+                onTap: () => goIfNeeded('/'),
+              ),
+              const SizedBox(width: 6),
+              _TopNavPill(
+                icon: Icons.search_rounded,
+                label: 'Search',
+                isSelected: selected('/search'),
+                onTap: () => goIfNeeded('/search'),
+              ),
+            ],
           ),
-          Align(
-            alignment: Alignment.centerRight,
-            child: _TopNavButton(
-              label: 'Settings',
-              isSelected: selected('/settings'),
-              onTap: () => goIfNeeded('/settings'),
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _TopNavIconButton(
+                    icon: Icons.download_rounded,
+                    tooltip: 'Downloads',
+                    isSelected: selected('/downloads'),
+                    onPressed: () => context.push('/downloads'),
+                  ),
+                  const SizedBox(width: 6),
+                  _TopNavIconButton(
+                    icon: Icons.settings_rounded,
+                    tooltip: 'Settings',
+                    isSelected: selected('/settings'),
+                    onPressed: () => goIfNeeded('/settings'),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -157,29 +173,83 @@ class _DesktopTopNavBar extends StatelessWidget {
   }
 }
 
-class _TopNavButton extends StatelessWidget {
-  const _TopNavButton({
+class _TopNavPill extends StatelessWidget {
+  const _TopNavPill({
+    required this.icon,
     required this.label,
     required this.isSelected,
     required this.onTap,
   });
 
+  final IconData icon;
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return TextButton(
-      onPressed: onTap,
-      style: TextButton.styleFrom(
+    final fg = isSelected ? AppColors.primary : AppColors.textSecondary;
+    final bg = isSelected
+        ? AppColors.primary.withValues(alpha: 0.16)
+        : Colors.transparent;
+    return Material(
+      color: bg,
+      shape: const StadiumBorder(),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 18, color: fg),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: fg,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TopNavIconButton extends StatelessWidget {
+  const _TopNavIconButton({
+    required this.icon,
+    required this.tooltip,
+    required this.isSelected,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final bool isSelected;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton.filledTonal(
+      onPressed: onPressed,
+      tooltip: tooltip,
+      icon: Icon(icon, size: 20),
+      style: IconButton.styleFrom(
+        backgroundColor: isSelected
+            ? AppColors.primary.withValues(alpha: 0.16)
+            : AppColors.surface,
         foregroundColor: isSelected
             ? AppColors.primary
-            : AppColors.textSecondary,
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            : AppColors.textPrimary,
+        minimumSize: const Size.square(40),
+        fixedSize: const Size.square(40),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       ),
     );
   }
