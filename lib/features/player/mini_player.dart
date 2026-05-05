@@ -14,7 +14,9 @@ import 'widgets/add_track_to_playlist_sheet.dart';
 import 'widgets/player_hero_art.dart';
 
 class MiniPlayer extends ConsumerWidget {
-  const MiniPlayer({super.key});
+  const MiniPlayer({this.edgeToEdge = false, super.key});
+
+  final bool edgeToEdge;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -35,15 +37,20 @@ class MiniPlayer extends ConsumerWidget {
       _ => false,
     };
 
+    final borderRadius = edgeToEdge
+        ? BorderRadius.zero
+        : BorderRadius.circular(20);
+    final horizontalPadding = edgeToEdge ? 0.0 : 10.0;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
+      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: borderRadius,
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
           child: Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: borderRadius,
               color: AppColors.surfaceElevated,
               border: Border.all(
                 color: AppColors.textPrimary.withValues(alpha: 0.06),
@@ -73,7 +80,7 @@ class MiniPlayer extends ConsumerWidget {
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: () => context.push('/now-playing'),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: borderRadius,
                   splashColor: AppColors.primary.withValues(alpha: 0.08),
                   highlightColor: AppColors.primary.withValues(alpha: 0.04),
                   child: Column(

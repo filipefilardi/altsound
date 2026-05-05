@@ -20,6 +20,7 @@ import '../features/playlist/playlist_screen.dart';
 import '../features/search/search_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/shell/app_shell.dart';
+import '../features/shell/desktop_shell.dart';
 
 class _AuthListenable extends ChangeNotifier {
   _AuthListenable(this._ref) {
@@ -58,54 +59,6 @@ final routerProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
-      GoRoute(path: '/downloads', builder: (_, __) => const DownloadsScreen()),
-      GoRoute(
-        path: '/recently-added',
-        builder: (_, __) => const RecentlyAddedScreen(),
-      ),
-      GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
-      GoRoute(
-        path: '/library/albums',
-        builder: (_, __) =>
-            const LibraryCollectionScreen(kind: LibraryCollectionKind.albums),
-      ),
-      GoRoute(
-        path: '/library/artists',
-        builder: (_, __) =>
-            const LibraryCollectionScreen(kind: LibraryCollectionKind.artists),
-      ),
-      GoRoute(
-        path: '/settings/downloads',
-        builder: (_, __) => const DownloadsSettingsScreen(),
-      ),
-      GoRoute(
-        path: '/artist/:id',
-        builder: (_, st) => ArtistScreen(artistId: st.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: '/artist/:id/discography',
-        builder: (_, st) =>
-            ArtistDiscographyScreen(artistId: st.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: '/album/:id',
-        builder: (_, st) => AlbumScreen(albumId: st.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: '/playlist/:id',
-        builder: (_, st) =>
-            PlaylistScreen(playlistId: st.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: '/instant-mix/:id',
-        builder: (_, st) => InstantMixScreen(
-          seedItemId: st.pathParameters['id']!,
-          seedKind: InstantMixSeedKind.fromQuery(
-            st.uri.queryParameters['kind'],
-          ),
-          seedTitle: st.uri.queryParameters['title'],
-        ),
-      ),
       GoRoute(
         path: '/now-playing',
         pageBuilder: (_, st) => CustomTransitionPage(
@@ -127,29 +80,91 @@ final routerProvider = Provider<GoRouter>((ref) {
           child: const NowPlayingScreen(),
         ),
       ),
-      StatefulShellRoute.indexedStack(
-        builder: (_, __, shell) => AppShell(navigationShell: shell),
-        branches: [
-          StatefulShellBranch(
-            routes: [
-              GoRoute(path: '/', builder: (_, __) => const HomeScreen()),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/search',
-                builder: (_, __) => const SearchScreen(),
+      ShellRoute(
+        builder: (_, __, child) => DesktopRouteFrame(child: child),
+        routes: [
+          StatefulShellRoute.indexedStack(
+            builder: (_, __, shell) => AppShell(navigationShell: shell),
+            branches: [
+              StatefulShellBranch(
+                routes: [
+                  GoRoute(path: '/', builder: (_, __) => const HomeScreen()),
+                ],
+              ),
+              StatefulShellBranch(
+                routes: [
+                  GoRoute(
+                    path: '/search',
+                    builder: (_, __) => const SearchScreen(),
+                  ),
+                ],
+              ),
+              StatefulShellBranch(
+                routes: [
+                  GoRoute(
+                    path: '/library',
+                    builder: (_, __) => const LibraryScreen(),
+                  ),
+                ],
               ),
             ],
           ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/library',
-                builder: (_, __) => const LibraryScreen(),
+          GoRoute(
+            path: '/downloads',
+            builder: (_, __) => const DownloadsScreen(),
+          ),
+          GoRoute(
+            path: '/recently-added',
+            builder: (_, __) => const RecentlyAddedScreen(),
+          ),
+          GoRoute(
+            path: '/settings',
+            builder: (_, __) => const SettingsScreen(),
+          ),
+          GoRoute(
+            path: '/library/albums',
+            builder: (_, __) => const LibraryCollectionScreen(
+              kind: LibraryCollectionKind.albums,
+            ),
+          ),
+          GoRoute(
+            path: '/library/artists',
+            builder: (_, __) => const LibraryCollectionScreen(
+              kind: LibraryCollectionKind.artists,
+            ),
+          ),
+          GoRoute(
+            path: '/settings/downloads',
+            builder: (_, __) => const DownloadsSettingsScreen(),
+          ),
+          GoRoute(
+            path: '/artist/:id',
+            builder: (_, st) =>
+                ArtistScreen(artistId: st.pathParameters['id']!),
+          ),
+          GoRoute(
+            path: '/artist/:id/discography',
+            builder: (_, st) =>
+                ArtistDiscographyScreen(artistId: st.pathParameters['id']!),
+          ),
+          GoRoute(
+            path: '/album/:id',
+            builder: (_, st) => AlbumScreen(albumId: st.pathParameters['id']!),
+          ),
+          GoRoute(
+            path: '/playlist/:id',
+            builder: (_, st) =>
+                PlaylistScreen(playlistId: st.pathParameters['id']!),
+          ),
+          GoRoute(
+            path: '/instant-mix/:id',
+            builder: (_, st) => InstantMixScreen(
+              seedItemId: st.pathParameters['id']!,
+              seedKind: InstantMixSeedKind.fromQuery(
+                st.uri.queryParameters['kind'],
               ),
-            ],
+              seedTitle: st.uri.queryParameters['title'],
+            ),
           ),
         ],
       ),

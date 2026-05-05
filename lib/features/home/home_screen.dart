@@ -24,84 +24,85 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    return const Scaffold(body: HomeContent());
+  }
+}
+
+class HomeContent extends ConsumerWidget {
+  const HomeContent({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(authControllerProvider);
     final username = state is AuthAuthenticated ? state.session.username : '';
     final isOffline = ref.watch(isOfflineProvider);
 
     if (isOffline) {
-      return Scaffold(
-        body: CustomScrollView(
-          slivers: [
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-              sliver: SliverToBoxAdapter(child: _Greeting(username: username)),
-            ),
-            const SliverPadding(
-              padding: EdgeInsets.fromLTRB(20, 8, 20, 8),
-              sliver: SliverToBoxAdapter(child: _ResumeCard()),
-            ),
-            const SliverToBoxAdapter(child: _ForYouSection()),
-            const SliverFillRemaining(child: OfflineLibraryView()),
-          ],
-        ),
+      return CustomScrollView(
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+            sliver: SliverToBoxAdapter(child: _Greeting(username: username)),
+          ),
+          const SliverPadding(
+            padding: EdgeInsets.fromLTRB(20, 8, 20, 8),
+            sliver: SliverToBoxAdapter(child: _ResumeCard()),
+          ),
+          const SliverToBoxAdapter(child: _ForYouSection()),
+          const SliverFillRemaining(child: OfflineLibraryView()),
+        ],
       );
     }
 
-    return Scaffold(
-      body: RefreshIndicator(
-        onRefresh: () async {
-          // Bust today's For You cache so the user can force a fresh fetch
-          // instead of waiting until tomorrow.
-          final session = ref.read(jellyfinApiProvider).session;
-          if (session != null) {
-            await ref.read(recommendationsCacheProvider).clear(
-                  session.serverId,
-                  session.userId,
-                );
-          }
-          ref.invalidate(recentlyAddedProvider);
-          ref.invalidate(recentlyPlayedProvider);
-          ref.invalidate(mostPlayedProvider);
-          ref.invalidate(homeRecommendationsProvider);
-          await Future.wait([
-            ref.read(recentlyAddedProvider.future),
-            ref.read(recentlyPlayedProvider.future),
-            ref.read(mostPlayedProvider.future),
-            ref.read(homeRecommendationsProvider.future),
-          ]);
-        },
-        child: CustomScrollView(
-          slivers: [
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-              sliver: SliverToBoxAdapter(child: _Greeting(username: username)),
-            ),
-            const SliverPadding(
-              padding: EdgeInsets.fromLTRB(20, 8, 20, 8),
-              sliver: SliverToBoxAdapter(child: _ResumeCard()),
-            ),
-            const SliverToBoxAdapter(child: _ForYouSection()),
-            SliverList.list(
-              children: [
-                const SizedBox(height: 8),
-                Shelf(
-                  title: 'Recently added',
-                  items: ref.watch(recentlyAddedProvider),
-                  onSeeAll: () => context.push('/recently-added'),
-                ),
-                Shelf(
-                  title: 'Most played',
-                  items: ref.watch(mostPlayedProvider),
-                ),
-                Shelf(
-                  title: 'Recently played',
-                  items: ref.watch(recentlyPlayedProvider),
-                ),
-                const SizedBox(height: 32),
-              ],
-            ),
-          ],
-        ),
+    return RefreshIndicator(
+      onRefresh: () async {
+        // Bust today's For You cache so the user can force a fresh fetch
+        // instead of waiting until tomorrow.
+        final session = ref.read(jellyfinApiProvider).session;
+        if (session != null) {
+          await ref
+              .read(recommendationsCacheProvider)
+              .clear(session.serverId, session.userId);
+        }
+        ref.invalidate(recentlyAddedProvider);
+        ref.invalidate(recentlyPlayedProvider);
+        ref.invalidate(mostPlayedProvider);
+        ref.invalidate(homeRecommendationsProvider);
+        await Future.wait([
+          ref.read(recentlyAddedProvider.future),
+          ref.read(recentlyPlayedProvider.future),
+          ref.read(mostPlayedProvider.future),
+          ref.read(homeRecommendationsProvider.future),
+        ]);
+      },
+      child: CustomScrollView(
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+            sliver: SliverToBoxAdapter(child: _Greeting(username: username)),
+          ),
+          const SliverPadding(
+            padding: EdgeInsets.fromLTRB(20, 8, 20, 8),
+            sliver: SliverToBoxAdapter(child: _ResumeCard()),
+          ),
+          const SliverToBoxAdapter(child: _ForYouSection()),
+          SliverList.list(
+            children: [
+              const SizedBox(height: 8),
+              Shelf(
+                title: 'Recently added',
+                items: ref.watch(recentlyAddedProvider),
+                onSeeAll: () => context.push('/recently-added'),
+              ),
+              Shelf(title: 'Most played', items: ref.watch(mostPlayedProvider)),
+              Shelf(
+                title: 'Recently played',
+                items: ref.watch(recentlyPlayedProvider),
+              ),
+              const SizedBox(height: 32),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -250,41 +251,45 @@ class _ForYouSection extends ConsumerWidget {
 
     final topSong = recs.topSong;
     if (topSong != null) {
-      tiles.add(_ForYouCard(
-        eyebrow: 'BECAUSE YOU PLAYED',
-        title: topSong.name,
-        subtitle: topSong.artistName,
-        imageUrl: topSong.imageTag == null
-            ? null
-            : repo.imageUrl(topSong.imageItemId, imageTag: topSong.imageTag),
-        fallbackIcon: Icons.music_note_rounded,
-        onTap: () => openInstantMixPage(
-          context,
-          ref,
-          itemId: topSong.id,
-          kind: InstantMixSeedKind.track,
+      tiles.add(
+        _ForYouCard(
+          eyebrow: 'BECAUSE YOU PLAYED',
           title: topSong.name,
+          subtitle: topSong.artistName,
+          imageUrl: topSong.imageTag == null
+              ? null
+              : repo.imageUrl(topSong.imageItemId, imageTag: topSong.imageTag),
+          fallbackIcon: Icons.music_note_rounded,
+          onTap: () => openInstantMixPage(
+            context,
+            ref,
+            itemId: topSong.id,
+            kind: InstantMixSeedKind.track,
+            title: topSong.name,
+          ),
         ),
-      ));
+      );
     }
 
     for (final artist in recs.topArtists) {
-      tiles.add(_ForYouCard(
-        eyebrow: 'INSPIRED BY',
-        title: artist.name,
-        subtitle: 'Mix from artist',
-        imageUrl: artist.imageTag == null
-            ? null
-            : repo.imageUrl(artist.id, imageTag: artist.imageTag),
-        fallbackIcon: Icons.person_rounded,
-        onTap: () => openInstantMixPage(
-          context,
-          ref,
-          itemId: artist.id,
-          kind: InstantMixSeedKind.artist,
+      tiles.add(
+        _ForYouCard(
+          eyebrow: 'INSPIRED BY',
           title: artist.name,
+          subtitle: 'Mix from artist',
+          imageUrl: artist.imageTag == null
+              ? null
+              : repo.imageUrl(artist.id, imageTag: artist.imageTag),
+          fallbackIcon: Icons.person_rounded,
+          onTap: () => openInstantMixPage(
+            context,
+            ref,
+            itemId: artist.id,
+            kind: InstantMixSeedKind.artist,
+            title: artist.name,
+          ),
         ),
-      ));
+      );
     }
 
     final forgotten = recs.forgottenFavorites;
@@ -293,20 +298,21 @@ class _ForYouSection extends ConsumerWidget {
         (t) => t.imageTag != null && t.imageTag!.isNotEmpty,
         orElse: () => forgotten.first,
       );
-      tiles.add(_ForYouCard(
-        eyebrow: 'FORGOTTEN FAVORITES',
-        title: 'Songs you used to love',
-        subtitle:
-            '${forgotten.length} song${forgotten.length == 1 ? '' : 's'}',
-        imageUrl: cover.imageTag == null
-            ? null
-            : repo.imageUrl(cover.imageItemId, imageTag: cover.imageTag),
-        fallbackIcon: Icons.history_rounded,
-        onTap: () => ref.read(playerControllerProvider).playTracks(
-              forgotten,
-              contextId: 'forgotten-favorites',
-            ),
-      ));
+      tiles.add(
+        _ForYouCard(
+          eyebrow: 'FORGOTTEN FAVORITES',
+          title: 'Songs you used to love',
+          subtitle:
+              '${forgotten.length} song${forgotten.length == 1 ? '' : 's'}',
+          imageUrl: cover.imageTag == null
+              ? null
+              : repo.imageUrl(cover.imageItemId, imageTag: cover.imageTag),
+          fallbackIcon: Icons.history_rounded,
+          onTap: () => ref
+              .read(playerControllerProvider)
+              .playTracks(forgotten, contextId: 'forgotten-favorites'),
+        ),
+      );
     }
 
     if (tiles.isEmpty) return const SizedBox.shrink();
@@ -334,7 +340,6 @@ class _ForYouSection extends ConsumerWidget {
       ],
     );
   }
-
 }
 
 class _ForYouCard extends StatelessWidget {
@@ -441,9 +446,7 @@ class _ForYouCardArtFallback extends StatelessWidget {
   Widget build(BuildContext context) {
     return ColoredBox(
       color: AppColors.surfaceElevated,
-      child: Center(
-        child: Icon(icon, color: AppColors.primary, size: 48),
-      ),
+      child: Center(child: Icon(icon, color: AppColors.primary, size: 48)),
     );
   }
 }
