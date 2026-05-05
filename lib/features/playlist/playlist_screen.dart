@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/layout/adaptive_breakpoints.dart';
 import '../../core/navigation/app_navigation.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/play_pill.dart';
@@ -23,9 +24,6 @@ import '../player/widgets/mini_player_slot.dart';
 import '../player/widgets/playing_track_leading.dart';
 import '../player/widgets/track_more_menu_button.dart';
 import 'playlist_providers.dart';
-
-/// Album on each track row is shown when width is at or above this (phone vs tablet / landscape).
-const double _kPlaylistShowAlbumWidthBreakpoint = 600;
 
 enum _SelectionBulkAction { addToLiked, addToPlaylist, removeFromPlaylist }
 
@@ -1445,10 +1443,10 @@ class _PlaylistTrackTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final showAlbumLine =
-        MediaQuery.sizeOf(context).width >= _kPlaylistShowAlbumWidthBreakpoint;
-    final hasAlbum =
-        showAlbumLine && track.albumName != null && track.albumName!.isNotEmpty;
+    final showAlbumColumn =
+        isDesktopLayout(context) &&
+        track.albumName != null &&
+        track.albumName!.isNotEmpty;
     final current = ref.watch(currentMediaItemProvider).value;
     final isCurrent =
         current != null && current.extras?['jellyfinId'] == track.id;
@@ -1458,7 +1456,7 @@ class _PlaylistTrackTile extends ConsumerWidget {
     return ListTile(
       dense: true,
       visualDensity: VisualDensity.compact,
-      isThreeLine: inSelection || hasAlbum,
+      isThreeLine: inSelection,
       onLongPress: onLongPress,
       onTap: () {
         if (inSelection) {
@@ -1498,67 +1496,70 @@ class _PlaylistTrackTile extends ConsumerWidget {
               jellyfinTrackId: track.id,
               indexLabel: '${index + 1}',
             ),
-      title: Text(
-        track.name,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          color: isCurrent && !inSelection
-              ? AppColors.primary
-              : AppColors.textPrimary,
-          fontWeight: isCurrent && !inSelection
-              ? FontWeight.w600
-              : FontWeight.w500,
-        ),
-      ),
-      subtitle: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+      title: Row(
         children: [
-          InkWell(
-            onTap: inSelection
-                ? null
-                : (track.artistId == null || track.artistId!.isEmpty
-                      ? null
-                      : () => context.push('/artist/${track.artistId}')),
+          Expanded(
             child: Text(
-              track.artistName,
+              track.name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color: inSelection
-                    ? AppColors.textSecondary
-                    : (track.artistId == null || track.artistId!.isEmpty
-                          ? AppColors.textSecondary
-                          : AppColors.primary),
-                fontSize: 12,
+                color: isCurrent && !inSelection
+                    ? AppColors.primary
+                    : AppColors.textPrimary,
+                fontWeight: isCurrent && !inSelection
+                    ? FontWeight.w600
+                    : FontWeight.w500,
               ),
             ),
           ),
-          if (hasAlbum) ...[
-            const SizedBox(height: 2),
-            InkWell(
-              onTap: inSelection
-                  ? null
-                  : (track.albumId == null || track.albumId!.isEmpty
-                        ? null
-                        : () => context.push('/album/${track.albumId}')),
-              child: Text(
-                track.albumName!,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: inSelection
-                      ? AppColors.textTertiary
-                      : (track.albumId == null || track.albumId!.isEmpty
-                            ? AppColors.textSecondary
-                            : AppColors.primary),
-                  fontSize: 12,
+          if (showAlbumColumn) ...[
+            const SizedBox(width: 24),
+            Expanded(
+              child: InkWell(
+                onTap: inSelection
+                    ? null
+                    : (track.albumId == null || track.albumId!.isEmpty
+                          ? null
+                          : () => context.push('/album/${track.albumId}')),
+                child: Text(
+                  track.albumName!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: inSelection
+                        ? AppColors.textTertiary
+                        : (track.albumId == null || track.albumId!.isEmpty
+                              ? AppColors.textSecondary
+                              : AppColors.primary),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ),
           ],
         ],
+      ),
+      subtitle: InkWell(
+        onTap: inSelection
+            ? null
+            : (track.artistId == null || track.artistId!.isEmpty
+                  ? null
+                  : () => context.push('/artist/${track.artistId}')),
+        child: Text(
+          track.artistName,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: inSelection
+                ? AppColors.textSecondary
+                : (track.artistId == null || track.artistId!.isEmpty
+                      ? AppColors.textSecondary
+                      : AppColors.primary),
+            fontSize: 12,
+          ),
+        ),
       ),
       trailing: inSelection
           ? null
