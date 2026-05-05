@@ -14,7 +14,6 @@ import '../../data/local/connectivity_provider.dart';
 import '../auth/auth_controller.dart';
 import '../downloads/offline_library_view.dart';
 import '../player/instant_mix.dart';
-import '../player/player_providers.dart';
 import 'home_controller.dart';
 import 'recommendations_cache.dart';
 import 'recommendations_provider.dart';
@@ -240,8 +239,9 @@ class _ResumeArtFallback extends StatelessWidget {
 
 /// Personalized "for you" recommendations on Home: a "Because you played"
 /// anchor (the user's #1 song from the last 7 days) plus 4 "Inspired by"
-/// artist mixes (drawn daily from the user's top 8 of the same window) and
-/// Forgotten favorites. Hides itself entirely when there's no data — i.e.
+/// artist mixes (drawn daily from the user's top 8 of the same window), plus
+/// one day-rotating discovery seed from your top tracks. Hides itself entirely
+/// when there's no data — i.e.
 /// when the Playback Reporting plugin isn't installed and there's no cached
 /// snapshot from a previous online session.
 class _ForYouSection extends ConsumerWidget {
@@ -277,6 +277,31 @@ class _ForYouSection extends ConsumerWidget {
       );
     }
 
+    final discovery = recs.discoveryTrack;
+    if (discovery != null) {
+      tiles.add(
+        _ForYouCard(
+          eyebrow: 'DISCOVER WITH',
+          title: discovery.name,
+          subtitle: discovery.artistName,
+          imageUrl: discovery.imageTag == null
+              ? null
+              : repo.imageUrl(
+                  discovery.imageItemId,
+                  imageTag: discovery.imageTag,
+                ),
+          fallbackIcon: Icons.explore_rounded,
+          onTap: () => openInstantMixPage(
+            context,
+            ref,
+            itemId: discovery.id,
+            kind: InstantMixSeedKind.track,
+            title: discovery.name,
+          ),
+        ),
+      );
+    }
+
     for (final artist in recs.topArtists) {
       tiles.add(
         _ForYouCard(
@@ -294,29 +319,6 @@ class _ForYouSection extends ConsumerWidget {
             kind: InstantMixSeedKind.artist,
             title: artist.name,
           ),
-        ),
-      );
-    }
-
-    final forgotten = recs.forgottenFavorites;
-    if (forgotten.isNotEmpty) {
-      final cover = forgotten.firstWhere(
-        (t) => t.imageTag != null && t.imageTag!.isNotEmpty,
-        orElse: () => forgotten.first,
-      );
-      tiles.add(
-        _ForYouCard(
-          eyebrow: 'FORGOTTEN FAVORITES',
-          title: 'Songs you used to love',
-          subtitle:
-              '${forgotten.length} song${forgotten.length == 1 ? '' : 's'}',
-          imageUrl: cover.imageTag == null
-              ? null
-              : repo.imageUrl(cover.imageItemId, imageTag: cover.imageTag),
-          fallbackIcon: Icons.history_rounded,
-          onTap: () => ref
-              .read(playerControllerProvider)
-              .playTracks(forgotten, contextId: 'forgotten-favorites'),
         ),
       );
     }

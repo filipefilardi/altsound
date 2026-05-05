@@ -14,29 +14,26 @@ import 'recommendations_cache.dart';
 ///
 /// [topSong] is the user's #1 played track over the last 7 days. [topArtists]
 /// are 4 artists drawn daily from the top 8 of the same window — stable for
-/// the day, fresh tomorrow. [forgottenFavorites] are high-played tracks the
-/// user hasn't returned to recently.
+/// the day, fresh tomorrow. [discoveryTrack] is a day-rotating pick from the
+/// remaining top-ranked tracks for quick discovery.
 class HomeRecommendations {
   const HomeRecommendations({
     required this.topSong,
     required this.topArtists,
-    required this.forgottenFavorites,
+    required this.discoveryTrack,
   });
 
   final Track? topSong;
   final List<BrowseItem> topArtists;
-  final List<Track> forgottenFavorites;
+  final Track? discoveryTrack;
 
   bool get isEmpty =>
-      topSong == null && topArtists.isEmpty && forgottenFavorites.isEmpty;
+      topSong == null && topArtists.isEmpty && discoveryTrack == null;
 }
 
 const _windowDays = 7;
-const _historyDays = 365;
-const _recentExclusionDays = 60;
 const _artistPoolSize = 8;
 const _artistsToShow = 4;
-const _forgottenLimit = 30;
 
 typedef _RankedTrack = ({Track track, int rank});
 
@@ -121,22 +118,29 @@ Future<HomeRecommendations?> _fetchFromApi(Ref ref) async {
 
   // Run remaining queries independently so a failure in one doesn't collapse
   // the whole shelf.
-  final artistsFuture = _safeItemsByIds(repo, pickedArtistIds);
-  final forgottenFuture =
-      _fetchForgottenFavorites(repo, reporting).catchError((Object e, _) {
-    if (kDebugMode) debugPrint('[ForYou] forgottenFavorites failed: $e');
-    return const <Track>[];
-  });
-  final results = await Future.wait([artistsFuture, forgottenFuture]);
+  final topArtists = await _safeItemsByIds(repo, pickedArtistIds);
+
+  // Day-seeded discovery pick from ranked tracks, excluding the anchor song.
+  final discoveryCandidates = ranked
+      .where((r) => r.track.id != topSong.id)
+      .take(10)
+      .map((r) => r.track)
+      .toList(growable: false);
+  Track? discoveryTrack;
+  if (discoveryCandidates.isNotEmpty) {
+    final discovery =
+        List<Track>.from(discoveryCandidates)..shuffle(Random(daySeed ^ 0x5F3759DF));
+    discoveryTrack = discovery.first;
+  }
 
   final recs = HomeRecommendations(
     topSong: topSong,
-    topArtists: results[0] as List<BrowseItem>,
-    forgottenFavorites: results[1] as List<Track>,
+    topArtists: topArtists,
+    discoveryTrack: discoveryTrack,
   );
   if (kDebugMode) {
     debugPrint(
-        '[ForYou] built: topSong=${recs.topSong?.name}, artists=${recs.topArtists.length}, forgotten=${recs.forgottenFavorites.length}');
+        '[ForYou] built: topSong=${recs.topSong?.name}, artists=${recs.topArtists.length}, discovery=${recs.discoveryTrack?.name ?? '(none)'}');
   }
   return recs;
 }
@@ -205,47 +209,6 @@ Future<List<Track>> _safeTopPlayedSince(
     return await repo.topPlayedSince(since: since);
   } catch (e) {
     if (kDebugMode) debugPrint('[ForYou] topPlayedSince failed: $e');
-    return const [];
-  }
-}
-
-/// Tracks the user used to listen to a lot but hasn't touched recently.
-/// Prefers the plugin's 365/60-day diff; falls back to the Jellyfin
-/// `forgottenFavorites` query (PlayCount + LastPlayedDate cutoff).
-Future<List<Track>> _fetchForgottenFavorites(
-  JellyfinRepository repo,
-  PlaybackReportingApi reporting,
-) async {
-  final history = await reporting.recentAudioPlays(days: _historyDays);
-  if (history != null && history.isNotEmpty) {
-    final recent = await reporting.recentAudioPlays(days: _recentExclusionDays);
-    final recentIds = (recent ?? const <PlaybackReportingPlay>[])
-        .map((p) => p.itemId)
-        .toSet();
-    final coldIds = <String>[];
-    for (final play in history) {
-      if (recentIds.contains(play.itemId)) continue;
-      coldIds.add(play.itemId);
-      if (coldIds.length >= _forgottenLimit) break;
-    }
-    if (coldIds.isNotEmpty) {
-      final tracks = await _safeTracksByIds(repo, coldIds);
-      if (tracks.isNotEmpty) return tracks;
-    }
-  }
-
-  // Plugin missing/broken/empty → use Jellyfin's PlayCount + cold-period
-  // filter. Tighter window (60 days) than the original 180 so more candidates
-  // qualify on smaller libraries.
-  try {
-    return await repo.forgottenFavorites(
-      limit: _forgottenLimit,
-      coldFor: const Duration(days: _recentExclusionDays),
-    );
-  } catch (e) {
-    if (kDebugMode) {
-      debugPrint('[ForYou] forgottenFavorites jellyfin fallback failed: $e');
-    }
     return const [];
   }
 }

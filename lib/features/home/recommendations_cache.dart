@@ -20,7 +20,7 @@ class CachedRecommendations {
   final HomeRecommendations recs;
 }
 
-const _cacheVersion = 1;
+const _cacheVersion = 2;
 
 final recommendationsCacheProvider = Provider<RecommendationsCache>((ref) {
   return const RecommendationsCache();
@@ -45,11 +45,7 @@ class RecommendationsCache {
             .whereType<Map<String, dynamic>>()
             .map(BrowseItem.fromSearchJson)
             .toList(),
-        forgottenFavorites: ((raw['forgottenFavorites'] as List?) ?? const [])
-            .whereType<Map<String, dynamic>>()
-            .map(_trackFromJson)
-            .whereType<Track>()
-            .toList(),
+        discoveryTrack: _trackFromJson(raw['discoveryTrack']),
       );
       return CachedRecommendations(dateKey: dateKey, recs: recs);
     } catch (_) {
@@ -77,9 +73,7 @@ class RecommendationsCache {
         'topSong': _trackToJson(recs.topSong),
         'topArtists':
             recs.topArtists.map((a) => a.toSearchJson()).toList(),
-        'forgottenFavorites': recs.forgottenFavorites
-            .map((t) => _trackToJson(t))
-            .toList(),
+        'discoveryTrack': _trackToJson(recs.discoveryTrack),
       }));
     } catch (_) {
       // Cache failure is non-fatal — picks just won't survive across launches.
