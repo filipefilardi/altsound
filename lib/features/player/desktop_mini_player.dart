@@ -284,6 +284,16 @@ class DesktopMiniPlayer extends ConsumerWidget {
                     ),
                     const SizedBox(width: 2),
                     IconButton(
+                      icon: const Icon(Icons.mic_rounded, size: 20),
+                      onPressed: () => context.push('/lyrics'),
+                      tooltip: 'Lyrics',
+                      padding: EdgeInsets.zero,
+                      constraints: _auxButtonConstraints,
+                      visualDensity: VisualDensity.compact,
+                      color: AppColors.textSecondary,
+                    ),
+                    const SizedBox(width: 2),
+                    IconButton(
                       icon: Icon(
                         muted
                             ? Icons.volume_off_rounded
