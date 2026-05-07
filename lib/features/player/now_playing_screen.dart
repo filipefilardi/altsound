@@ -54,6 +54,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
     final playing = ref.watch(effectivePlayingProvider);
     final artistId = mediaItem?.extras?['artistId'] as String?;
     final albumId = mediaItem?.extras?['albumId'] as String?;
+    final trackId = mediaItem?.extras?['jellyfinId'] as String?;
 
     if (mediaItem == null) {
       return Scaffold(
@@ -71,19 +72,22 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          const _PlayerBackdrop(),
+          const PlayerBackdrop(),
           SafeArea(
-            child: _DismissibleSurface(
+            child: PlayerDismissibleSurface(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 22),
                 child: Column(
                   children: [
-                    const _DragHandle(),
+                    const PlayerDragHandle(),
                     const SizedBox(height: 4),
                     _TopBar(
                       album: mediaItem.album ?? '',
                       albumId: albumId,
                       onQueue: () => showQueueBottomSheet(context, ref),
+                      onLyrics: trackId == null
+                          ? null
+                          : () => context.push('/lyrics'),
                     ),
                     Expanded(
                       child: LayoutBuilder(
@@ -149,7 +153,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                     ],
                     _SecondaryControls(mediaItem: mediaItem),
                     const SizedBox(height: 12),
-                    const _Scrubber(),
+                    const PlayerScrubber(),
                     const SizedBox(height: 16),
                     _MainControls(playing: playing),
                     const SizedBox(height: 24),
@@ -170,15 +174,16 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
 /// finger, and on release we either pop (past threshold or fast flick) or
 /// snap back. Doesn't fight any inner scrollables because the now-playing
 /// layout is a non-scrolling [Column].
-class _DismissibleSurface extends StatefulWidget {
-  const _DismissibleSurface({required this.child});
+class PlayerDismissibleSurface extends StatefulWidget {
+  const PlayerDismissibleSurface({required this.child, super.key});
   final Widget child;
 
   @override
-  State<_DismissibleSurface> createState() => _DismissibleSurfaceState();
+  State<PlayerDismissibleSurface> createState() =>
+      _PlayerDismissibleSurfaceState();
 }
 
-class _DismissibleSurfaceState extends State<_DismissibleSurface>
+class _PlayerDismissibleSurfaceState extends State<PlayerDismissibleSurface>
     with SingleTickerProviderStateMixin {
   double _dy = 0;
   late final AnimationController _settle;
@@ -245,8 +250,8 @@ class _DismissibleSurfaceState extends State<_DismissibleSurface>
   }
 }
 
-class _DragHandle extends StatelessWidget {
-  const _DragHandle();
+class PlayerDragHandle extends StatelessWidget {
+  const PlayerDragHandle({super.key});
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -263,8 +268,8 @@ class _DragHandle extends StatelessWidget {
   }
 }
 
-class _PlayerBackdrop extends StatelessWidget {
-  const _PlayerBackdrop();
+class PlayerBackdrop extends StatelessWidget {
+  const PlayerBackdrop({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -279,10 +284,12 @@ class _TopBar extends ConsumerWidget {
     required this.album,
     required this.albumId,
     required this.onQueue,
+    required this.onLyrics,
   });
   final String album;
   final String? albumId;
   final VoidCallback onQueue;
+  final VoidCallback? onLyrics;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -295,9 +302,9 @@ class _TopBar extends ConsumerWidget {
         ? 'PLAYING ON ${remoteSession?.deviceName.toUpperCase() ?? 'REMOTE'}'
         : 'PLAYING FROM ALBUM';
     // Reserve symmetric space on both sides so the centered text is not
-    // pushed off-center by the icon row. Right side has two icons (~96 px),
-    // left has one (~48 px) — pad the text by the larger value on each side.
-    const sideReserve = 96.0;
+    // pushed off-center by the icon row. Right side has up to three icons
+    // (~144 px), left has one (~48 px) — pad both with the larger value.
+    const sideReserve = 144.0;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: SizedBox(
@@ -372,6 +379,11 @@ class _TopBar extends ConsumerWidget {
                       ),
                       onPressed: () => showRemoteSessionsSheet(context),
                       tooltip: 'Play on…',
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.mic_rounded, size: 22),
+                      onPressed: onLyrics,
+                      tooltip: 'Lyrics',
                     ),
                     IconButton(
                       icon: const Icon(Icons.queue_music_rounded, size: 24),
@@ -489,8 +501,8 @@ Future<void> _onPlaylistTap(
   ref.invalidate(currentTrackPlaylistPresenceProvider);
 }
 
-class _Scrubber extends ConsumerWidget {
-  const _Scrubber();
+class PlayerScrubber extends ConsumerWidget {
+  const PlayerScrubber({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -568,7 +580,7 @@ class _MainControls extends ConsumerWidget {
           onPressed: controller.previous,
         ),
         const SizedBox(width: 24),
-        _PlayPauseButton(playing: playing, onTap: controller.togglePlay),
+        PlayerPlayPauseButton(playing: playing, onTap: controller.togglePlay),
         const SizedBox(width: 24),
         IconButton(
           iconSize: 32,
@@ -583,8 +595,12 @@ class _MainControls extends ConsumerWidget {
   }
 }
 
-class _PlayPauseButton extends StatelessWidget {
-  const _PlayPauseButton({required this.playing, required this.onTap});
+class PlayerPlayPauseButton extends StatelessWidget {
+  const PlayerPlayPauseButton({
+    required this.playing,
+    required this.onTap,
+    super.key,
+  });
   final bool playing;
   final VoidCallback onTap;
 

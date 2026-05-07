@@ -16,6 +16,7 @@ import '../features/library/library_collection_screen.dart';
 import '../features/library/library_screen.dart';
 import '../features/player/instant_mix.dart';
 import '../features/player/instant_mix_screen.dart';
+import '../features/player/lyrics_screen.dart';
 import '../features/player/now_playing_screen.dart';
 import '../features/playlist/playlist_screen.dart';
 import '../features/search/search_screen.dart';
@@ -103,6 +104,28 @@ final routerProvider = Provider<GoRouter>((ref) {
             );
           },
           child: const NowPlayingScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/lyrics',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (_, st) => CustomTransitionPage(
+          key: st.pageKey,
+          fullscreenDialog: true,
+          opaque: true,
+          transitionDuration: const Duration(milliseconds: 220),
+          reverseTransitionDuration: const Duration(milliseconds: 180),
+          transitionsBuilder: (_, animation, __, child) {
+            return FadeTransition(
+              opacity: CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOut,
+                reverseCurve: Curves.easeIn,
+              ),
+              child: child,
+            );
+          },
+          child: const LyricsScreen(),
         ),
       ),
       StatefulShellRoute.indexedStack(
@@ -215,7 +238,9 @@ final routerProvider = Provider<GoRouter>((ref) {
           context: context,
           state: state,
           child: DesktopRouteFrame(
-            child: ArtistDiscographyScreen(artistId: state.pathParameters['id']!),
+            child: ArtistDiscographyScreen(
+              artistId: state.pathParameters['id']!,
+            ),
           ),
         ),
       ),
