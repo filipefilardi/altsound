@@ -11,6 +11,7 @@ import 'auth_repository.dart';
 import '../../core/utils/search_normalization.dart';
 import 'jellyfin_api.dart';
 import 'models/jellyfin_session.dart';
+import 'models/lyrics.dart';
 import 'models/media_item.dart';
 
 class _NoSession implements Exception {
@@ -645,6 +646,22 @@ class JellyfinRepository {
       queryParameters: {'Fields': _trackFields},
     );
     return Track.fromJson(res.data ?? {});
+  }
+
+  /// Fetches lyrics for [trackId] from Jellyfin's `/Audio/{id}/Lyrics`.
+  /// Returns `null` when the server has no lyrics (HTTP 404).
+  Future<Lyrics?> lyrics(String trackId) async {
+    try {
+      final res = await _api.dio.get<Map<String, dynamic>>(
+        '/Audio/$trackId/Lyrics',
+      );
+      final data = res.data;
+      if (data == null) return null;
+      return Lyrics.fromJson(data);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) return null;
+      rethrow;
+    }
   }
 
   Future<List<Track>> instantMix(String itemId, {int limit = 100}) async {
