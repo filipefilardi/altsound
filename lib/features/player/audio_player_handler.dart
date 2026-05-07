@@ -17,6 +17,12 @@ class JellymusicAudioHandler extends BaseAudioHandler with SeekHandler {
       (_) => _syncPlaybackState(),
       onError: (Object e, StackTrace st) => _emitError(e),
     );
+    _player.processingStateStream.listen((state) async {
+      if (state != ProcessingState.completed) return;
+      if (_player.loopMode != LoopMode.off) return;
+      await _player.pause();
+      await _player.seek(Duration.zero, index: 0);
+    });
     _player.currentIndexStream.listen((index) {
       final q = queue.value;
       if (index != null && index >= 0 && index < q.length) {
@@ -138,13 +144,7 @@ class JellymusicAudioHandler extends BaseAudioHandler with SeekHandler {
       await _player.setShuffleModeEnabled(savedShuffle);
     }
 
-    final shouldPlay = snapshot['playing'] == true;
-    if (shouldPlay) {
-      // Don't block app startup on network/buffering while resuming playback.
-      _player.play().catchError((_) {});
-    } else {
-      await _player.pause();
-    }
+    await _player.pause();
     _syncPlaybackState();
     return true;
   }
