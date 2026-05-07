@@ -54,7 +54,6 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
     final playing = ref.watch(effectivePlayingProvider);
     final artistId = mediaItem?.extras?['artistId'] as String?;
     final albumId = mediaItem?.extras?['albumId'] as String?;
-    final trackId = mediaItem?.extras?['jellyfinId'] as String?;
 
     if (mediaItem == null) {
       return Scaffold(
@@ -85,9 +84,6 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                       album: mediaItem.album ?? '',
                       albumId: albumId,
                       onQueue: () => showQueueBottomSheet(context, ref),
-                      onLyrics: trackId == null
-                          ? null
-                          : () => context.push('/lyrics'),
                     ),
                     Expanded(
                       child: LayoutBuilder(
@@ -284,12 +280,10 @@ class _TopBar extends ConsumerWidget {
     required this.album,
     required this.albumId,
     required this.onQueue,
-    required this.onLyrics,
   });
   final String album;
   final String? albumId;
   final VoidCallback onQueue;
-  final VoidCallback? onLyrics;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -302,9 +296,9 @@ class _TopBar extends ConsumerWidget {
         ? 'PLAYING ON ${remoteSession?.deviceName.toUpperCase() ?? 'REMOTE'}'
         : 'PLAYING FROM ALBUM';
     // Reserve symmetric space on both sides so the centered text is not
-    // pushed off-center by the icon row. Right side has up to three icons
-    // (~144 px), left has one (~48 px) — pad both with the larger value.
-    const sideReserve = 144.0;
+    // pushed off-center by the icon row. Right side has two icons (~96 px),
+    // left has one (~48 px) — pad the text by the larger value on each side.
+    const sideReserve = 96.0;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: SizedBox(
@@ -379,11 +373,6 @@ class _TopBar extends ConsumerWidget {
                       ),
                       onPressed: () => showRemoteSessionsSheet(context),
                       tooltip: 'Play on…',
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.mic_rounded, size: 22),
-                      onPressed: onLyrics,
-                      tooltip: 'Lyrics',
                     ),
                     IconButton(
                       icon: const Icon(Icons.queue_music_rounded, size: 24),
@@ -485,6 +474,15 @@ class _SecondaryControls extends ConsumerWidget {
             size: 24,
           ),
           tooltip: 'Add to playlist',
+        ),
+        IconButton(
+          onPressed: () => context.push('/lyrics'),
+          icon: const Icon(
+            Icons.mic_rounded,
+            color: AppColors.textSecondary,
+            size: 22,
+          ),
+          tooltip: 'Lyrics',
         ),
       ],
     );
