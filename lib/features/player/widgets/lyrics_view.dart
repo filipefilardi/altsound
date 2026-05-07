@@ -48,33 +48,37 @@ class LyricsView extends ConsumerWidget {
 class _LoadingLyrics extends StatelessWidget {
   const _LoadingLyrics();
 
+  static const _widths = <double>[
+    0.85,
+    0.7,
+    0.9,
+    0.6,
+    0.8,
+    0.75,
+    0.65,
+    0.55,
+    0.8,
+    0.7,
+  ];
+
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-      child: Skeleton.group(
-        child: Column(
-          children: List.generate(10, (i) {
-            final widths = [
-              0.85,
-              0.7,
-              0.9,
-              0.6,
-              0.8,
-              0.75,
-              0.65,
-              0.55,
-              0.8,
-              0.7,
-            ];
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Skeleton.line(
-                width: MediaQuery.sizeOf(context).width * widths[i] * 0.8,
-                height: 16,
-              ),
-            );
-          }),
+    final maxWidth = MediaQuery.sizeOf(context).width;
+    return Skeleton.group(
+      // ListView (not Column) so the placeholder gracefully scrolls when the
+      // available height is shorter than the rendered shimmer rows.
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: _widths.length,
+        itemBuilder: (_, i) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Center(
+            child: Skeleton.line(
+              width: maxWidth * _widths[i] * 0.8,
+              height: 16,
+            ),
+          ),
         ),
       ),
     );
