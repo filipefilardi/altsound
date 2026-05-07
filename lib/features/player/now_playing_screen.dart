@@ -456,6 +456,15 @@ class _SecondaryControls extends ConsumerWidget {
           tooltip: 'Instant Mix',
         ),
         IconButton(
+          onPressed: () => context.push('/lyrics'),
+          icon: const Icon(
+            Icons.mic_rounded,
+            color: AppColors.textSecondary,
+            size: 22,
+          ),
+          tooltip: 'Lyrics',
+        ),
+        IconButton(
           onPressed: offline || isRemote
               ? null
               : () => unawaited(
@@ -474,15 +483,6 @@ class _SecondaryControls extends ConsumerWidget {
             size: 24,
           ),
           tooltip: 'Add to playlist',
-        ),
-        IconButton(
-          onPressed: () => context.push('/lyrics'),
-          icon: const Icon(
-            Icons.mic_rounded,
-            color: AppColors.textSecondary,
-            size: 22,
-          ),
-          tooltip: 'Lyrics',
         ),
       ],
     );
