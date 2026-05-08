@@ -350,6 +350,15 @@ class _LibraryGroup extends ConsumerWidget {
           ),
           onTap: () => context.push('/settings/downloads'),
         ),
+        ListTile(
+          leading: const Icon(Icons.backup_rounded),
+          title: const Text('Playlist backups'),
+          subtitle: const Text(
+            'Automatic restore points and migration exports',
+            style: TextStyle(color: AppColors.textSecondary),
+          ),
+          onTap: () => context.push('/settings/playlist-backups'),
+        ),
       ],
     );
   }

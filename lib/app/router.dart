@@ -20,6 +20,7 @@ import '../features/player/lyrics_screen.dart';
 import '../features/player/now_playing_screen.dart';
 import '../features/playlist/playlist_screen.dart';
 import '../features/search/search_screen.dart';
+import '../features/settings/playlist_backup_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/shell/app_shell.dart';
 import '../features/shell/desktop_shell.dart';
@@ -218,6 +219,15 @@ final routerProvider = Provider<GoRouter>((ref) {
           context: context,
           state: state,
           child: const DesktopRouteFrame(child: DownloadsSettingsScreen()),
+        ),
+      ),
+      GoRoute(
+        path: '/settings/playlist-backups',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) => desktopAwarePage(
+          context: context,
+          state: state,
+          child: const DesktopRouteFrame(child: PlaylistBackupScreen()),
         ),
       ),
       GoRoute(

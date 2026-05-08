@@ -7,6 +7,7 @@ import '../core/theme/app_theme.dart';
 import '../data/jellyfin/jellyfin_repository.dart';
 import '../data/jellyfin/scrobbler.dart';
 import '../data/last_played/last_played_controller.dart';
+import '../data/playlists/playlist_backup_repository.dart';
 import '../features/auth/auth_controller.dart';
 import '../features/player/instant_mix_extender.dart';
 import '../features/player/playback_session_persistence.dart';
@@ -25,6 +26,7 @@ class _JellymusicAppState extends ConsumerState<JellymusicApp> {
   bool _instantMixExtenderAttached = false;
   bool _playbackPersistenceAttached = false;
   String? _searchWarmSessionKey;
+  String? _playlistBackupSessionKey;
 
   void _ensureScrobbler() {
     if (_scrobblerAttached) return;
@@ -52,6 +54,19 @@ class _JellymusicAppState extends ConsumerState<JellymusicApp> {
     unawaited(ref.read(jellyfinRepositoryProvider).warmSearchCatalog());
   }
 
+  void _ensurePlaylistAutoBackup(AuthAuthenticated auth) {
+    final now = DateTime.now();
+    final key =
+        '${auth.session.serverId}_${auth.session.userId}_${now.year}-${now.month}-${now.day}';
+    if (_playlistBackupSessionKey == key) return;
+    _playlistBackupSessionKey = key;
+    unawaited(
+      ref
+          .read(playlistBackupRepositoryProvider)
+          .maybeCreateAutomaticBackup(session: auth.session),
+    );
+  }
+
   void _ensurePlaybackPersistence() {
     if (_playbackPersistenceAttached) return;
     _playbackPersistenceAttached = true;
@@ -75,10 +90,12 @@ class _JellymusicAppState extends ConsumerState<JellymusicApp> {
       _ensureScrobbler();
       _ensureInstantMixExtender();
       _ensureSearchWarmup(auth);
+      _ensurePlaylistAutoBackup(auth);
       // Eagerly attach the local last-played listener.
       ref.read(lastPlayedProvider);
     } else {
       _searchWarmSessionKey = null;
+      _playlistBackupSessionKey = null;
     }
 
     return MaterialApp.router(
