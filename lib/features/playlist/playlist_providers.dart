@@ -7,16 +7,21 @@ import '../../data/jellyfin/models/media_item.dart';
 import '../../data/local/connectivity_provider.dart';
 
 final playlistProvider = FutureProvider.autoDispose
-    .family<PlaylistDetail, String>((ref, playlistId) {
-      if (ref.watch(isOfflineProvider)) {
-        final offlinePlaylist = _buildOfflinePlaylist(
-          playlistId,
-          ref.watch(downloadManagerProvider),
-        );
-        if (offlinePlaylist != null) return offlinePlaylist;
-        throw Exception('Playlist is not downloaded.');
+    .family<PlaylistDetail, String>((ref, playlistId) async {
+      final keepAlive = ref.keepAlive();
+      try {
+        if (ref.watch(isOfflineProvider)) {
+          final offlinePlaylist = _buildOfflinePlaylist(
+            playlistId,
+            ref.watch(downloadManagerProvider),
+          );
+          if (offlinePlaylist != null) return offlinePlaylist;
+          throw Exception('Playlist is not downloaded.');
+        }
+        return await ref.read(jellyfinRepositoryProvider).playlist(playlistId);
+      } finally {
+        keepAlive.close();
       }
-      return ref.read(jellyfinRepositoryProvider).playlist(playlistId);
     });
 
 final likedSongsPlaylistProvider = FutureProvider.autoDispose((ref) {
