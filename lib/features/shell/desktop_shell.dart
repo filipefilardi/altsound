@@ -155,9 +155,7 @@ class _DesktopTopNavBar extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   _TopNavIconButton(
-                    icon: syncPlayActive
-                        ? Icons.group_work_rounded
-                        : Icons.groups_rounded,
+                    icon: Icons.groups_rounded,
                     tooltip: 'SyncPlay',
                     isSelected: syncPlayActive,
                     onPressed: () => showSyncPlaySheet(context),
