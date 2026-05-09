@@ -20,8 +20,40 @@ Future<void> openAddTrackToPlaylistFlow(
   required String trackId,
   bool includeLikedSongsShortcut = false,
 }) async {
+  if (includeLikedSongsShortcut) {
+    await _addTrackToLikedSongs(context, ref, trackId: trackId);
+    return;
+  }
   await openManageTrackPlaylistsSheet(context, ref, trackId: trackId);
   _invalidateTrackPlaylistPresence(ref);
+}
+
+Future<void> _addTrackToLikedSongs(
+  BuildContext context,
+  WidgetRef ref, {
+  required String trackId,
+}) async {
+  final repo = ref.read(jellyfinRepositoryProvider);
+  try {
+    await repo.setFavorite(trackId, favorite: true);
+    await repo.addTrackToLikedSongs(trackId);
+    final liked = await repo.likedSongsPlaylist();
+    if (liked != null) {
+      ref.invalidate(playlistProvider(liked.id));
+    }
+    ref.invalidate(likedSongsPlaylistProvider);
+    _invalidateTrackPlaylistPresence(ref);
+    ref.invalidate(nowPlayingFavoriteProvider);
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Added to Liked songs')),
+    );
+  } catch (e) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Could not add to Liked songs: $e')),
+    );
+  }
 }
 
 Future<void> openAddTracksToPlaylistFlow(
@@ -183,6 +215,7 @@ class _ManageTrackPlaylistsSheetState
   final Set<String> _playlistIdsContainingTrack = <String>{};
   final Map<String, String> _entryIdByPlaylistId = <String, String>{};
   late List<BrowseItem> _allPlaylists;
+  String? _likedPlaylistId;
   bool _isFavorite = false;
   String _query = '';
 
@@ -190,6 +223,7 @@ class _ManageTrackPlaylistsSheetState
   void initState() {
     super.initState();
     _allPlaylists = List.of(widget.initialPlaylists);
+    _likedPlaylistId = widget.likedPlaylistId;
     _isFavorite = widget.initialPresence.isFavorite;
     for (final membership in widget.initialPresence.memberships) {
       _playlistIdsContainingTrack.add(membership.playlistId);
@@ -210,7 +244,9 @@ class _ManageTrackPlaylistsSheetState
   @override
   Widget build(BuildContext context) {
     final playlists = _allPlaylists.where((playlist) {
-      if (playlist.id == widget.likedPlaylistId) return false;
+      if (_likedPlaylistId != null && playlist.id == _likedPlaylistId) {
+        return false;
+      }
       if (_query.isEmpty) return true;
       return playlist.name.toLowerCase().contains(_query);
     }).toList();
@@ -242,22 +278,23 @@ class _ManageTrackPlaylistsSheetState
                 onTap: () => unawaited(_createPlaylistAndAttach(context)),
               ),
               const SizedBox(height: 4),
-              if (widget.likedPlaylistId != null)
-                _PlaylistToggleRow(
-                  icon: Icons.favorite_rounded,
-                  iconColor: AppColors.like,
-                  title: 'Liked songs',
-                  selected: _playlistIdsContainingTrack.contains(
-                    widget.likedPlaylistId,
-                  ),
-                  onTap: () => unawaited(
-                    _toggleLikedSongs(
-                      selected: !_playlistIdsContainingTrack.contains(
-                        widget.likedPlaylistId,
-                      ),
-                    ),
+              _PlaylistToggleRow(
+                icon: Icons.favorite_rounded,
+                iconColor: AppColors.like,
+                title: 'Liked songs',
+                selected:
+                    _likedPlaylistId != null &&
+                    _playlistIdsContainingTrack.contains(_likedPlaylistId),
+                onTap: () => unawaited(
+                  _toggleLikedSongs(
+                    selected:
+                        !(_likedPlaylistId != null &&
+                            _playlistIdsContainingTrack.contains(
+                              _likedPlaylistId,
+                            )),
                   ),
                 ),
+              ),
               ...playlists.map(
                 (playlist) => _PlaylistToggleRow(
                   icon: Icons.queue_music_rounded,
@@ -332,13 +369,16 @@ class _ManageTrackPlaylistsSheetState
   }
 
   Future<void> _toggleLikedSongs({required bool selected}) async {
-    final likedId = widget.likedPlaylistId;
-    if (likedId == null) return;
     final repo = ref.read(jellyfinRepositoryProvider);
     try {
       if (selected) {
         await repo.setFavorite(widget.trackId, favorite: true);
         await repo.addTrackToLikedSongs(widget.trackId);
+        final liked = await repo.likedSongsPlaylist();
+        final likedId = liked?.id;
+        if (likedId == null) {
+          throw StateError('Could not resolve Liked songs playlist');
+        }
         final entryId = await repo.playlistEntryIdForTrack(
           playlistId: likedId,
           trackId: widget.trackId,
@@ -346,10 +386,17 @@ class _ManageTrackPlaylistsSheetState
         if (!mounted) return;
         setState(() {
           _isFavorite = true;
+          _likedPlaylistId = likedId;
+          if (_allPlaylists.every((playlist) => playlist.id != likedId) &&
+              liked != null) {
+            _allPlaylists = [liked, ..._allPlaylists];
+          }
           _playlistIdsContainingTrack.add(likedId);
           if (entryId != null) _entryIdByPlaylistId[likedId] = entryId;
         });
       } else {
+        final likedId = _likedPlaylistId;
+        if (likedId == null) return;
         final entryId =
             _entryIdByPlaylistId[likedId] ??
             await repo.playlistEntryIdForTrack(
@@ -372,7 +419,11 @@ class _ManageTrackPlaylistsSheetState
           _entryIdByPlaylistId.remove(likedId);
         });
       }
-      ref.invalidate(playlistProvider(likedId));
+      final likedId = _likedPlaylistId;
+      if (likedId != null) {
+        ref.invalidate(playlistProvider(likedId));
+      }
+      ref.invalidate(likedSongsPlaylistProvider);
       _invalidateTrackPlaylistPresence(ref);
       ref.invalidate(nowPlayingFavoriteProvider);
     } catch (e) {
@@ -387,6 +438,7 @@ class _ManageTrackPlaylistsSheetState
     await _showCreatePlaylistDialog(context, ref, trackId: widget.trackId);
     if (!mounted) return;
     final repo = ref.read(jellyfinRepositoryProvider);
+    final liked = await repo.likedSongsPlaylist();
     final refreshedPlaylists = await repo.playlists();
     final refreshedMemberships = await repo.playlistsContainingTrack(
       widget.trackId,
@@ -395,6 +447,7 @@ class _ManageTrackPlaylistsSheetState
     if (!mounted) return;
     setState(() {
       _allPlaylists = refreshedPlaylists;
+      _likedPlaylistId = liked?.id;
       _playlistIdsContainingTrack
         ..clear()
         ..addAll(refreshedMemberships.map((m) => m.playlistId));
