@@ -40,7 +40,7 @@ class MiniPlayer extends ConsumerWidget {
 
     final borderRadius = edgeToEdge
         ? BorderRadius.zero
-        : BorderRadius.circular(20);
+        : BorderRadius.circular(12);
     final horizontalPadding = edgeToEdge ? 0.0 : 10.0;
 
     return Padding(
