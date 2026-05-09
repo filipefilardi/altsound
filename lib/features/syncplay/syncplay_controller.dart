@@ -17,6 +17,8 @@ import 'syncplay_socket.dart';
 final syncPlayControllerProvider =
     NotifierProvider<SyncPlayController, SyncPlayState>(SyncPlayController.new);
 
+const _emptyGuid = '00000000000000000000000000000000';
+
 class SyncPlayState {
   const SyncPlayState({
     this.activeGroup,
@@ -65,7 +67,10 @@ class SyncPlayController extends Notifier<SyncPlayState> {
     _handler = ref.watch(audioHandlerProvider);
     _downloads = ref.watch(downloadManagerProvider.notifier);
     _socketSub = _socket.events.listen(_handleSocketEvent);
-    ref.onDispose(() => _socketSub?.cancel());
+    ref.onDispose(() {
+      _socketSub?.cancel();
+      _scheduledCommandTimer?.cancel();
+    });
     return const SyncPlayState();
   }
 
@@ -78,6 +83,7 @@ class SyncPlayController extends Notifier<SyncPlayState> {
   List<SyncPlayQueueItem> _queue = const [];
   String? _lastCommandKey;
   DateTime? _lastCommandAt;
+  Timer? _scheduledCommandTimer;
 
   Future<void> attach() => _socket.connect();
 
@@ -107,6 +113,7 @@ class SyncPlayController extends Notifier<SyncPlayState> {
     try {
       await _socket.connect();
       final groupName = _safeGroupName(name);
+      final wasPlaying = _handler.playbackState.value.playing;
       await _repo.createGroup(groupName);
       await Future<void>.delayed(const Duration(milliseconds: 250));
       final group = state.activeGroup ?? await _findJoinedGroup(groupName);
@@ -118,7 +125,12 @@ class SyncPlayController extends Notifier<SyncPlayState> {
         loading: false,
         connected: _socket.connected,
       );
-      await _publishCurrentQueue();
+      // Only push the current queue to the group if we were already playing.
+      // SyncPlay's SetNewQueue auto-starts playback for everyone, so a paused
+      // creator pushing their queue would surprise-play the room.
+      if (wasPlaying) {
+        await _publishCurrentQueue();
+      }
     } catch (e) {
       state = state.copyWith(loading: false, error: e.toString());
     }
@@ -171,6 +183,13 @@ class SyncPlayController extends Notifier<SyncPlayState> {
     final playing = _handler.playbackState.value.playing;
     if (playing) {
       await _repo.pause();
+      return;
+    }
+    // If the group has no queue yet (e.g. group was created while paused),
+    // pushing our local queue via SetNewQueue auto-starts playback for the
+    // whole room. Otherwise just resume the existing queue.
+    if (_queue.isEmpty) {
+      await _publishCurrentQueue();
     } else {
       await _repo.unpause();
     }
@@ -411,7 +430,18 @@ class SyncPlayController extends Notifier<SyncPlayState> {
       );
     }
     if (items.isEmpty) return;
-    final index = update.playingItemIndex.clamp(0, items.length - 1);
+    // Resolve the playing item by playlistItemId — clamping the server index
+    // would land on a different song if any track failed to load locally.
+    final playingItemId = update.playingItemIndex >= 0 &&
+            update.playingItemIndex < update.playlist.length
+        ? update.playlist[update.playingItemIndex].playlistItemId
+        : null;
+    final localIndex = playingItemId == null
+        ? 0
+        : items.indexWhere(
+            (m) => m.extras?['syncPlayPlaylistItemId'] == playingItemId,
+          );
+    final index = localIndex < 0 ? 0 : localIndex;
     await _handler.loadQueue(
       items,
       initialIndex: index,
@@ -431,13 +461,35 @@ class SyncPlayController extends Notifier<SyncPlayState> {
         '[SyncPlay] command: ${command.command}, position=${command.position}, item=${command.playlistItemId}',
       );
     }
+    // Drop commands targeting a different playlist item than the one we're
+    // currently on (Stop is unconditional, and the empty-GUID sentinel means
+    // "no specific item" — apply globally). Auto-skipping locally desyncs
+    // clients when their queues differ; the next PlayQueue update from the
+    // server is the source of truth for which track we should be on.
+    final cmdItem = command.playlistItemId;
+    final isWildcardItem =
+        cmdItem == null || cmdItem.isEmpty || cmdItem == _emptyGuid;
+    if (command.command != 'Stop' &&
+        !isWildcardItem &&
+        cmdItem != _currentPlaylistItemId()) {
+      if (kDebugMode) {
+        debugPrint(
+          '[SyncPlay] command playlist item mismatch — dropping: cmd=$cmdItem local=${_currentPlaylistItemId()}',
+        );
+      }
+      return;
+    }
+    // Cancel any previously scheduled command — this one supersedes it.
+    _scheduledCommandTimer?.cancel();
+    _scheduledCommandTimer = null;
     final delay = _delayUntil(command.when);
     if (delay > Duration.zero) {
-      await Future<void>.delayed(delay);
-    }
-    final itemIndex = _playlistIndex(command.playlistItemId);
-    if (itemIndex != null && itemIndex != _handler.player.currentIndex) {
-      await _handler.skipToQueueItem(itemIndex);
+      final completer = Completer<void>();
+      _scheduledCommandTimer = Timer(delay, () {
+        _scheduledCommandTimer = null;
+        completer.complete();
+      });
+      await completer.future;
     }
     final targetPosition = _adjustedPosition(command);
     switch (command.command) {
@@ -496,14 +548,6 @@ class SyncPlayController extends Notifier<SyncPlayState> {
     final elapsed = DateTime.now().toUtc().difference(command.when!);
     if (elapsed <= Duration.zero) return position;
     return position + elapsed;
-  }
-
-  int? _playlistIndex(String? playlistItemId) {
-    if (playlistItemId == null || playlistItemId.isEmpty) return null;
-    final idx = _queue.indexWhere(
-      (item) => item.playlistItemId == playlistItemId,
-    );
-    return idx < 0 ? null : idx;
   }
 
   Future<void> _sendReady() async {
