@@ -5,12 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/jellyfin/models/media_item.dart' as jf;
 import '../../data/jellyfin/models/remote_session.dart';
 import '../../data/jellyfin/remote_sessions_repository.dart';
+import 'remote_session_socket.dart';
 
 /// Active remote target. `null` means playback is local.
 final activeRemoteSessionIdProvider =
-    NotifierProvider<ActiveRemoteSessionId, String?>(
-  ActiveRemoteSessionId.new,
-);
+    NotifierProvider<ActiveRemoteSessionId, String?>(ActiveRemoteSessionId.new);
 
 class ActiveRemoteSessionId extends Notifier<String?> {
   @override
@@ -20,32 +19,62 @@ class ActiveRemoteSessionId extends Notifier<String?> {
   void clear() => state = null;
 }
 
-/// Polls `/Sessions` every few seconds while a remote target is active so the
-/// UI can mirror its now-playing state. Replace with the Jellyfin WebSocket
-/// (`/socket?api_key=...`) once we want push updates.
-final activeRemoteSessionProvider = StreamProvider<RemoteSession?>((ref) {
+/// Mirrors the active remote session's now-playing state.
+///
+/// Jellyfin's web client uses the session WebSocket (`SessionsStart` /
+/// `Sessions`) for this, with REST polling only when the message channel is
+/// unavailable. We follow the same shape here.
+final activeRemoteSessionProvider = StreamProvider.autoDispose<RemoteSession?>((
+  ref,
+) {
   final id = ref.watch(activeRemoteSessionIdProvider);
   if (id == null) return Stream.value(null);
   final repo = ref.watch(remoteSessionsRepositoryProvider);
+  final socket = ref.watch(remoteSessionSocketProvider);
 
   final controller = StreamController<RemoteSession?>();
+  StreamSubscription<RemoteSessionSocketEvent>? socketSub;
   Timer? timer;
+  var disposed = false;
+  var socketConnected = false;
 
-  Future<void> tick() async {
+  RemoteSession? select(List<RemoteSession> sessions) {
+    return sessions.where((s) => s.id == id).cast<RemoteSession?>().firstOrNull;
+  }
+
+  Future<void> poll() async {
+    if (socketConnected) return;
     try {
       final sessions = await repo.list();
-      controller.add(
-        sessions.where((s) => s.id == id).cast<RemoteSession?>().firstOrNull,
-      );
+      if (disposed) return;
+      controller.add(select(sessions));
     } catch (e, st) {
+      if (disposed) return;
       controller.addError(e, st);
     }
   }
 
-  tick();
-  timer = Timer.periodic(const Duration(seconds: 3), (_) => tick());
+  socketSub = socket.events.listen((event) {
+    switch (event) {
+      case RemoteSessionsEvent(:final sessions):
+        if (!disposed) controller.add(select(sessions));
+      case RemoteSessionSocketStatusEvent(:final connected):
+        socketConnected = connected;
+        if (!connected) unawaited(poll());
+    }
+  });
+
+  socket.subscribeSessions().catchError((Object e, StackTrace st) {
+    if (!disposed) controller.addError(e, st);
+    unawaited(poll());
+  });
+  unawaited(poll());
+  timer = Timer.periodic(const Duration(seconds: 5), (_) => poll());
   ref.onDispose(() {
+    disposed = true;
     timer?.cancel();
+    socket.unsubscribeSessions();
+    socketSub?.cancel();
     controller.close();
   });
   return controller.stream;
@@ -87,8 +116,7 @@ class RemotePlayerController {
   Future<void> playNext(jf.Track track) =>
       repo.queueItems(_id, [track.id], playNext: true);
 
-  Future<void> addToQueue(jf.Track track) =>
-      repo.queueItems(_id, [track.id]);
+  Future<void> addToQueue(jf.Track track) => repo.queueItems(_id, [track.id]);
 
   Future<void> togglePlay() => repo.playPause(_id);
   Future<void> stop() => repo.stop(_id);

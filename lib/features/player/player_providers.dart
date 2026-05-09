@@ -32,6 +32,18 @@ final positionProvider = StreamProvider<Duration>((ref) {
   return AudioService.position;
 });
 
+final _remotePositionTickProvider = StreamProvider.autoDispose<int>((
+  ref,
+) async* {
+  if (ref.watch(activeRemoteSessionIdProvider) == null) return;
+
+  var tick = 0;
+  yield tick;
+  await for (final _ in Stream<void>.periodic(const Duration(seconds: 1))) {
+    yield ++tick;
+  }
+});
+
 /// Currently displayed item — local mediaItem, or a synthesized MediaItem
 /// reflecting the remote session's now-playing.
 final effectiveMediaItemProvider = Provider<MediaItem?>((ref) {
@@ -63,8 +75,11 @@ final effectivePositionProvider = Provider<Duration>((ref) {
   if (ref.watch(activeRemoteSessionIdProvider) == null) {
     return ref.watch(positionProvider).value ?? Duration.zero;
   }
-  return ref.watch(activeRemoteSessionProvider).value?.position ??
-      Duration.zero;
+  final session = ref.watch(activeRemoteSessionProvider).value;
+  if (session?.hasNowPlaying == true && session?.isPaused == false) {
+    ref.watch(_remotePositionTickProvider);
+  }
+  return session?.estimatedPosition() ?? Duration.zero;
 });
 
 final effectiveDurationProvider = Provider<Duration>((ref) {
@@ -242,13 +257,13 @@ class PlayerController {
       ? Future.value()
       : handler.reorderQueue(oldIndex, newIndex);
 
-  Future<void> removeQueueItemAt(int index) =>
-      isSyncPlay && !isRemote
+  Future<void> removeQueueItemAt(int index) => isSyncPlay && !isRemote
       ? _syncPlay.removeQueueItemAt(index)
       : Future.value();
 
-  Future<void> clearQueueAfterCurrent() =>
-      isSyncPlay && !isRemote ? _syncPlay.clearQueueAfterCurrent() : Future.value();
+  Future<void> clearQueueAfterCurrent() => isSyncPlay && !isRemote
+      ? _syncPlay.clearQueueAfterCurrent()
+      : Future.value();
 
   Future<void> setVolume(double v) =>
       isRemote ? _remote.setVolume(v) : handler.setAppVolume(v);
