@@ -32,6 +32,11 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
   PlayerError? _error;
   ProviderSubscription<AsyncValue<PlayerError>>? _errorSub;
 
+  void _openLyrics() {
+    HapticFeedback.selectionClick();
+    context.push('/lyrics');
+  }
+
   @override
   void initState() {
     super.initState();
@@ -95,10 +100,13 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                             children: [
                               Flexible(
                                 child: Center(
-                                  child: PlayerHeroArt(
-                                    size: maxArt.toDouble(),
-                                    mediaItem: mediaItem,
-                                    hero: true,
+                                  child: GestureDetector(
+                                    onDoubleTap: _openLyrics,
+                                    child: PlayerHeroArt(
+                                      size: maxArt.toDouble(),
+                                      mediaItem: mediaItem,
+                                      hero: true,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -466,15 +474,6 @@ class _SecondaryControls extends ConsumerWidget {
           tooltip: 'Instant Mix',
         ),
         IconButton(
-          onPressed: () => context.push('/lyrics'),
-          icon: const Icon(
-            Icons.mic_rounded,
-            color: AppColors.textSecondary,
-            size: 22,
-          ),
-          tooltip: 'Lyrics',
-        ),
-        IconButton(
           onPressed: offline || isRemote
               ? null
               : () => unawaited(
@@ -588,10 +587,7 @@ class _MainControls extends ConsumerWidget {
           onPressed: controller.previous,
         ),
         const SizedBox(width: 24),
-        PlayerPlayPauseButton(
-          playing: playing,
-          onTap: controller.togglePlay,
-        ),
+        PlayerPlayPauseButton(playing: playing, onTap: controller.togglePlay),
         const SizedBox(width: 24),
         IconButton(
           iconSize: 32,
