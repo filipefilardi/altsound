@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../data/jellyfin/auth_repository.dart';
 import '../remote/remote_player_controller.dart';
 import 'syncplay_controller.dart';
 
@@ -23,9 +22,6 @@ class _SyncPlaySheet extends ConsumerStatefulWidget {
 }
 
 class _SyncPlaySheetState extends ConsumerState<_SyncPlaySheet> {
-  final _name = TextEditingController();
-  bool _suggestedNameApplied = false;
-
   @override
   void initState() {
     super.initState();
@@ -35,21 +31,10 @@ class _SyncPlaySheetState extends ConsumerState<_SyncPlaySheet> {
   }
 
   @override
-  void dispose() {
-    _name.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final state = ref.watch(syncPlayControllerProvider);
     final controller = ref.read(syncPlayControllerProvider.notifier);
     final remoteActive = ref.watch(activeRemoteSessionIdProvider) != null;
-    final username = ref.watch(jellyfinApiProvider).session?.username;
-    if (!_suggestedNameApplied && username != null && username.isNotEmpty) {
-      _suggestedNameApplied = true;
-      _name.text = "$username's group";
-    }
 
     return SafeArea(
       child: Padding(
@@ -63,85 +48,12 @@ class _SyncPlaySheetState extends ConsumerState<_SyncPlaySheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('SyncPlay', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 16),
             if (remoteActive)
-              const Padding(
-                padding: EdgeInsets.only(bottom: 16),
-                child: Text('Switch back to this device to use SyncPlay.'),
-              )
-            else if (state.activeGroup != null) ...[
-              ListTile(
-                leading: const Icon(
-                  Icons.groups_rounded,
-                  color: AppColors.primary,
-                ),
-                title: Text(state.activeGroup!.name),
-                subtitle: Text(
-                  '${state.activeGroup!.participants.length} participant${state.activeGroup!.participants.length == 1 ? '' : 's'}',
-                ),
-                trailing: TextButton(
-                  onPressed: () => controller.leaveGroup(),
-                  child: const Text('Leave'),
-                ),
-              ),
-              if (state.activeGroup!.participants.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    for (final participant in state.activeGroup!.participants)
-                      Chip(
-                        avatar: const Icon(Icons.person_rounded, size: 16),
-                        label: Text(participant),
-                        visualDensity: VisualDensity.compact,
-                      ),
-                  ],
-                ),
-              ],
-              const SizedBox(height: 12),
-            ] else ...[
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _name,
-                      textInputAction: TextInputAction.done,
-                      decoration: const InputDecoration(
-                        labelText: 'Group name',
-                        border: OutlineInputBorder(),
-                      ),
-                      onSubmitted: (_) => controller.createGroup(_name.text),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  IconButton.filled(
-                    onPressed: state.loading
-                        ? null
-                        : () => controller.createGroup(_name.text),
-                    icon: const Icon(Icons.add_rounded),
-                    tooltip: 'Create group',
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-            ],
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    state.connected ? 'Connected' : 'Connecting…',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ),
-                IconButton(
-                  onPressed: state.loading ? null : controller.refreshGroups,
-                  icon: const Icon(Icons.refresh_rounded),
-                  tooltip: 'Refresh',
-                ),
-              ],
-            ),
+              _buildRemoteActive(context)
+            else if (state.activeGroup != null)
+              _buildActiveGroup(context, state, controller)
+            else
+              _buildJoinGroup(context, state, controller),
             if (state.error != null) ...[
               const SizedBox(height: 8),
               Text(
@@ -149,48 +61,113 @@ class _SyncPlaySheetState extends ConsumerState<_SyncPlaySheet> {
                 style: const TextStyle(color: AppColors.error, fontSize: 13),
               ),
             ],
-            const SizedBox(height: 8),
-            if (state.loading)
-              const Padding(
-                padding: EdgeInsets.all(24),
-                child: Center(child: CircularProgressIndicator()),
-              )
-            else if (!remoteActive && state.groups.isEmpty)
-              const Padding(
-                padding: EdgeInsets.all(24),
-                child: Text('No groups available.'),
-              )
-            else if (!remoteActive)
-              Flexible(
-                child: ListView(
-                  shrinkWrap: true,
-                  children: [
-                    for (final group in state.groups)
-                      ListTile(
-                        leading: Icon(
-                          state.activeGroup?.id == group.id
-                              ? Icons.check_circle_rounded
-                              : Icons.groups_rounded,
-                          color: state.activeGroup?.id == group.id
-                              ? AppColors.primary
-                              : null,
-                        ),
-                        title: Text(group.name),
-                        subtitle: Text(
-                          group.participants.isEmpty
-                              ? 'No users connected'
-                              : group.participants.join(', '),
-                        ),
-                        onTap: state.activeGroup?.id == group.id
-                            ? null
-                            : () => controller.joinGroup(group.id),
-                      ),
-                  ],
-                ),
-              ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildRemoteActive(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text('SyncPlay', style: Theme.of(context).textTheme.titleLarge),
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: 16),
+          child: Text('Switch back to this device to use SyncPlay.'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildJoinGroup(
+    BuildContext context,
+    SyncPlayState state,
+    SyncPlayController controller,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text('Join a group', style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 8),
+        if (state.loading && state.groups.isEmpty)
+          const Padding(
+            padding: EdgeInsets.all(32),
+            child: Center(child: CircularProgressIndicator()),
+          )
+        else ...[
+          for (final group in state.groups)
+            ListTile(
+              leading: const Icon(Icons.person_rounded),
+              title: Text(group.name),
+              subtitle: Text(
+                group.participants.isEmpty
+                    ? 'No users connected'
+                    : group.participants.join(', '),
+              ),
+              onTap: state.loading ? null : () => controller.joinGroup(group.id),
+            ),
+          ListTile(
+            leading: const Icon(Icons.add_rounded),
+            title: const Text('New group'),
+            subtitle: const Text('Create a new group'),
+            onTap: state.loading ? null : () => controller.createGroup(''),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildActiveGroup(
+    BuildContext context,
+    SyncPlayState state,
+    SyncPlayController controller,
+  ) {
+    final group = state.activeGroup!;
+    final participants = group.participants.isEmpty
+        ? 'No users connected'
+        : group.participants.join(', ');
+    final ignored = state.localPlaybackIgnored;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(group.name, style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 4),
+        Text(
+          participants,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: AppColors.textSecondary,
+          ),
+        ),
+        const SizedBox(height: 16),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: Icon(
+            ignored
+                ? Icons.play_circle_outline_rounded
+                : Icons.pause_circle_outline_rounded,
+          ),
+          title: Text(ignored ? 'Resume sync' : 'Stop local playback'),
+          subtitle: Text(
+            ignored
+                ? 'Resume listening with the group'
+                : 'And ignore current playlist updates',
+          ),
+          onTap: controller.toggleLocalPlaybackIgnored,
+        ),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.logout_rounded),
+          title: const Text('Leave group'),
+          subtitle: const Text('Disable SyncPlay'),
+          onTap: () async {
+            Navigator.of(context).pop();
+            await controller.leaveGroup();
+          },
+        ),
+      ],
     );
   }
 }
