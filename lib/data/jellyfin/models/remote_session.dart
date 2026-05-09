@@ -17,6 +17,7 @@ class RemoteSession {
     this.isPaused = false,
     this.isMuted = false,
     this.volumeLevel,
+    this.observedAt,
   });
 
   final String id;
@@ -36,6 +37,7 @@ class RemoteSession {
   final bool isPaused;
   final bool isMuted;
   final int? volumeLevel;
+  final DateTime? observedAt;
 
   bool get hasNowPlaying => nowPlayingItemId != null;
 
@@ -43,16 +45,29 @@ class RemoteSession {
       ? null
       : Duration(microseconds: positionTicks! ~/ 10);
 
-  Duration? get duration => runTimeTicks == null
-      ? null
-      : Duration(microseconds: runTimeTicks! ~/ 10);
+  Duration? get duration =>
+      runTimeTicks == null ? null : Duration(microseconds: runTimeTicks! ~/ 10);
+
+  Duration? estimatedPosition({DateTime? now}) {
+    final base = position;
+    if (base == null || isPaused || !hasNowPlaying || observedAt == null) {
+      return base;
+    }
+
+    final elapsed = (now ?? DateTime.now()).difference(observedAt!);
+    if (elapsed <= Duration.zero) return base;
+
+    final estimate = base + elapsed;
+    final total = duration;
+    if (total != null && estimate > total) return total;
+    return estimate;
+  }
 
   factory RemoteSession.fromJson(Map<String, dynamic> json) {
     final nowPlaying = json['NowPlayingItem'] as Map<String, dynamic>?;
     final playState = json['PlayState'] as Map<String, dynamic>?;
-    final commands = (json['SupportedCommands'] as List?)
-            ?.cast<String>()
-            .toSet() ??
+    final commands =
+        (json['SupportedCommands'] as List?)?.cast<String>().toSet() ??
         const <String>{};
     return RemoteSession(
       id: json['Id'] as String,
@@ -61,17 +76,19 @@ class RemoteSession {
       client: json['Client'] as String? ?? '',
       userId: json['UserId'] as String? ?? '',
       userName: json['UserName'] as String? ?? '',
-      supportsRemoteControl:
-          (json['SupportsRemoteControl'] as bool?) ?? false,
+      supportsRemoteControl: (json['SupportsRemoteControl'] as bool?) ?? false,
       supportedCommands: commands,
       nowPlayingItemId: nowPlaying?['Id'] as String?,
       nowPlayingTitle: nowPlaying?['Name'] as String?,
-      nowPlayingArtist: (nowPlaying?['Artists'] as List?)?.cast<String>().firstOrNull,
+      nowPlayingArtist: (nowPlaying?['Artists'] as List?)
+          ?.cast<String>()
+          .firstOrNull,
       runTimeTicks: nowPlaying?['RunTimeTicks'] as int?,
       positionTicks: playState?['PositionTicks'] as int?,
       isPaused: (playState?['IsPaused'] as bool?) ?? false,
       isMuted: (playState?['IsMuted'] as bool?) ?? false,
       volumeLevel: playState?['VolumeLevel'] as int?,
+      observedAt: DateTime.now(),
     );
   }
 }
