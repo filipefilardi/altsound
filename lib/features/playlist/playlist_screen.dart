@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/layout/adaptive_breakpoints.dart';
 import '../../core/navigation/app_navigation.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/search_normalization.dart';
 import '../../core/widgets/play_pill.dart';
 import '../../core/utils/format.dart';
 import '../../core/widgets/error_state.dart';
@@ -25,7 +26,13 @@ import '../player/widgets/playing_track_leading.dart';
 import '../player/widgets/track_more_menu_button.dart';
 import 'playlist_providers.dart';
 
-enum _SelectionBulkAction { addToLiked, addToPlaylist, removeFromPlaylist }
+enum _SelectionBulkAction {
+  addToLiked,
+  addToPlaylist,
+  moveToTop,
+  moveToBottom,
+  removeFromPlaylist,
+}
 
 enum _PlaylistSort { custom, title, artist, album, dateAdded }
 
@@ -39,12 +46,41 @@ class PlaylistScreen extends ConsumerStatefulWidget {
 }
 
 class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
+  final _filterController = TextEditingController();
   final Set<String> _selectedTrackIds = {};
   _PlaylistSort _activeSort = _PlaylistSort.custom;
   bool _sortDescending = false;
+  String _filterQuery = '';
   static const _emptySelection = <String>{};
 
   bool get _inSelection => _selectedTrackIds.isNotEmpty;
+
+  @override
+  void initState() {
+    super.initState();
+    _filterController.addListener(() {
+      setState(() {
+        _filterQuery = _filterController.text.trim();
+        if (_selectedTrackIds.isNotEmpty) {
+          final visibleIds = ref
+              .read(playlistProvider(widget.playlistId))
+              .maybeWhen(
+                data: (playlist) => _visiblePlaylistTracks(
+                  playlist.tracks,
+                ).map((track) => track.id).toSet(),
+                orElse: () => const <String>{},
+              );
+          _selectedTrackIds.removeWhere((id) => !visibleIds.contains(id));
+        }
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _filterController.dispose();
+    super.dispose();
+  }
 
   void _clearSelection() {
     if (_selectedTrackIds.isEmpty) return;
@@ -101,6 +137,20 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
               ).pop(_SelectionBulkAction.addToPlaylist),
             ),
             ListTile(
+              leading: const Icon(Icons.vertical_align_top_rounded),
+              title: const Text('Move to top'),
+              onTap: () => Navigator.of(
+                sheetContext,
+              ).pop(_SelectionBulkAction.moveToTop),
+            ),
+            ListTile(
+              leading: const Icon(Icons.vertical_align_bottom_rounded),
+              title: const Text('Move to bottom'),
+              onTap: () => Navigator.of(
+                sheetContext,
+              ).pop(_SelectionBulkAction.moveToBottom),
+            ),
+            ListTile(
               leading: const Icon(Icons.remove_circle_rounded),
               title: const Text('Remove from this playlist'),
               onTap: () => Navigator.of(
@@ -124,6 +174,22 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
           trackIds: ids,
           onDone: _clearSelection,
         );
+      case _SelectionBulkAction.moveToTop:
+        await _moveSelectedTracks(
+          context,
+          playlistId: playlistId,
+          trackIds: ids,
+          moveToTop: true,
+          onDone: _clearSelection,
+        );
+      case _SelectionBulkAction.moveToBottom:
+        await _moveSelectedTracks(
+          context,
+          playlistId: playlistId,
+          trackIds: ids,
+          moveToTop: false,
+          onDone: _clearSelection,
+        );
       case _SelectionBulkAction.removeFromPlaylist:
         await _confirmBulkRemove(
           context,
@@ -140,6 +206,15 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
     final playlistId = widget.playlistId;
     final async = ref.watch(playlistProvider(playlistId));
     final downloads = ref.watch(downloadManagerProvider);
+    final visibleForSelection = async.maybeWhen(
+      data: (playlist) => _visiblePlaylistTracks(playlist.tracks),
+      orElse: () => const <Track>[],
+    );
+    final allVisibleSelected =
+        visibleForSelection.isNotEmpty &&
+        visibleForSelection.every(
+          (track) => _selectedTrackIds.contains(track.id),
+        );
 
     ref.listen(playlistProvider(playlistId), (prev, next) {
       if (prev?.value == null && next.value != null) {
@@ -161,16 +236,47 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
       child: Scaffold(
         appBar: _inSelection
             ? AppBar(
-                leading: IconButton(
-                  tooltip: 'Cancel',
-                  icon: const Icon(Icons.close_rounded),
-                  onPressed: _clearSelection,
+                leadingWidth: 104,
+                leading: Row(
+                  children: [
+                    const SizedBox(width: 4),
+                    _SelectionToolbarButton(
+                      tooltip: 'Clear selection',
+                      icon: Icons.close_rounded,
+                      onPressed: _clearSelection,
+                    ),
+                    _SelectionToolbarButton(
+                      tooltip: allVisibleSelected
+                          ? 'Clear visible selection'
+                          : 'Select visible songs',
+                      icon: allVisibleSelected
+                          ? Icons.remove_done_rounded
+                          : Icons.done_all_rounded,
+                      onPressed: visibleForSelection.isEmpty
+                          ? null
+                          : () {
+                              setState(() {
+                                if (allVisibleSelected) {
+                                  for (final track in visibleForSelection) {
+                                    _selectedTrackIds.remove(track.id);
+                                  }
+                                } else {
+                                  _selectedTrackIds.addAll(
+                                    visibleForSelection.map(
+                                      (track) => track.id,
+                                    ),
+                                  );
+                                }
+                              });
+                            },
+                    ),
+                  ],
                 ),
                 title: Text('${_selectedTrackIds.length} selected'),
                 actions: [
-                  IconButton(
+                  _SelectionToolbarButton(
                     tooltip: 'More',
-                    icon: const Icon(Icons.more_vert_rounded),
+                    icon: Icons.more_horiz_rounded,
                     onPressed: () => _showSelectionActionsMenu(
                       context,
                       playlistId: playlistId,
@@ -225,12 +331,17 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
           data: (playlist) => _PlaylistView(
             playlist: playlist,
             visibleTracks: _visiblePlaylistTracks(playlist.tracks),
+            filterController: _filterController,
+            filterQuery: _filterQuery,
             selectedTrackIds: _selectedTrackIds,
             inSelection: _inSelection,
             onLongPress: _onLongPressStartSelection,
             onToggleSelected: _toggleTrackSelected,
             onSort: () => _showSortPlaylistSheet(context, ref, playlist),
             onEdit: () => _editPlaylistOrder(context, ref, playlist),
+            duplicateCount: _duplicatePlaylistEntries(playlist.tracks).length,
+            onRemoveDuplicates: () =>
+                _confirmRemoveDuplicates(context, ref, playlist),
             onRename: _isLikedSongsPlaylist(playlist)
                 ? null
                 : () => _renamePlaylist(context, ref, playlist),
@@ -264,11 +375,21 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
   }
 
   List<Track> _visiblePlaylistTracks(List<Track> tracks) {
-    return _sortedPlaylistTracks(
+    final sorted = _sortedPlaylistTracks(
       tracks,
       _activeSort,
       descending: _sortDescending,
     );
+    if (_filterQuery.isEmpty) return sorted;
+    return sorted
+        .where(
+          (track) => searchMatches(_filterQuery, [
+            track.name,
+            track.artistName,
+            track.albumName,
+          ]),
+        )
+        .toList();
   }
 
   Future<void> _showSortPlaylistSheet(
@@ -455,6 +576,45 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
     }
   }
 
+  Future<void> _moveSelectedTracks(
+    BuildContext context, {
+    required String playlistId,
+    required Set<String> trackIds,
+    required bool moveToTop,
+    required VoidCallback onDone,
+  }) async {
+    if (trackIds.isEmpty) return;
+    final playlist = ref
+        .read(playlistProvider(playlistId))
+        .maybeWhen(data: (playlist) => playlist, orElse: () => null);
+    final detail =
+        playlist ??
+        await ref.read(jellyfinRepositoryProvider).playlist(playlistId);
+    if (!mounted || !context.mounted) return;
+    final selected = <Track>[];
+    final others = <Track>[];
+    for (final track in detail.tracks) {
+      if (trackIds.contains(track.id)) {
+        selected.add(track);
+      } else {
+        others.add(track);
+      }
+    }
+    final ordered = moveToTop
+        ? [...selected, ...others]
+        : [...others, ...selected];
+    final updated = await _applyPlaylistOrder(
+      context,
+      ref,
+      playlist: detail,
+      orderedTracks: ordered,
+      successMessage: moveToTop
+          ? 'Moved ${selected.length} song${selected.length == 1 ? '' : 's'} to top'
+          : 'Moved ${selected.length} song${selected.length == 1 ? '' : 's'} to bottom',
+    );
+    if (updated && context.mounted) onDone();
+  }
+
   Future<void> _renamePlaylist(
     BuildContext context,
     WidgetRef ref,
@@ -623,11 +783,21 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
     if (chosen == null || !context.mounted) return;
     final targetId = chosen.id;
     try {
+      var addedCount = 0;
+      var skippedCount = 0;
       for (final id in trackIds) {
         if (liked != null && targetId == liked.id) {
           await repo.setFavorite(id, favorite: true);
         }
-        await repo.addTrackToPlaylist(trackId: id, playlistId: targetId);
+        final added = await repo.addTrackToPlaylist(
+          trackId: id,
+          playlistId: targetId,
+        );
+        if (added) {
+          addedCount++;
+        } else {
+          skippedCount++;
+        }
       }
       ref.invalidate(playlistProvider(targetId));
       if (liked != null && targetId == liked.id) {
@@ -635,9 +805,16 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
         ref.invalidate(nowPlayingFavoriteProvider);
       }
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Added to "${chosen.name}"')));
+        final skippedText = skippedCount == 0
+            ? ''
+            : ' · $skippedCount duplicate${skippedCount == 1 ? '' : 's'} skipped';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Added $addedCount song${addedCount == 1 ? '' : 's'} to "${chosen.name}"$skippedText',
+            ),
+          ),
+        );
         onDone();
       }
     } catch (e) {
@@ -713,10 +890,77 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
       }
     }
   }
+
+  Future<void> _confirmRemoveDuplicates(
+    BuildContext context,
+    WidgetRef ref,
+    PlaylistDetail playlist,
+  ) async {
+    final duplicates = _duplicatePlaylistEntries(playlist.tracks);
+    if (duplicates.isEmpty) return;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Remove duplicates?'),
+        content: Text(
+          'Remove ${duplicates.length} duplicate song${duplicates.length == 1 ? '' : 's'} from "${playlist.name}"? The first copy of each song stays.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+    final repo = ref.read(jellyfinRepositoryProvider);
+    try {
+      for (final track in duplicates) {
+        final entryId = track.playlistItemId;
+        if (entryId == null || entryId.isEmpty) continue;
+        await repo.removeTrackFromPlaylistByEntry(
+          playlistId: playlist.id,
+          playlistItemEntryId: entryId,
+        );
+      }
+      ref.invalidate(playlistProvider(playlist.id));
+      ref.invalidate(currentTrackPlaylistPresenceProvider);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Removed ${duplicates.length} duplicate${duplicates.length == 1 ? '' : 's'}',
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not remove duplicates: $e')),
+      );
+    }
+  }
 }
 
 bool _isLikedSongsPlaylist(PlaylistDetail playlist) {
   return playlist.name.toLowerCase().trim() == 'liked songs';
+}
+
+List<Track> _duplicatePlaylistEntries(List<Track> tracks) {
+  final seen = <String>{};
+  final duplicates = <Track>[];
+  for (final track in tracks) {
+    if (seen.add(track.id)) continue;
+    if (track.playlistItemId != null && track.playlistItemId!.isNotEmpty) {
+      duplicates.add(track);
+    }
+  }
+  return duplicates;
 }
 
 bool _sameStringOrder(List<String?> a, List<String?> b) {
@@ -1005,10 +1249,14 @@ class _PlaylistView extends ConsumerWidget {
   const _PlaylistView({
     required this.playlist,
     required this.visibleTracks,
+    this.filterController,
+    this.filterQuery = '',
     required this.selectedTrackIds,
     required this.inSelection,
     required this.onLongPress,
     required this.onToggleSelected,
+    this.duplicateCount = 0,
+    this.onRemoveDuplicates,
     this.onSort,
     this.onEdit,
     this.onRename,
@@ -1017,10 +1265,14 @@ class _PlaylistView extends ConsumerWidget {
 
   final PlaylistDetail playlist;
   final List<Track> visibleTracks;
+  final TextEditingController? filterController;
+  final String filterQuery;
   final Set<String> selectedTrackIds;
   final bool inSelection;
   final void Function(String trackId) onLongPress;
   final void Function(String trackId) onToggleSelected;
+  final int duplicateCount;
+  final VoidCallback? onRemoveDuplicates;
   final VoidCallback? onSort;
   final VoidCallback? onEdit;
   final VoidCallback? onRename;
@@ -1041,16 +1293,29 @@ class _PlaylistView extends ConsumerWidget {
             selectionActive: inSelection,
             onSort: onSort,
             onEdit: onEdit,
+            duplicateCount: duplicateCount,
+            onRemoveDuplicates: onRemoveDuplicates,
             onRename: onRename,
             onDelete: onDelete,
           ),
           const SizedBox(height: 8),
+          if (filterController != null && playlist.tracks.isNotEmpty) ...[
+            _PlaylistFilterBar(
+              controller: filterController!,
+              filterQuery: filterQuery,
+              visibleCount: visibleTracks.length,
+              totalCount: playlist.tracks.length,
+            ),
+            const SizedBox(height: 8),
+          ],
           if (visibleTracks.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24),
               child: Text(
-                'No songs in this playlist yet.',
-                style: TextStyle(color: AppColors.textSecondary),
+                filterQuery.isEmpty
+                    ? 'No songs in this playlist yet.'
+                    : 'No songs match your filter.',
+                style: const TextStyle(color: AppColors.textSecondary),
               ),
             )
           else
@@ -1104,6 +1369,111 @@ class _PlaylistHeader extends ConsumerWidget {
             ],
           ),
         ),
+      ],
+    );
+  }
+}
+
+class _SelectionToolbarButton extends StatelessWidget {
+  const _SelectionToolbarButton({
+    required this.tooltip,
+    required this.icon,
+    required this.onPressed,
+  });
+
+  final String tooltip;
+  final IconData icon;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onPressed != null;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: Tooltip(
+        message: tooltip,
+        child: Material(
+          color: enabled
+              ? AppColors.surfaceElevated
+              : AppColors.surfaceElevated.withValues(alpha: 0.45),
+          borderRadius: BorderRadius.circular(18),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onPressed,
+            child: SizedBox(
+              width: 36,
+              height: 36,
+              child: Icon(
+                icon,
+                size: 19,
+                color: enabled ? AppColors.textPrimary : AppColors.textTertiary,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PlaylistFilterBar extends StatelessWidget {
+  const _PlaylistFilterBar({
+    required this.controller,
+    required this.filterQuery,
+    required this.visibleCount,
+    required this.totalCount,
+  });
+
+  final TextEditingController controller;
+  final String filterQuery;
+  final int visibleCount;
+  final int totalCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: SizedBox(
+            height: 42,
+            child: TextField(
+              controller: controller,
+              style: const TextStyle(fontSize: 14),
+              textAlignVertical: TextAlignVertical.center,
+              decoration: InputDecoration(
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                hintText: 'Filter playlist',
+                prefixIcon: const Icon(Icons.search_rounded, size: 19),
+                prefixIconConstraints: const BoxConstraints(
+                  minWidth: 40,
+                  minHeight: 40,
+                ),
+                suffixIcon: filterQuery.isEmpty
+                    ? null
+                    : IconButton(
+                        tooltip: 'Clear filter',
+                        icon: const Icon(Icons.close_rounded, size: 18),
+                        onPressed: controller.clear,
+                      ),
+                suffixIconConstraints: const BoxConstraints(
+                  minWidth: 40,
+                  minHeight: 40,
+                ),
+              ),
+            ),
+          ),
+        ),
+        if (filterQuery.isNotEmpty) ...[
+          const SizedBox(width: 10),
+          Text(
+            '$visibleCount/$totalCount',
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 12,
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -1201,6 +1571,8 @@ class _ActionRow extends ConsumerWidget {
     this.selectionActive = false,
     this.onSort,
     this.onEdit,
+    this.duplicateCount = 0,
+    this.onRemoveDuplicates,
     this.onRename,
     this.onDelete,
   });
@@ -1210,6 +1582,8 @@ class _ActionRow extends ConsumerWidget {
   final bool selectionActive;
   final VoidCallback? onSort;
   final VoidCallback? onEdit;
+  final int duplicateCount;
+  final VoidCallback? onRemoveDuplicates;
   final VoidCallback? onRename;
   final VoidCallback? onDelete;
 
@@ -1307,6 +1681,21 @@ class _ActionRow extends ConsumerWidget {
                                           sheetContext,
                                         ).pop(_PlaylistCollectionAction.edit),
                                       ),
+                                    if (duplicateCount > 0 &&
+                                        onRemoveDuplicates != null)
+                                      ListTile(
+                                        leading: const Icon(
+                                          Icons.content_copy_rounded,
+                                        ),
+                                        title: Text(
+                                          'Remove $duplicateCount duplicate${duplicateCount == 1 ? '' : 's'}',
+                                        ),
+                                        onTap: () =>
+                                            Navigator.of(sheetContext).pop(
+                                              _PlaylistCollectionAction
+                                                  .removeDuplicates,
+                                            ),
+                                      ),
                                     ListTile(
                                       leading: const Icon(
                                         Icons.playlist_add_rounded,
@@ -1384,6 +1773,8 @@ class _ActionRow extends ConsumerWidget {
                           onRename?.call();
                         case _PlaylistCollectionAction.edit:
                           onEdit?.call();
+                        case _PlaylistCollectionAction.removeDuplicates:
+                          onRemoveDuplicates?.call();
                       }
                     }
                   : null,
@@ -1397,6 +1788,7 @@ class _ActionRow extends ConsumerWidget {
 
 enum _PlaylistCollectionAction {
   edit,
+  removeDuplicates,
   addToPlaylist,
   addToQueue,
   rename,
@@ -1552,10 +1944,7 @@ class _PlaylistTrackTile extends ConsumerWidget {
           track.artistName,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 12,
-          ),
+          style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
         ),
       ),
       trailing: inSelection

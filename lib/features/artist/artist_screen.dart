@@ -419,7 +419,7 @@ class _ArtistActionRow extends ConsumerWidget {
                             children: [
                               ListTile(
                                 leading: const Icon(Icons.playlist_add_rounded),
-                                title: const Text('Add to playlist'),
+                                title: const Text('Add top songs to playlist'),
                                 onTap: () => Navigator.of(
                                   sheetContext,
                                 ).pop(_ArtistCollectionAction.addToPlaylist),

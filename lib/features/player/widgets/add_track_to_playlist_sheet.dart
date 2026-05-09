@@ -45,17 +45,28 @@ Future<void> openAddTracksToPlaylistFlow(
   );
   if (target == null || !context.mounted) return;
 
-  int addedCount = 0;
+  var addedCount = 0;
+  var skippedCount = 0;
   for (final id in trackIds) {
-    await repo.addTrackToPlaylist(trackId: id, playlistId: target.id);
-    addedCount++;
+    final added = await repo.addTrackToPlaylist(
+      trackId: id,
+      playlistId: target.id,
+    );
+    if (added) {
+      addedCount++;
+    } else {
+      skippedCount++;
+    }
   }
   ref.invalidate(playlistProvider(target.id));
   if (!context.mounted) return;
+  final skippedText = skippedCount == 0
+      ? ''
+      : ' · $skippedCount duplicate${skippedCount == 1 ? '' : 's'} skipped';
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       content: Text(
-        'Added $addedCount song${addedCount == 1 ? '' : 's'} to "${target.name}"',
+        'Added $addedCount song${addedCount == 1 ? '' : 's'} to "${target.name}"$skippedText',
       ),
     ),
   );

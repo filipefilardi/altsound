@@ -604,7 +604,7 @@ class _ActionBar extends ConsumerWidget {
                                   leading: const Icon(
                                     Icons.playlist_add_rounded,
                                   ),
-                                  title: const Text('Add to playlist'),
+                                  title: const Text('Add album to playlist'),
                                   onTap: () => Navigator.of(
                                     sheetContext,
                                   ).pop(_CollectionAction.addToPlaylist),

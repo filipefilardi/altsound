@@ -226,12 +226,14 @@ class JellyfinRepository {
     }
     if (ordered.isEmpty) return const [];
 
-    final artistJson = await Future.wait(ordered.map((id) async {
-      final r = await _api.dio.get<Map<String, dynamic>>(
-        '/Users/${s.userId}/Items/$id',
-      );
-      return r.data;
-    }));
+    final artistJson = await Future.wait(
+      ordered.map((id) async {
+        final r = await _api.dio.get<Map<String, dynamic>>(
+          '/Users/${s.userId}/Items/$id',
+        );
+        return r.data;
+      }),
+    );
     return artistJson
         .whereType<Map<String, dynamic>>()
         .map(BrowseItem.fromJson)
@@ -256,7 +258,11 @@ class JellyfinRepository {
         'Filters': 'IsPlayed',
         'Recursive': true,
         'Limit': limit * 6,
-        'Fields': const ['MediaSources', 'DateCreated', 'UserDataLastPlayedDate'],
+        'Fields': const [
+          'MediaSources',
+          'DateCreated',
+          'UserDataLastPlayedDate',
+        ],
         'EnableUserData': true,
       },
       options: Options(listFormat: ListFormat.multi),
@@ -265,8 +271,7 @@ class JellyfinRepository {
     final items = ((res.data?['Items'] as List?) ?? const [])
         .cast<Map<String, dynamic>>()
         .where((json) {
-          final lastPlayedRaw =
-              json['UserData']?['LastPlayedDate'] as String?;
+          final lastPlayedRaw = json['UserData']?['LastPlayedDate'] as String?;
           if (lastPlayedRaw == null) return false;
           final lastPlayed = DateTime.tryParse(lastPlayedRaw);
           if (lastPlayed == null) return false;
@@ -617,7 +622,10 @@ class JellyfinRepository {
       for (final raw in (res.data?['Items'] as List?) ?? const [])
         (raw as Map<String, dynamic>)['Id'] as String: Track.fromJson(raw),
     };
-    return [for (final id in ids) if (byId[id] != null) byId[id]!];
+    return [
+      for (final id in ids)
+        if (byId[id] != null) byId[id]!,
+    ];
   }
 
   /// Fetch multiple browse items (artists/albums/playlists) by id in a single
@@ -627,16 +635,16 @@ class JellyfinRepository {
     final s = _session;
     final res = await _api.dio.get<Map<String, dynamic>>(
       '/Users/${s.userId}/Items',
-      queryParameters: {
-        'Ids': ids.join(','),
-        'Fields': 'AlbumArtist,Artists',
-      },
+      queryParameters: {'Ids': ids.join(','), 'Fields': 'AlbumArtist,Artists'},
     );
     final byId = {
       for (final raw in (res.data?['Items'] as List?) ?? const [])
         (raw as Map<String, dynamic>)['Id'] as String: BrowseItem.fromJson(raw),
     };
-    return [for (final id in ids) if (byId[id] != null) byId[id]!];
+    return [
+      for (final id in ids)
+        if (byId[id] != null) byId[id]!,
+    ];
   }
 
   Future<Track> track(String trackId) async {
@@ -924,7 +932,7 @@ class JellyfinRepository {
     );
   }
 
-  Future<void> addTrackToPlaylist({
+  Future<bool> addTrackToPlaylist({
     required String trackId,
     required String playlistId,
   }) async {
@@ -941,11 +949,12 @@ class JellyfinRepository {
         (((existing.data?['Items'] as List?) ?? const [])
                 .cast<Map<String, dynamic>>())
             .any((item) => item['Id'] == trackId);
-    if (alreadyInPlaylist) return;
+    if (alreadyInPlaylist) return false;
     await _api.dio.post<void>(
       '/Playlists/$playlistId/Items',
       queryParameters: {'Ids': trackId, 'UserId': s.userId},
     );
+    return true;
   }
 
   Future<void> addTracksToPlaylist({
