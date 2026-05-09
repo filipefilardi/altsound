@@ -26,7 +26,6 @@ class _JellymusicAppState extends ConsumerState<JellymusicApp> {
   bool _scrobblerAttached = false;
   bool _instantMixExtenderAttached = false;
   bool _playbackPersistenceAttached = false;
-  bool _syncPlayAttached = false;
   String? _searchWarmSessionKey;
   String? _playlistBackupSessionKey;
 
@@ -75,12 +74,6 @@ class _JellymusicAppState extends ConsumerState<JellymusicApp> {
     ref.read(playbackSessionPersistenceProvider).attach();
   }
 
-  void _ensureSyncPlay() {
-    if (_syncPlayAttached) return;
-    _syncPlayAttached = true;
-    unawaited(ref.read(syncPlayControllerProvider.notifier).attach());
-  }
-
   @override
   void dispose() {
     unawaited(ref.read(playbackSessionPersistenceProvider).persistNow());
@@ -97,16 +90,12 @@ class _JellymusicAppState extends ConsumerState<JellymusicApp> {
     if (auth is AuthAuthenticated) {
       _ensureScrobbler();
       _ensureInstantMixExtender();
-      _ensureSyncPlay();
       _ensureSearchWarmup(auth);
       _ensurePlaylistAutoBackup(auth);
       // Eagerly attach the local last-played listener.
       ref.read(lastPlayedProvider);
     } else {
-      if (_syncPlayAttached) {
-        _syncPlayAttached = false;
-        unawaited(ref.read(syncPlayControllerProvider.notifier).disconnect());
-      }
+      unawaited(ref.read(syncPlayControllerProvider.notifier).disconnect());
       _searchWarmSessionKey = null;
       _playlistBackupSessionKey = null;
     }
