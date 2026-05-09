@@ -434,6 +434,49 @@ class SyncPlayController extends Notifier<SyncPlayState> {
         '${update.isPlaying}|$playlistKey';
   }
 
+  bool _isAppendOnlyPlayQueueUpdate(
+    SyncPlayQueueUpdate update,
+    List<SyncPlayQueueItem> previousQueue,
+  ) {
+    if (previousQueue.isEmpty || update.playlist.length <= previousQueue.length) {
+      return false;
+    }
+    for (var i = 0; i < previousQueue.length; i++) {
+      final previous = previousQueue[i];
+      final next = update.playlist[i];
+      if (previous.itemId != next.itemId ||
+          previous.playlistItemId != next.playlistItemId) {
+        return false;
+      }
+    }
+    final loadedQueue = _handler.queue.value;
+    if (loadedQueue.length != previousQueue.length) return false;
+    for (var i = 0; i < previousQueue.length; i++) {
+      final loadedPlaylistId =
+          loadedQueue[i].extras?['syncPlayPlaylistItemId'] as String?;
+      if (loadedPlaylistId != previousQueue[i].playlistItemId) return false;
+    }
+    return true;
+  }
+
+  List<MediaItem> _mediaItemsForQueueSlice(List<SyncPlayQueueItem> queueSlice) {
+    final items = <MediaItem>[];
+    for (final queueItem in queueSlice) {
+      final track = _syncPlayTrackCache[queueItem.itemId];
+      if (track == null) continue;
+      items.add(
+        mediaItemForTrack(
+          ref: ref,
+          repo: _jellyfin,
+          downloads: _downloads,
+          track: track,
+          syncPlayPlaylistItemId: queueItem.playlistItemId,
+        ),
+      );
+    }
+    return items;
+  }
+
   Future<void> _applyPlayQueueUpdate(SyncPlayQueueUpdate update) async {
     if (update.playlist.isEmpty) return;
     final updateKey = _playQueueKey(update);
@@ -443,7 +486,7 @@ class SyncPlayController extends Notifier<SyncPlayState> {
         '[SyncPlay] play queue: ${update.playlist.length} items, index ${update.playingItemIndex}, playing=${update.isPlaying}, groupState=${state.activeGroup?.state}',
       );
     }
-    _queue = update.playlist;
+    final previousQueue = _queue;
     final uniqueIds = <String>{};
     final missingIds = <String>[];
     for (final item in update.playlist) {
@@ -457,20 +500,19 @@ class SyncPlayController extends Notifier<SyncPlayState> {
         _syncPlayTrackCache[track.id] = track;
       }
     }
-    final items = <MediaItem>[];
-    for (final queueItem in update.playlist) {
-      final track = _syncPlayTrackCache[queueItem.itemId];
-      if (track == null) continue;
-      items.add(
-        mediaItemForTrack(
-          ref: ref,
-          repo: _jellyfin,
-          downloads: _downloads,
-          track: track,
-          syncPlayPlaylistItemId: queueItem.playlistItemId,
-        ),
-      );
+    if (_isAppendOnlyPlayQueueUpdate(update, previousQueue)) {
+      final appendedSlice = update.playlist.sublist(previousQueue.length);
+      final appendedItems = _mediaItemsForQueueSlice(appendedSlice);
+      if (appendedItems.length == appendedSlice.length) {
+        await _handler.appendItems(appendedItems);
+        _queue = update.playlist;
+        _lastAppliedPlayQueueKey = updateKey;
+        await _sendReady();
+        return;
+      }
     }
+
+    final items = _mediaItemsForQueueSlice(update.playlist);
     if (items.isEmpty) return;
     // Resolve the playing item by playlistItemId — clamping the server index
     // would land on a different song if any track failed to load locally.
@@ -492,6 +534,7 @@ class SyncPlayController extends Notifier<SyncPlayState> {
       randomizeStart: false,
       respectShuffle: false,
     );
+    _queue = update.playlist;
     _lastAppliedPlayQueueKey = updateKey;
     await _sendReady();
   }
