@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../core/layout/adaptive_breakpoints.dart';
 import '../../core/theme/app_colors.dart';
 import '../../data/local/connectivity_provider.dart';
+import '../syncplay/syncplay_controller.dart';
+import '../syncplay/syncplay_sheet.dart';
 import '../home/home_screen.dart';
 import '../library/library_screen.dart';
 import '../player/widgets/mini_player_slot.dart';
@@ -94,12 +96,14 @@ class _DesktopRightPane extends StatelessWidget {
   }
 }
 
-class _DesktopTopNavBar extends StatelessWidget {
+class _DesktopTopNavBar extends ConsumerWidget {
   const _DesktopTopNavBar();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final location = GoRouterState.of(context).matchedLocation;
+    final syncPlayActive =
+        ref.watch(syncPlayControllerProvider).activeGroup != null;
     void goIfNeeded(String target) {
       if (location != target) context.go(target);
     }
@@ -150,6 +154,15 @@ class _DesktopTopNavBar extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  _TopNavIconButton(
+                    icon: syncPlayActive
+                        ? Icons.group_work_rounded
+                        : Icons.groups_rounded,
+                    tooltip: 'SyncPlay',
+                    isSelected: syncPlayActive,
+                    onPressed: () => showSyncPlaySheet(context),
+                  ),
+                  const SizedBox(width: 6),
                   _TopNavIconButton(
                     icon: Icons.download_rounded,
                     tooltip: 'Downloads',
@@ -244,9 +257,7 @@ class _TopNavIconButton extends StatelessWidget {
         backgroundColor: isSelected
             ? AppColors.primary.withValues(alpha: 0.16)
             : AppColors.surface,
-        foregroundColor: isSelected
-            ? AppColors.primary
-            : AppColors.textPrimary,
+        foregroundColor: isSelected ? AppColors.primary : AppColors.textPrimary,
         minimumSize: const Size.square(40),
         fixedSize: const Size.square(40),
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,

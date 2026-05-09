@@ -271,8 +271,10 @@ class JellymusicAudioHandler extends BaseAudioHandler with SeekHandler {
   Future<void> loadQueue(
     List<MediaItem> items, {
     int initialIndex = 0,
+    Duration initialPosition = Duration.zero,
     bool autoPlay = true,
     bool randomizeStart = false,
+    bool respectShuffle = true,
   }) async {
     if (items.isEmpty) return;
     final safeIndex = initialIndex.clamp(0, items.length - 1);
@@ -282,7 +284,7 @@ class JellymusicAudioHandler extends BaseAudioHandler with SeekHandler {
     // Only pick a random starting track when the caller didn't select one.
     final List<MediaItem> toLoad;
     final int loadInitialIndex;
-    if (_player.shuffleModeEnabled && items.length > 1) {
+    if (respectShuffle && _player.shuffleModeEnabled && items.length > 1) {
       final startIdx = randomizeStart
           ? Random().nextInt(items.length)
           : safeIndex;
@@ -309,7 +311,7 @@ class JellymusicAudioHandler extends BaseAudioHandler with SeekHandler {
       await _player.setAudioSources(
         sources,
         initialIndex: loadInitialIndex,
-        initialPosition: Duration.zero,
+        initialPosition: initialPosition,
       );
       queue.add(toLoad);
       mediaItem.add(toLoad[loadInitialIndex]);

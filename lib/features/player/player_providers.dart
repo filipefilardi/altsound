@@ -5,9 +5,10 @@ import 'package:just_audio/just_audio.dart';
 import '../../data/downloads/download_manager.dart';
 import '../../data/jellyfin/jellyfin_repository.dart';
 import '../../data/jellyfin/models/media_item.dart' as jf;
-import '../../data/local/playback_preferences.dart';
 import '../remote/remote_player_controller.dart';
+import '../syncplay/syncplay_controller.dart';
 import 'audio_player_handler.dart';
+import 'media_item_mapper.dart';
 
 final audioHandlerProvider = Provider<JellymusicAudioHandler>((ref) {
   throw UnimplementedError(
@@ -123,8 +124,12 @@ class PlayerController {
 
   String? get _remoteId => ref.read(activeRemoteSessionIdProvider);
   bool get isRemote => _remoteId != null;
+  bool get isSyncPlay =>
+      ref.read(syncPlayControllerProvider).activeGroup != null;
   RemotePlayerController get _remote =>
       ref.read(remotePlayerControllerProvider);
+  SyncPlayController get _syncPlay =>
+      ref.read(syncPlayControllerProvider.notifier);
 
   /// Load [tracks] and play from [startIndex] onwards.
   ///
@@ -141,6 +146,11 @@ class PlayerController {
     bool forceReload = false,
   }) async {
     if (tracks.isEmpty) return;
+
+    if (isSyncPlay && !isRemote) {
+      await _syncPlay.playTracks(tracks, startIndex: startIndex);
+      return;
+    }
 
     if (isRemote) {
       // Local handler must be silent while remote is playing.
@@ -193,6 +203,7 @@ class PlayerController {
   }
 
   Future<void> togglePlay() async {
+    if (isSyncPlay && !isRemote) return _syncPlay.togglePlay();
     if (isRemote) return _remote.togglePlay();
     final playing = handler.playbackState.value.playing;
     if (playing) {
@@ -202,15 +213,34 @@ class PlayerController {
     }
   }
 
-  Future<void> stop() => isRemote ? _remote.stop() : handler.stop();
+  Future<void> stop() => isSyncPlay && !isRemote
+      ? _syncPlay.stop()
+      : isRemote
+      ? _remote.stop()
+      : handler.stop();
 
-  Future<void> next() => isRemote ? _remote.next() : handler.skipToNext();
-  Future<void> previous() =>
-      isRemote ? _remote.previous() : handler.skipToPrevious();
-  Future<void> seek(Duration p) => isRemote ? _remote.seek(p) : handler.seek(p);
-  Future<void> skipToIndex(int i) => handler.skipToQueueItem(i);
+  Future<void> next() => isSyncPlay && !isRemote
+      ? _syncPlay.next()
+      : isRemote
+      ? _remote.next()
+      : handler.skipToNext();
+  Future<void> previous() => isSyncPlay && !isRemote
+      ? _syncPlay.previous()
+      : isRemote
+      ? _remote.previous()
+      : handler.skipToPrevious();
+  Future<void> seek(Duration p) => isSyncPlay && !isRemote
+      ? _syncPlay.seek(p)
+      : isRemote
+      ? _remote.seek(p)
+      : handler.seek(p);
+  Future<void> skipToIndex(int i) => isSyncPlay && !isRemote
+      ? _syncPlay.skipToIndex(i)
+      : handler.skipToQueueItem(i);
   Future<void> reorderQueue(int oldIndex, int newIndex) =>
-      handler.reorderQueue(oldIndex, newIndex);
+      isSyncPlay && !isRemote
+      ? Future.value()
+      : handler.reorderQueue(oldIndex, newIndex);
 
   Future<void> setVolume(double v) =>
       isRemote ? _remote.setVolume(v) : handler.setAppVolume(v);
@@ -233,12 +263,15 @@ class PlayerController {
     return handler.isEffectivelyMuted;
   }
 
-  Future<void> cycleRepeatMode() => handler.cycleLoopMode();
+  Future<void> cycleRepeatMode() =>
+      isSyncPlay && !isRemote ? Future.value() : handler.cycleLoopMode();
 
-  Future<void> toggleShuffle() => handler.toggleShuffle();
+  Future<void> toggleShuffle() =>
+      isSyncPlay && !isRemote ? Future.value() : handler.toggleShuffle();
 
   /// Insert [track] immediately after the current track.
   Future<void> playNext(jf.Track track) async {
+    if (isSyncPlay && !isRemote) return _syncPlay.playNext(track);
     if (isRemote) return _remote.playNext(track);
     final item = _toMediaItem(track);
     if (handler.queue.value.isEmpty) {
@@ -257,11 +290,8 @@ class PlayerController {
   /// Append [tracks] to the end of the queue **without** marking them as
   /// user-queued. Used to extend Instant Mix playback automatically; these
   /// items participate in shuffle and don't take "Play next" priority slots.
-  Future<void> appendTracks(
-    List<jf.Track> tracks, {
-    String? contextId,
-  }) async {
-    if (tracks.isEmpty || isRemote) return;
+  Future<void> appendTracks(List<jf.Track> tracks, {String? contextId}) async {
+    if (tracks.isEmpty || isRemote || isSyncPlay) return;
     final items = tracks
         .map((t) => _toMediaItem(t, contextId: contextId))
         .toList();
@@ -274,6 +304,12 @@ class PlayerController {
   /// existing user-queued items, keeping app-provided items after them.
   Future<int> addTracksToQueue(List<jf.Track> tracks) async {
     if (tracks.isEmpty) return 0;
+    if (isSyncPlay && !isRemote) {
+      for (final track in tracks) {
+        await _syncPlay.addToQueue(track);
+      }
+      return tracks.length;
+    }
     if (isRemote) {
       for (final t in tracks) {
         await _remote.addToQueue(t);
@@ -291,37 +327,12 @@ class PlayerController {
   }
 
   MediaItem _toMediaItem(jf.Track t, {String? contextId}) {
-    final localPath = downloads.localPath(t.id);
-    final localArtPath = downloads.localArtworkPath(t.id);
-    final art = (t.imageTag == null || t.imageTag!.isEmpty)
-        ? null
-        : (localArtPath != null
-              ? Uri.file(localArtPath).toString()
-              : repo.imageUrl(t.imageItemId, imageTag: t.imageTag, size: 600));
-    final quality = ref.read(playbackPreferencesProvider).streamingQuality;
-    final streamUrl = localPath != null
-        ? Uri.file(localPath).toString()
-        : repo.streamUrl(
-            t.id,
-            maxBitrate: quality == StreamingQuality.original
-                ? null
-                : quality.bitrate,
-          );
-    return MediaItem(
-      id: t.id,
-      title: t.name,
-      album: t.albumName,
-      artist: t.artistName,
-      duration: t.duration,
-      artUri: art == null ? null : Uri.parse(art),
-      extras: {
-        'streamUrl': streamUrl,
-        'jellyfinId': t.id,
-        'albumId': t.albumId,
-        'artistId': t.artistId,
-        'isOffline': localPath != null,
-        if (contextId != null) 'contextId': contextId,
-      },
+    return mediaItemForTrack(
+      ref: ref,
+      repo: repo,
+      downloads: downloads,
+      track: t,
+      contextId: contextId,
     );
   }
 }

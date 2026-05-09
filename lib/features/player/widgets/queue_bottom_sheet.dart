@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../syncplay/syncplay_controller.dart';
 import '../player_providers.dart';
 
 const double _kQueueRowHeight = 64;
@@ -43,6 +44,8 @@ class _QueueSheetState extends ConsumerState<_QueueSheet> {
     final userQueuedIds =
         ref.watch(userQueuedIdsProvider).value ?? const <String>{};
     final loopMode = ref.watch(playerLoopModeProvider).value ?? LoopMode.off;
+    final syncPlayActive =
+        ref.watch(syncPlayControllerProvider).activeGroup != null;
     final fullQueue = queueAsync.value ?? const <MediaItem>[];
     final absoluteIndex = stateAsync.value?.queueIndex;
 
@@ -75,6 +78,7 @@ class _QueueSheetState extends ConsumerState<_QueueSheet> {
                       itemCount: queue.length,
                       itemExtent: _kQueueRowHeight,
                       onReorder: (displayOld, displayNew) {
+                        if (syncPlayActive) return;
                         ref
                             .read(playerControllerProvider)
                             .reorderQueue(
@@ -95,6 +99,7 @@ class _QueueSheetState extends ConsumerState<_QueueSheet> {
                           isCurrent: isCurrent,
                           isUserQueued: isUserQueued,
                           loopMode: loopMode,
+                          canReorder: !syncPlayActive,
                           onTap: () {
                             ref
                                 .read(playerControllerProvider)
@@ -192,6 +197,7 @@ class _QueueRow extends StatelessWidget {
     required this.isCurrent,
     required this.isUserQueued,
     required this.loopMode,
+    required this.canReorder,
     required this.onTap,
   });
 
@@ -200,6 +206,7 @@ class _QueueRow extends StatelessWidget {
   final bool isCurrent;
   final bool isUserQueued;
   final LoopMode loopMode;
+  final bool canReorder;
   final VoidCallback onTap;
 
   @override
@@ -260,17 +267,18 @@ class _QueueRow extends StatelessWidget {
                   size: 16,
                 ),
               ),
-            ReorderableDragStartListener(
-              index: index,
-              child: const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-                child: Icon(
-                  Icons.drag_indicator_rounded,
-                  color: AppColors.textTertiary,
-                  size: 20,
+            if (canReorder)
+              ReorderableDragStartListener(
+                index: index,
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                  child: Icon(
+                    Icons.drag_indicator_rounded,
+                    color: AppColors.textTertiary,
+                    size: 20,
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ),

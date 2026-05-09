@@ -12,6 +12,7 @@ import '../../core/theme/app_gradients.dart';
 import '../../core/utils/format.dart';
 import '../remote/remote_player_controller.dart';
 import '../remote/remote_sessions_sheet.dart';
+import '../syncplay/syncplay_controller.dart';
 import 'audio_player_handler.dart';
 import 'current_track_playlist_presence.dart';
 import 'instant_mix.dart';
@@ -291,9 +292,12 @@ class _TopBar extends ConsumerWidget {
     final remoteSession = remoteId == null
         ? null
         : ref.watch(activeRemoteSessionProvider).value;
+    final syncGroup = ref.watch(syncPlayControllerProvider).activeGroup;
     final castConnected = remoteId != null;
     final castLabel = castConnected
         ? 'PLAYING ON ${remoteSession?.deviceName.toUpperCase() ?? 'REMOTE'}'
+        : syncGroup != null
+        ? 'SYNCPLAY: ${syncGroup.name.toUpperCase()}'
         : 'PLAYING FROM ALBUM';
     // Reserve symmetric space on both sides so the centered text is not
     // pushed off-center by the icon row. Right side has two icons (~96 px),
@@ -397,6 +401,8 @@ class _SecondaryControls extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isRemote = ref.watch(activeRemoteSessionIdProvider) != null;
+    final isSyncPlay =
+        ref.watch(syncPlayControllerProvider).activeGroup != null;
     final loop = ref
         .watch(playerLoopModeProvider)
         .when(
@@ -419,7 +425,9 @@ class _SecondaryControls extends ConsumerWidget {
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         IconButton(
-          onPressed: isRemote ? null : () => controller.toggleShuffle(),
+          onPressed: isRemote || isSyncPlay
+              ? null
+              : () => controller.toggleShuffle(),
           icon: Icon(
             Icons.shuffle_rounded,
             color: shuffled ? AppColors.primary : AppColors.textSecondary,
@@ -428,7 +436,9 @@ class _SecondaryControls extends ConsumerWidget {
           tooltip: 'Shuffle',
         ),
         IconButton(
-          onPressed: isRemote ? null : () => controller.cycleRepeatMode(),
+          onPressed: isRemote || isSyncPlay
+              ? null
+              : () => controller.cycleRepeatMode(),
           icon: Icon(
             loop == LoopMode.one
                 ? Icons.repeat_one_rounded
@@ -465,7 +475,7 @@ class _SecondaryControls extends ConsumerWidget {
           tooltip: 'Lyrics',
         ),
         IconButton(
-          onPressed: offline || isRemote
+          onPressed: offline || isRemote || isSyncPlay
               ? null
               : () => unawaited(
                   _onPlaylistTap(

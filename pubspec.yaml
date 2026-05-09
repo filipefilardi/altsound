@@ -50,6 +50,7 @@ dependencies:
   google_fonts: ^6.2.1
   package_info_plus: ^8.0.2
   device_info_plus: ^10.1.2
+  web_socket_channel: ^3.0.3
 
 dev_dependencies:
   flutter_test:
