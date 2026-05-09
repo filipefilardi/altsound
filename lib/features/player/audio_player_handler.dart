@@ -338,6 +338,24 @@ class JellymusicAudioHandler extends BaseAudioHandler with SeekHandler {
     await _player.moveAudioSource(oldIndex, adjusted);
   }
 
+  /// Remove a single item from the queue while keeping playback uninterrupted.
+  @override
+  Future<void> removeQueueItemAt(int index) async {
+    final q = List<MediaItem>.from(queue.value);
+    if (index < 0 || index >= q.length) return;
+    final removed = q.removeAt(index);
+    queue.add(q);
+    await _player.removeAudioSourceAt(index);
+    if (index < _originalItems.length) {
+      _originalItems = List<MediaItem>.from(_originalItems)..removeAt(index);
+    }
+    final removedId = removed.extras?['jellyfinId'] as String?;
+    if (removedId != null && _userQueuedIds.value.contains(removedId)) {
+      final next = Set<String>.from(_userQueuedIds.value)..remove(removedId);
+      _userQueuedIds.add(next);
+    }
+  }
+
   Future<void> appendToQueue(MediaItem item) async {
     final q = List<MediaItem>.from(queue.value)..add(item);
     queue.add(q);
