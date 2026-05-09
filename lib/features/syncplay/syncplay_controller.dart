@@ -184,6 +184,59 @@ class SyncPlayController extends Notifier<SyncPlayState> {
 
   Future<void> addToQueue(jf.Track track) => _repo.queueItems([track.id]);
 
+  Future<void> removeQueueItemAt(int index) async {
+    if (_queue.isEmpty || index < 0 || index >= _queue.length) return;
+    final currentPlaylistItemId = _currentPlaylistItemId();
+    final nextQueue = <SyncPlayQueueItem>[
+      ..._queue.take(index),
+      ..._queue.skip(index + 1),
+    ];
+    if (nextQueue.isEmpty) {
+      await _repo.stop();
+      return;
+    }
+    var nextPlayingIndex = 0;
+    if (currentPlaylistItemId != null && currentPlaylistItemId.isNotEmpty) {
+      final syncedIndex = nextQueue.indexWhere(
+        (item) => item.playlistItemId == currentPlaylistItemId,
+      );
+      if (syncedIndex >= 0) {
+        nextPlayingIndex = syncedIndex;
+      } else {
+        nextPlayingIndex = index.clamp(0, nextQueue.length - 1);
+      }
+    }
+    final startPosition =
+        nextQueue[nextPlayingIndex].playlistItemId == currentPlaylistItemId
+        ? _handler.player.position
+        : Duration.zero;
+    await _repo.setNewQueue(
+      nextQueue.map((item) => item.itemId).toList(growable: false),
+      playingItemPosition: nextPlayingIndex,
+      startPosition: startPosition,
+    );
+  }
+
+  Future<void> clearQueueAfterCurrent() async {
+    if (_queue.length <= 1) return;
+    final currentPlaylistItemId = _currentPlaylistItemId();
+    SyncPlayQueueItem? currentItem;
+    if (currentPlaylistItemId != null && currentPlaylistItemId.isNotEmpty) {
+      for (final item in _queue) {
+        if (item.playlistItemId == currentPlaylistItemId) {
+          currentItem = item;
+          break;
+        }
+      }
+    }
+    currentItem ??= _queue.first;
+    await _repo.setNewQueue(
+      [currentItem.itemId],
+      playingItemPosition: 0,
+      startPosition: _handler.player.position,
+    );
+  }
+
   Future<void> togglePlay() async {
     final playing = _handler.playbackState.value.playing;
     if (playing) {
