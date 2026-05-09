@@ -76,6 +76,10 @@ class SyncPlayController extends Notifier<SyncPlayState> {
   late final DownloadManager _downloads;
   StreamSubscription<SyncPlaySocketEvent>? _socketSub;
   List<SyncPlayQueueItem> _queue = const [];
+  final Map<String, jf.Track> _syncPlayTrackCache = {};
+  SyncPlayQueueUpdate? _pendingPlayQueueUpdate;
+  bool _processingPlayQueueUpdate = false;
+  String? _lastAppliedPlayQueueKey;
   String? _lastCommandKey;
   DateTime? _lastCommandAt;
   Timer? _scheduledCommandTimer;
@@ -84,6 +88,9 @@ class SyncPlayController extends Notifier<SyncPlayState> {
 
   Future<void> disconnect() async {
     _queue = const [];
+    _syncPlayTrackCache.clear();
+    _pendingPlayQueueUpdate = null;
+    _lastAppliedPlayQueueKey = null;
     state = const SyncPlayState();
     await _socket.disconnect();
   }
@@ -153,6 +160,9 @@ class SyncPlayController extends Notifier<SyncPlayState> {
       await _repo.leaveGroup();
     } finally {
       _queue = const [];
+      _syncPlayTrackCache.clear();
+      _pendingPlayQueueUpdate = null;
+      _lastAppliedPlayQueueKey = null;
       state = state.copyWith(clearActiveGroup: true, clearError: true);
       await Future<void>.delayed(const Duration(milliseconds: 250));
       await refreshGroups();
@@ -270,13 +280,16 @@ class SyncPlayController extends Notifier<SyncPlayState> {
     }
     if (type == 'GroupLeft' || type == 'NotInGroup') {
       _queue = const [];
+      _syncPlayTrackCache.clear();
+      _pendingPlayQueueUpdate = null;
+      _lastAppliedPlayQueueKey = null;
       state = state.copyWith(clearActiveGroup: true);
       return;
     }
     if (type == 'PlayQueue') {
       final raw = data['Data'] ?? data['data'];
       if (raw is Map) {
-        await _handlePlayQueue(
+        _enqueuePlayQueueUpdate(
           SyncPlayQueueUpdate.fromJson(Map<String, dynamic>.from(raw)),
         );
       }
@@ -386,20 +399,67 @@ class SyncPlayController extends Notifier<SyncPlayState> {
         .toList(growable: false);
   }
 
-  Future<void> _handlePlayQueue(SyncPlayQueueUpdate update) async {
+  void _enqueuePlayQueueUpdate(SyncPlayQueueUpdate update) {
+    _pendingPlayQueueUpdate = update;
+    if (_processingPlayQueueUpdate) return;
+    _processingPlayQueueUpdate = true;
+    unawaited(_drainPlayQueueUpdates());
+  }
+
+  Future<void> _drainPlayQueueUpdates() async {
+    while (true) {
+      final next = _pendingPlayQueueUpdate;
+      if (next == null) break;
+      _pendingPlayQueueUpdate = null;
+      try {
+        await _applyPlayQueueUpdate(next);
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('[SyncPlay] play queue apply failed: $e');
+        }
+      }
+    }
+    _processingPlayQueueUpdate = false;
+    if (_pendingPlayQueueUpdate != null) {
+      _processingPlayQueueUpdate = true;
+      unawaited(_drainPlayQueueUpdates());
+    }
+  }
+
+  String _playQueueKey(SyncPlayQueueUpdate update) {
+    final playlistKey = update.playlist
+        .map((item) => '${item.itemId}:${item.playlistItemId}')
+        .join(',');
+    return '${update.playingItemIndex}|${update.startPosition.inMilliseconds}|'
+        '${update.isPlaying}|$playlistKey';
+  }
+
+  Future<void> _applyPlayQueueUpdate(SyncPlayQueueUpdate update) async {
     if (update.playlist.isEmpty) return;
+    final updateKey = _playQueueKey(update);
+    if (_lastAppliedPlayQueueKey == updateKey) return;
     if (kDebugMode) {
       debugPrint(
         '[SyncPlay] play queue: ${update.playlist.length} items, index ${update.playingItemIndex}, playing=${update.isPlaying}, groupState=${state.activeGroup?.state}',
       );
     }
     _queue = update.playlist;
-    final ids = update.playlist.map((item) => item.itemId).toList();
-    final tracks = await _jellyfin.tracksByIds(ids);
-    final trackById = {for (final track in tracks) track.id: track};
+    final uniqueIds = <String>{};
+    final missingIds = <String>[];
+    for (final item in update.playlist) {
+      final id = item.itemId;
+      if (id.isEmpty || !uniqueIds.add(id)) continue;
+      if (!_syncPlayTrackCache.containsKey(id)) missingIds.add(id);
+    }
+    if (missingIds.isNotEmpty) {
+      final tracks = await _jellyfin.tracksByIds(missingIds);
+      for (final track in tracks) {
+        _syncPlayTrackCache[track.id] = track;
+      }
+    }
     final items = <MediaItem>[];
     for (final queueItem in update.playlist) {
-      final track = trackById[queueItem.itemId];
+      final track = _syncPlayTrackCache[queueItem.itemId];
       if (track == null) continue;
       items.add(
         mediaItemForTrack(
@@ -432,6 +492,7 @@ class SyncPlayController extends Notifier<SyncPlayState> {
       randomizeStart: false,
       respectShuffle: false,
     );
+    _lastAppliedPlayQueueKey = updateKey;
     await _sendReady();
   }
 
