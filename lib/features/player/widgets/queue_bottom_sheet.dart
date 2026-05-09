@@ -63,6 +63,20 @@ class _QueueSheetState extends ConsumerState<_QueueSheet> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _Header(total: queue.length, loopMode: loopMode),
+            if (syncPlayActive && queue.length > 1)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton.icon(
+                    onPressed: () => ref
+                        .read(playerControllerProvider)
+                        .clearQueueAfterCurrent(),
+                    icon: const Icon(Icons.clear_all_rounded, size: 18),
+                    label: const Text('Clear queue'),
+                  ),
+                ),
+              ),
             Expanded(
               child: queue.isEmpty
                   ? const Center(
@@ -100,6 +114,12 @@ class _QueueSheetState extends ConsumerState<_QueueSheet> {
                           isUserQueued: isUserQueued,
                           loopMode: loopMode,
                           canReorder: !syncPlayActive,
+                          showRemove: syncPlayActive && !isCurrent,
+                          onRemove: syncPlayActive && !isCurrent
+                              ? () => ref
+                                    .read(playerControllerProvider)
+                                    .removeQueueItemAt(i + offset)
+                              : null,
                           onTap: () {
                             ref
                                 .read(playerControllerProvider)
@@ -198,6 +218,8 @@ class _QueueRow extends StatelessWidget {
     required this.isUserQueued,
     required this.loopMode,
     required this.canReorder,
+    required this.showRemove,
+    required this.onRemove,
     required this.onTap,
   });
 
@@ -207,6 +229,8 @@ class _QueueRow extends StatelessWidget {
   final bool isUserQueued;
   final LoopMode loopMode;
   final bool canReorder;
+  final bool showRemove;
+  final VoidCallback? onRemove;
   final VoidCallback? onTap;
 
   @override
@@ -266,6 +290,17 @@ class _QueueRow extends StatelessWidget {
                   color: AppColors.textTertiary,
                   size: 16,
                 ),
+              ),
+            if (showRemove)
+              IconButton(
+                onPressed: onRemove,
+                icon: const Icon(
+                  Icons.remove_circle_outline_rounded,
+                  color: AppColors.textSecondary,
+                  size: 20,
+                ),
+                tooltip: 'Remove from queue',
+                visualDensity: VisualDensity.compact,
               ),
             if (canReorder)
               ReorderableDragStartListener(

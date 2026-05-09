@@ -242,6 +242,14 @@ class PlayerController {
       ? Future.value()
       : handler.reorderQueue(oldIndex, newIndex);
 
+  Future<void> removeQueueItemAt(int index) =>
+      isSyncPlay && !isRemote
+      ? _syncPlay.removeQueueItemAt(index)
+      : Future.value();
+
+  Future<void> clearQueueAfterCurrent() =>
+      isSyncPlay && !isRemote ? _syncPlay.clearQueueAfterCurrent() : Future.value();
+
   Future<void> setVolume(double v) =>
       isRemote ? _remote.setVolume(v) : handler.setAppVolume(v);
 
