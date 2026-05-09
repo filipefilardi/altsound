@@ -12,7 +12,8 @@ import 'last_played_record.dart';
 
 final lastPlayedProvider =
     NotifierProvider<LastPlayedController, LastPlayedRecord?>(
-        LastPlayedController.new);
+      LastPlayedController.new,
+    );
 
 /// Tracks the last played track + position locally so we can render a
 /// "pick up where you left off" card without depending on Jellyfin.
@@ -28,17 +29,22 @@ class LastPlayedController extends Notifier<LastPlayedRecord?> {
   StreamSubscription<PlaybackState>? _stateSub;
   Timer? _ticker;
   bool _dirty = false;
+  bool _disposed = false;
 
   @override
   LastPlayedRecord? build() {
     if (kIsWeb) return null;
-    _bootstrap();
-    _attachStreams();
+    _disposed = false;
+    Future<void>(() async {
+      await _bootstrap();
+      if (!_disposed) _attachStreams();
+    });
     ref.onDispose(_disposeAll);
     return null;
   }
 
   void _disposeAll() {
+    _disposed = true;
     _itemSub?.cancel();
     _stateSub?.cancel();
     _ticker?.cancel();
@@ -47,12 +53,14 @@ class LastPlayedController extends Notifier<LastPlayedRecord?> {
   Future<void> _bootstrap() async {
     try {
       final dir = await getApplicationDocumentsDirectory();
+      if (_disposed) return;
       _file = File('${dir.path}/last_played.json');
       if (await _file!.exists()) {
         final raw = await _file!.readAsString();
-        if (raw.isNotEmpty) {
+        if (!_disposed && raw.isNotEmpty) {
           state = LastPlayedRecord.fromJson(
-              jsonDecode(raw) as Map<String, dynamic>);
+            jsonDecode(raw) as Map<String, dynamic>,
+          );
         }
       }
     } catch (_) {

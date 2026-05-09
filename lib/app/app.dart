@@ -23,6 +23,8 @@ class JellymusicApp extends ConsumerStatefulWidget {
 }
 
 class _JellymusicAppState extends ConsumerState<JellymusicApp> {
+  ProviderSubscription<AuthState>? _authSub;
+  PlaybackSessionPersistence? _playbackPersistence;
   bool _scrobblerAttached = false;
   bool _instantMixExtenderAttached = false;
   bool _playbackPersistenceAttached = false;
@@ -71,13 +73,49 @@ class _JellymusicAppState extends ConsumerState<JellymusicApp> {
   void _ensurePlaybackPersistence() {
     if (_playbackPersistenceAttached) return;
     _playbackPersistenceAttached = true;
-    ref.read(playbackSessionPersistenceProvider).attach();
+    final persistence = ref.read(playbackSessionPersistenceProvider);
+    _playbackPersistence = persistence;
+    persistence.attach();
+  }
+
+  void _handleAuthChange(AuthState? previous, AuthState next) {
+    if (next is AuthAuthenticated) {
+      _ensureScrobbler();
+      _ensureInstantMixExtender();
+      _ensureSearchWarmup(next);
+      _ensurePlaylistAutoBackup(next);
+      // Eagerly attach the local last-played listener once the session exists.
+      ref.read(lastPlayedProvider);
+      return;
+    }
+
+    _searchWarmSessionKey = null;
+    _playlistBackupSessionKey = null;
+
+    if (previous is AuthAuthenticated) {
+      unawaited(ref.read(syncPlayControllerProvider.notifier).disconnect());
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _ensurePlaybackPersistence();
+    _authSub = ref.listenManual<AuthState>(
+      authControllerProvider,
+      _handleAuthChange,
+      fireImmediately: true,
+    );
   }
 
   @override
   void dispose() {
-    unawaited(ref.read(playbackSessionPersistenceProvider).persistNow());
-    unawaited(ref.read(playbackSessionPersistenceProvider).close());
+    _authSub?.close();
+    final persistence = _playbackPersistence;
+    if (persistence != null) {
+      unawaited(persistence.persistNow());
+      unawaited(persistence.close());
+    }
     super.dispose();
   }
 
@@ -85,20 +123,6 @@ class _JellymusicAppState extends ConsumerState<JellymusicApp> {
   Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
     final auth = ref.watch(authControllerProvider);
-    _ensurePlaybackPersistence();
-
-    if (auth is AuthAuthenticated) {
-      _ensureScrobbler();
-      _ensureInstantMixExtender();
-      _ensureSearchWarmup(auth);
-      _ensurePlaylistAutoBackup(auth);
-      // Eagerly attach the local last-played listener.
-      ref.read(lastPlayedProvider);
-    } else {
-      unawaited(ref.read(syncPlayControllerProvider.notifier).disconnect());
-      _searchWarmSessionKey = null;
-      _playlistBackupSessionKey = null;
-    }
 
     return MaterialApp.router(
       title: 'AltSound',
