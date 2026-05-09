@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/remote/remote_player_controller.dart';
+import '../../features/remote/remote_sessions_sheet.dart';
 import '../../features/syncplay/syncplay_controller.dart';
 import '../../features/syncplay/syncplay_sheet.dart';
 import '../theme/app_colors.dart';
@@ -13,6 +15,7 @@ class HeaderActionButtons extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final syncPlayActive =
         ref.watch(syncPlayControllerProvider).activeGroup != null;
+    final castConnected = ref.watch(activeRemoteSessionIdProvider) != null;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -27,6 +30,15 @@ class HeaderActionButtons extends ConsumerWidget {
           tooltip: 'SyncPlay',
           active: syncPlayActive,
           onPressed: () => showSyncPlaySheet(context),
+        ),
+        const SizedBox(width: 6),
+        _HeaderActionButton(
+          icon: castConnected
+              ? Icons.cast_connected_rounded
+              : Icons.cast_rounded,
+          tooltip: 'Play on…',
+          active: castConnected,
+          onPressed: () => showRemoteSessionsSheet(context),
         ),
         const SizedBox(width: 6),
         _HeaderActionButton(

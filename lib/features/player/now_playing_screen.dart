@@ -11,7 +11,6 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_gradients.dart';
 import '../../core/utils/format.dart';
 import '../remote/remote_player_controller.dart';
-import '../remote/remote_sessions_sheet.dart';
 import '../syncplay/syncplay_controller.dart';
 import 'audio_player_handler.dart';
 import 'current_track_playlist_presence.dart';
@@ -308,9 +307,8 @@ class _TopBar extends ConsumerWidget {
         ? 'SYNCPLAY: ${syncGroup.name.toUpperCase()}'
         : 'PLAYING FROM ALBUM';
     // Reserve symmetric space on both sides so the centered text is not
-    // pushed off-center by the icon row. Right side has two icons (~96 px),
-    // left has one (~48 px) — pad the text by the larger value on each side.
-    const sideReserve = 96.0;
+    // pushed off-center by edge icons (one icon per side, ~48 px each).
+    const sideReserve = 48.0;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: SizedBox(
@@ -375,17 +373,6 @@ class _TopBar extends ConsumerWidget {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    IconButton(
-                      icon: Icon(
-                        castConnected
-                            ? Icons.cast_connected_rounded
-                            : Icons.cast_rounded,
-                        size: 22,
-                        color: castConnected ? AppColors.primary : null,
-                      ),
-                      onPressed: () => showRemoteSessionsSheet(context),
-                      tooltip: 'Play on…',
-                    ),
                     IconButton(
                       icon: const Icon(Icons.queue_music_rounded, size: 24),
                       onPressed: onQueue,
