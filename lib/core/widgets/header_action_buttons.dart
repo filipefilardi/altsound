@@ -1,16 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/syncplay/syncplay_controller.dart';
+import '../../features/syncplay/syncplay_sheet.dart';
 import '../theme/app_colors.dart';
 
-class HeaderActionButtons extends StatelessWidget {
+class HeaderActionButtons extends ConsumerWidget {
   const HeaderActionButtons({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final syncPlayActive =
+        ref.watch(syncPlayControllerProvider).activeGroup != null;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        _HeaderActionButton(
+          icon: syncPlayActive
+              ? Icons.group_work_rounded
+              : Icons.groups_rounded,
+          tooltip: 'SyncPlay',
+          active: syncPlayActive,
+          onPressed: () => showSyncPlaySheet(context),
+        ),
+        const SizedBox(width: 6),
         _HeaderActionButton(
           icon: Icons.search_rounded,
           tooltip: 'Search',
@@ -38,11 +52,13 @@ class _HeaderActionButton extends StatelessWidget {
     required this.icon,
     required this.tooltip,
     required this.onPressed,
+    this.active = false,
   });
 
   final IconData icon;
   final String tooltip;
   final VoidCallback onPressed;
+  final bool active;
 
   @override
   Widget build(BuildContext context) {
@@ -50,8 +66,10 @@ class _HeaderActionButton extends StatelessWidget {
       onPressed: onPressed,
       icon: Icon(icon, size: 20),
       style: IconButton.styleFrom(
-        backgroundColor: AppColors.surface,
-        foregroundColor: AppColors.textPrimary,
+        backgroundColor: active
+            ? AppColors.primary.withValues(alpha: 0.16)
+            : AppColors.surface,
+        foregroundColor: active ? AppColors.primary : AppColors.textPrimary,
         minimumSize: const Size.square(40),
         fixedSize: const Size.square(40),
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,

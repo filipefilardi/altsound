@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:uuid/uuid.dart';
 
 import 'app/app.dart';
 import 'data/jellyfin/auth_repository.dart';
@@ -11,6 +12,12 @@ import 'data/jellyfin/jellyfin_api.dart';
 import 'features/player/audio_player_handler.dart';
 import 'features/player/playback_session_persistence.dart';
 import 'features/player/player_providers.dart';
+
+const _secureStorage = FlutterSecureStorage(
+  iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
+);
+const _deviceIdKey = 'jellyfin_device_id_v1';
+const _gaplessKey = 'playback_gapless_v1';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,7 +35,9 @@ Future<void> main() async {
   // on the next launch.
   final gapless = await _readGaplessPreference();
   final metadata = await loadClientMetadata();
+  final deviceId = await _readDeviceId();
   final api = JellyfinApi(
+    deviceId: deviceId,
     deviceName: metadata.deviceName,
     appVersion: metadata.appVersion,
   );
@@ -67,12 +76,21 @@ Future<void> main() async {
 
 Future<bool> _readGaplessPreference() async {
   try {
-    const storage = FlutterSecureStorage(
-      iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
-    );
-    final raw = await storage.read(key: 'playback_gapless_v1');
+    final raw = await _secureStorage.read(key: _gaplessKey);
     return raw != 'false';
   } catch (_) {
     return true;
+  }
+}
+
+Future<String> _readDeviceId() async {
+  try {
+    final existing = await _secureStorage.read(key: _deviceIdKey);
+    if (existing != null && existing.isNotEmpty) return existing;
+    final created = const Uuid().v4();
+    await _secureStorage.write(key: _deviceIdKey, value: created);
+    return created;
+  } catch (_) {
+    return const Uuid().v4();
   }
 }
