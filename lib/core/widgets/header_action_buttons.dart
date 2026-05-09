@@ -17,9 +17,7 @@ class HeaderActionButtons extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         _HeaderActionButton(
-          icon: syncPlayActive
-              ? Icons.group_work_rounded
-              : Icons.groups_rounded,
+          icon: Icons.groups_rounded,
           tooltip: 'SyncPlay',
           active: syncPlayActive,
           onPressed: () => showSyncPlaySheet(context),
