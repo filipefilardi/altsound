@@ -114,16 +114,25 @@ final routerProvider = Provider<GoRouter>((ref) {
           key: st.pageKey,
           fullscreenDialog: true,
           opaque: true,
-          transitionDuration: const Duration(milliseconds: 220),
-          reverseTransitionDuration: const Duration(milliseconds: 180),
+          transitionDuration: const Duration(milliseconds: 320),
+          reverseTransitionDuration: const Duration(milliseconds: 240),
           transitionsBuilder: (_, animation, __, child) {
+            final curved = CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeOutCubic,
+              reverseCurve: Curves.easeInCubic,
+            );
+            final slide = Tween<Offset>(
+              begin: const Offset(0, 0.035),
+              end: Offset.zero,
+            ).animate(curved);
+            final scale = Tween<double>(begin: 0.98, end: 1).animate(curved);
             return FadeTransition(
-              opacity: CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeOut,
-                reverseCurve: Curves.easeIn,
+              opacity: curved,
+              child: SlideTransition(
+                position: slide,
+                child: ScaleTransition(scale: scale, child: child),
               ),
-              child: child,
             );
           },
           child: const LyricsScreen(),
