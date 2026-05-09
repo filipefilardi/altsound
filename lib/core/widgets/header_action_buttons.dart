@@ -17,16 +17,16 @@ class HeaderActionButtons extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         _HeaderActionButton(
+          icon: Icons.search_rounded,
+          tooltip: 'Search',
+          onPressed: () => context.go('/search'),
+        ),
+        const SizedBox(width: 6),
+        _HeaderActionButton(
           icon: Icons.groups_rounded,
           tooltip: 'SyncPlay',
           active: syncPlayActive,
           onPressed: () => showSyncPlaySheet(context),
-        ),
-        const SizedBox(width: 6),
-        _HeaderActionButton(
-          icon: Icons.search_rounded,
-          tooltip: 'Search',
-          onPressed: () => context.go('/search'),
         ),
         const SizedBox(width: 6),
         _HeaderActionButton(
