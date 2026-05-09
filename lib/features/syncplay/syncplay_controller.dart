@@ -18,6 +18,7 @@ final syncPlayControllerProvider =
     NotifierProvider<SyncPlayController, SyncPlayState>(SyncPlayController.new);
 
 const _emptyGuid = '00000000000000000000000000000000';
+const _skipPreviousRestartThreshold = Duration(seconds: 3);
 
 class SyncPlayState {
   const SyncPlayState({
@@ -271,6 +272,10 @@ class SyncPlayController extends Notifier<SyncPlayState> {
   }
 
   Future<void> previous() async {
+    if (_handler.player.position > _skipPreviousRestartThreshold) {
+      await _repo.seek(Duration.zero);
+      return;
+    }
     final playlistItemId = _currentPlaylistItemId();
     if (playlistItemId != null && playlistItemId.isNotEmpty) {
       await _repo.previousItem(playlistItemId);
@@ -512,6 +517,42 @@ class SyncPlayController extends Notifier<SyncPlayState> {
     return true;
   }
 
+  int? _singleRemovedIndexFromPlayQueueUpdate(
+    SyncPlayQueueUpdate update,
+    List<SyncPlayQueueItem> previousQueue,
+  ) {
+    if (previousQueue.isEmpty ||
+        update.playlist.length + 1 != previousQueue.length) {
+      return null;
+    }
+    final loadedQueue = _handler.queue.value;
+    if (loadedQueue.length != previousQueue.length) return null;
+    for (var i = 0; i < previousQueue.length; i++) {
+      final loadedPlaylistId =
+          loadedQueue[i].extras?['syncPlayPlaylistItemId'] as String?;
+      if (loadedPlaylistId != previousQueue[i].playlistItemId) return null;
+    }
+
+    var i = 0;
+    var j = 0;
+    int? removedIndex;
+    while (i < previousQueue.length && j < update.playlist.length) {
+      final previous = previousQueue[i];
+      final next = update.playlist[j];
+      if (previous.itemId == next.itemId &&
+          previous.playlistItemId == next.playlistItemId) {
+        i++;
+        j++;
+        continue;
+      }
+      if (removedIndex != null) return null;
+      removedIndex = i;
+      i++;
+    }
+    removedIndex ??= previousQueue.length - 1;
+    return removedIndex;
+  }
+
   List<MediaItem> _mediaItemsForQueueSlice(List<SyncPlayQueueItem> queueSlice) {
     final items = <MediaItem>[];
     for (final queueItem in queueSlice) {
@@ -563,6 +604,20 @@ class SyncPlayController extends Notifier<SyncPlayState> {
         await _sendReady();
         return;
       }
+    }
+    final removedIndex = _singleRemovedIndexFromPlayQueueUpdate(
+      update,
+      previousQueue,
+    );
+    if (removedIndex != null &&
+        removedIndex >= 0 &&
+        removedIndex < _handler.queue.value.length &&
+        removedIndex != (_handler.player.currentIndex ?? -1)) {
+      await _handler.removeQueueItemAt(removedIndex);
+      _queue = update.playlist;
+      _lastAppliedPlayQueueKey = updateKey;
+      await _sendReady();
+      return;
     }
 
     final items = _mediaItemsForQueueSlice(update.playlist);

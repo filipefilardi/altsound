@@ -31,6 +31,31 @@ class _QueueSheet extends ConsumerStatefulWidget {
 class _QueueSheetState extends ConsumerState<_QueueSheet> {
   final _scrollController = ScrollController();
 
+  Future<bool> _confirmClearQueue(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Clear queue?'),
+          content: const Text(
+            'This will remove all upcoming tracks and keep only the current song.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Clear'),
+            ),
+          ],
+        );
+      },
+    );
+    return confirmed ?? false;
+  }
+
   @override
   void dispose() {
     _scrollController.dispose();
@@ -69,9 +94,13 @@ class _QueueSheetState extends ConsumerState<_QueueSheet> {
                 child: Align(
                   alignment: Alignment.centerRight,
                   child: TextButton.icon(
-                    onPressed: () => ref
-                        .read(playerControllerProvider)
-                        .clearQueueAfterCurrent(),
+                    onPressed: () async {
+                      final confirmed = await _confirmClearQueue(context);
+                      if (!confirmed) return;
+                      await ref
+                          .read(playerControllerProvider)
+                          .clearQueueAfterCurrent();
+                    },
                     icon: const Icon(Icons.clear_all_rounded, size: 18),
                     label: const Text('Clear queue'),
                   ),

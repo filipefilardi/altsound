@@ -106,13 +106,29 @@ class _SyncPlaySheetState extends ConsumerState<_SyncPlaySheet> {
                     ? 'No users connected'
                     : group.participants.join(', '),
               ),
-              onTap: state.loading ? null : () => controller.joinGroup(group.id),
+              onTap: state.loading
+                  ? null
+                  : () async {
+                      await controller.joinGroup(group.id);
+                      if (!context.mounted) return;
+                      final joined =
+                          ref.read(syncPlayControllerProvider).activeGroup != null;
+                      if (joined) Navigator.of(context).pop();
+                    },
             ),
           ListTile(
             leading: const Icon(Icons.add_rounded),
             title: const Text('New group'),
             subtitle: const Text('Create a new group'),
-            onTap: state.loading ? null : () => controller.createGroup(''),
+            onTap: state.loading
+                ? null
+                : () async {
+                    await controller.createGroup('');
+                    if (!context.mounted) return;
+                    final joined =
+                        ref.read(syncPlayControllerProvider).activeGroup != null;
+                    if (joined) Navigator.of(context).pop();
+                  },
           ),
         ],
       ],
