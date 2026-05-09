@@ -516,9 +516,6 @@ class PlayerScrubber extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final position = ref.watch(effectivePositionProvider);
     final duration = ref.watch(effectiveDurationProvider);
-    final ignored = ref.watch(
-      syncPlayControllerProvider.select((s) => s.localPlaybackIgnored),
-    );
 
     final clamped = position > duration ? duration : position;
     final maxMs = duration.inMilliseconds.toDouble().clamp(
@@ -542,11 +539,9 @@ class PlayerScrubber extends ConsumerWidget {
             value: value,
             min: 0,
             max: maxMs,
-            onChanged: ignored
-                ? null
-                : (x) => ref
-                    .read(playerControllerProvider)
-                    .seek(Duration(milliseconds: x.toInt())),
+            onChanged: (x) => ref
+                .read(playerControllerProvider)
+                .seek(Duration(milliseconds: x.toInt())),
           ),
         ),
         Padding(
@@ -581,9 +576,6 @@ class _MainControls extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.read(playerControllerProvider);
-    final ignored = ref.watch(
-      syncPlayControllerProvider.select((s) => s.localPlaybackIgnored),
-    );
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -593,12 +585,12 @@ class _MainControls extends ConsumerWidget {
             Icons.skip_previous_rounded,
             color: AppColors.textPrimary,
           ),
-          onPressed: ignored ? null : controller.previous,
+          onPressed: controller.previous,
         ),
         const SizedBox(width: 24),
         PlayerPlayPauseButton(
           playing: playing,
-          onTap: ignored ? null : controller.togglePlay,
+          onTap: controller.togglePlay,
         ),
         const SizedBox(width: 24),
         IconButton(
@@ -607,7 +599,7 @@ class _MainControls extends ConsumerWidget {
             Icons.skip_next_rounded,
             color: AppColors.textPrimary,
           ),
-          onPressed: ignored ? null : controller.next,
+          onPressed: controller.next,
         ),
       ],
     );

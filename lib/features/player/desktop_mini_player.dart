@@ -7,7 +7,6 @@ import 'package:just_audio/just_audio.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/format.dart';
-import '../syncplay/syncplay_controller.dart';
 import 'current_track_playlist_presence.dart';
 import 'instant_mix.dart';
 import 'player_providers.dart';
@@ -34,9 +33,6 @@ class DesktopMiniPlayer extends ConsumerWidget {
     if (mediaItem == null) return const SizedBox.shrink();
 
     final controller = ref.read(playerControllerProvider);
-    final ignored = ref.watch(
-      syncPlayControllerProvider.select((s) => s.localPlaybackIgnored),
-    );
     final playing = ref.watch(effectivePlayingProvider);
     final position = ref.watch(effectivePositionProvider);
     final duration = ref.watch(effectiveDurationProvider);
@@ -158,7 +154,7 @@ class DesktopMiniPlayer extends ConsumerWidget {
                             Icons.skip_previous_rounded,
                             size: 24,
                           ),
-                          onPressed: ignored ? null : controller.previous,
+                          onPressed: controller.previous,
                           tooltip: 'Previous',
                           padding: EdgeInsets.zero,
                           constraints: _controlButtonConstraints,
@@ -171,7 +167,7 @@ class DesktopMiniPlayer extends ConsumerWidget {
                                 : Icons.play_circle_fill_rounded,
                             size: 42,
                           ),
-                          onPressed: ignored ? null : controller.togglePlay,
+                          onPressed: controller.togglePlay,
                           tooltip: playing ? 'Pause' : 'Play',
                           padding: EdgeInsets.zero,
                           constraints: _controlButtonConstraints,
@@ -179,7 +175,7 @@ class DesktopMiniPlayer extends ConsumerWidget {
                         ),
                         IconButton(
                           icon: const Icon(Icons.skip_next_rounded, size: 24),
-                          onPressed: ignored ? null : controller.next,
+                          onPressed: controller.next,
                           tooltip: 'Next',
                           padding: EdgeInsets.zero,
                           constraints: _controlButtonConstraints,
@@ -241,11 +237,9 @@ class DesktopMiniPlayer extends ConsumerWidget {
                                   value: sliderValue,
                                   min: 0,
                                   max: sliderMax,
-                                  onChanged: ignored
-                                      ? null
-                                      : (value) => controller.seek(
-                                          Duration(milliseconds: value.toInt()),
-                                        ),
+                                  onChanged: (value) => controller.seek(
+                                    Duration(milliseconds: value.toInt()),
+                                  ),
                                 ),
                               ),
                             ),

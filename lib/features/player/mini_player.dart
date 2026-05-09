@@ -9,7 +9,6 @@ import 'package:go_router/go_router.dart';
 import '../../core/navigation/app_navigation.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_gradients.dart';
-import '../syncplay/syncplay_controller.dart';
 import 'current_track_playlist_presence.dart';
 import 'player_providers.dart';
 import 'widgets/add_track_to_playlist_sheet.dart';
@@ -32,9 +31,6 @@ class MiniPlayer extends ConsumerWidget {
         ? 0.0
         : (position.inMilliseconds / duration.inMilliseconds).clamp(0.0, 1.0);
     final controller = ref.read(playerControllerProvider);
-    final ignored = ref.watch(
-      syncPlayControllerProvider.select((s) => s.localPlaybackIgnored),
-    );
     final artistId = mediaItem.extras?['artistId'] as String?;
     final presenceAsync = ref.watch(currentTrackPlaylistPresenceProvider);
     final saved = switch (presenceAsync) {
@@ -71,18 +67,16 @@ class MiniPlayer extends ConsumerWidget {
             ),
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onHorizontalDragEnd: ignored
-                  ? null
-                  : (d) {
-                      final v = d.primaryVelocity ?? 0;
-                      if (v < -250) {
-                        HapticFeedback.selectionClick();
-                        controller.next();
-                      } else if (v > 250) {
-                        HapticFeedback.selectionClick();
-                        controller.previous();
-                      }
-                    },
+              onHorizontalDragEnd: (d) {
+                final v = d.primaryVelocity ?? 0;
+                if (v < -250) {
+                  HapticFeedback.selectionClick();
+                  controller.next();
+                } else if (v > 250) {
+                  HapticFeedback.selectionClick();
+                  controller.previous();
+                }
+              },
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
@@ -164,7 +158,7 @@ class MiniPlayer extends ConsumerWidget {
                               icon: playing
                                   ? Icons.pause_rounded
                                   : Icons.play_arrow_rounded,
-                              onTap: ignored ? null : controller.togglePlay,
+                              onTap: controller.togglePlay,
                             ),
                           ],
                         ),

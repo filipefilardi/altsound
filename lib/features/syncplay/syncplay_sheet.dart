@@ -128,7 +128,6 @@ class _SyncPlaySheetState extends ConsumerState<_SyncPlaySheet> {
     final participants = group.participants.isEmpty
         ? 'No users connected'
         : group.participants.join(', ');
-    final ignored = state.localPlaybackIgnored;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -142,21 +141,6 @@ class _SyncPlaySheetState extends ConsumerState<_SyncPlaySheet> {
           ),
         ),
         const SizedBox(height: 16),
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: Icon(
-            ignored
-                ? Icons.play_circle_outline_rounded
-                : Icons.pause_circle_outline_rounded,
-          ),
-          title: Text(ignored ? 'Resume sync' : 'Stop local playback'),
-          subtitle: Text(
-            ignored
-                ? 'Resume listening with the group'
-                : 'And ignore current playlist updates',
-          ),
-          onTap: controller.toggleLocalPlaybackIgnored,
-        ),
         ListTile(
           contentPadding: EdgeInsets.zero,
           leading: const Icon(Icons.logout_rounded),

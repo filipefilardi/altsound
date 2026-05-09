@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../remote/remote_player_controller.dart';
-import '../syncplay/syncplay_controller.dart';
 import 'now_playing_screen.dart';
 import 'player_providers.dart';
 import 'widgets/lyrics_view.dart';
@@ -22,9 +21,6 @@ class LyricsScreen extends ConsumerWidget {
     final mediaItem = ref.watch(effectiveMediaItemProvider);
     final playing = ref.watch(effectivePlayingProvider);
     final controller = ref.read(playerControllerProvider);
-    final ignored = ref.watch(
-      syncPlayControllerProvider.select((s) => s.localPlaybackIgnored),
-    );
     final trackId = mediaItem?.extras?['jellyfinId'] as String?;
     final albumId = mediaItem?.extras?['albumId'] as String?;
     final remoteId = ref.watch(activeRemoteSessionIdProvider);
@@ -78,7 +74,7 @@ class LyricsScreen extends ConsumerWidget {
                     const SizedBox(height: 16),
                     PlayerPlayPauseButton(
                       playing: playing,
-                      onTap: ignored ? null : controller.togglePlay,
+                      onTap: controller.togglePlay,
                     ),
                     const SizedBox(height: 24),
                   ],
