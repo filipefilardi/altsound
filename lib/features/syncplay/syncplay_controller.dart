@@ -165,8 +165,7 @@ class SyncPlayController extends Notifier<SyncPlayState> {
       _pendingPlayQueueUpdate = null;
       _lastAppliedPlayQueueKey = null;
       state = state.copyWith(clearActiveGroup: true, clearError: true);
-      await Future<void>.delayed(const Duration(milliseconds: 250));
-      await refreshGroups();
+      await _socket.disconnect();
     }
   }
 
