@@ -50,10 +50,11 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
   final Set<String> _selectedTrackIds = {};
   _PlaylistSort _activeSort = _PlaylistSort.custom;
   bool _sortDescending = false;
+  bool _selectionMode = false;
   String _filterQuery = '';
   static const _emptySelection = <String>{};
 
-  bool get _inSelection => _selectedTrackIds.isNotEmpty;
+  bool get _inSelection => _selectionMode;
 
   @override
   void initState() {
@@ -83,12 +84,16 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
   }
 
   void _clearSelection() {
-    if (_selectedTrackIds.isEmpty) return;
-    setState(() => _selectedTrackIds.clear());
+    if (!_selectionMode && _selectedTrackIds.isEmpty) return;
+    setState(() {
+      _selectionMode = false;
+      _selectedTrackIds.clear();
+    });
   }
 
   void _toggleTrackSelected(String id) {
     setState(() {
+      _selectionMode = true;
       if (_selectedTrackIds.contains(id)) {
         _selectedTrackIds.remove(id);
       } else {
@@ -99,6 +104,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
 
   void _onLongPressStartSelection(String id) {
     setState(() {
+      _selectionMode = true;
       _selectedTrackIds.add(id);
     });
   }
@@ -210,11 +216,13 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
       data: (playlist) => _visiblePlaylistTracks(playlist.tracks),
       orElse: () => const <Track>[],
     );
+    final visibleSelectedCount = visibleForSelection
+        .where((track) => _selectedTrackIds.contains(track.id))
+        .length;
     final allVisibleSelected =
         visibleForSelection.isNotEmpty &&
-        visibleForSelection.every(
-          (track) => _selectedTrackIds.contains(track.id),
-        );
+        visibleSelectedCount == visibleForSelection.length;
+    final someVisibleSelected = visibleSelectedCount > 0;
 
     ref.listen(playlistProvider(playlistId), (prev, next) {
       if (prev?.value == null && next.value != null) {
@@ -246,17 +254,19 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                       onPressed: _clearSelection,
                     ),
                     _SelectionToolbarButton(
-                      tooltip: allVisibleSelected
+                      tooltip: someVisibleSelected
                           ? 'Clear visible selection'
                           : 'Select visible songs',
                       icon: allVisibleSelected
-                          ? Icons.remove_done_rounded
-                          : Icons.done_all_rounded,
+                          ? Icons.check_box_rounded
+                          : someVisibleSelected
+                          ? Icons.indeterminate_check_box_rounded
+                          : Icons.check_box_outline_blank_rounded,
                       onPressed: visibleForSelection.isEmpty
                           ? null
                           : () {
                               setState(() {
-                                if (allVisibleSelected) {
+                                if (someVisibleSelected) {
                                   for (final track in visibleForSelection) {
                                     _selectedTrackIds.remove(track.id);
                                   }
@@ -277,10 +287,12 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                   _SelectionToolbarButton(
                     tooltip: 'More',
                     icon: Icons.more_horiz_rounded,
-                    onPressed: () => _showSelectionActionsMenu(
-                      context,
-                      playlistId: playlistId,
-                    ),
+                    onPressed: _selectedTrackIds.isEmpty
+                        ? null
+                        : () => _showSelectionActionsMenu(
+                            context,
+                            playlistId: playlistId,
+                          ),
                   ),
                 ],
               )
