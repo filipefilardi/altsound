@@ -612,18 +612,45 @@ class JellyfinRepository {
     const chunkSize = 50;
     final s = _session;
     final byId = <String, Track>{};
-    for (var i = 0; i < ids.length; i += chunkSize) {
-      final chunk = ids.sublist(i, math.min(i + chunkSize, ids.length));
-      final res = await _api.dio.get<Map<String, dynamic>>(
-        '/Users/${s.userId}/Items',
-        queryParameters: {
-          'Ids': chunk.join(','),
-          'IncludeItemTypes': 'Audio',
-          'Fields': _trackFields,
-          'EnableUserData': true,
-        },
-      );
-      for (final raw in (res.data?['Items'] as List?) ?? const []) {
+    final uniqueIds = <String>[];
+    final seen = <String>{};
+    for (final id in ids) {
+      if (id.isEmpty || !seen.add(id)) continue;
+      uniqueIds.add(id);
+    }
+    for (var i = 0; i < uniqueIds.length; i += chunkSize) {
+      final chunk = uniqueIds.sublist(i, math.min(i + chunkSize, uniqueIds.length));
+      Map<String, dynamic>? data;
+      for (var attempt = 0; attempt < 3; attempt++) {
+        try {
+          final res = await _api.dio.get<Map<String, dynamic>>(
+            '/Users/${s.userId}/Items',
+            queryParameters: {
+              'Ids': chunk.join(','),
+              'IncludeItemTypes': 'Audio',
+              'Fields': _trackFields,
+              'EnableUserData': true,
+            },
+          );
+          data = res.data;
+          break;
+        } on DioException catch (e) {
+          final status = e.response?.statusCode ?? 0;
+          final shouldRetry =
+              status == 429 ||
+              status >= 500 ||
+              e.type == DioExceptionType.connectionTimeout ||
+              e.type == DioExceptionType.sendTimeout ||
+              e.type == DioExceptionType.receiveTimeout ||
+              e.type == DioExceptionType.connectionError;
+          if (!shouldRetry || attempt == 2) rethrow;
+          await Future<void>.delayed(
+            Duration(milliseconds: 200 * (attempt + 1)),
+          );
+        }
+      }
+      if (data == null) continue;
+      for (final raw in (data['Items'] as List?) ?? const []) {
         final map = raw as Map<String, dynamic>;
         byId[map['Id'] as String] = Track.fromJson(map);
       }
