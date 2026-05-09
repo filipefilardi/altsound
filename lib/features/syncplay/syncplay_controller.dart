@@ -26,7 +26,6 @@ class SyncPlayState {
     this.loading = false,
     this.connected = false,
     this.error,
-    this.localPlaybackIgnored = false,
   });
 
   final SyncPlayGroup? activeGroup;
@@ -34,7 +33,6 @@ class SyncPlayState {
   final bool loading;
   final bool connected;
   final String? error;
-  final bool localPlaybackIgnored;
 
   SyncPlayState copyWith({
     SyncPlayGroup? activeGroup,
@@ -44,7 +42,6 @@ class SyncPlayState {
     bool? connected,
     String? error,
     bool clearError = false,
-    bool? localPlaybackIgnored,
   }) {
     return SyncPlayState(
       activeGroup: clearActiveGroup ? null : activeGroup ?? this.activeGroup,
@@ -52,8 +49,6 @@ class SyncPlayState {
       loading: loading ?? this.loading,
       connected: connected ?? this.connected,
       error: clearError ? null : error ?? this.error,
-      localPlaybackIgnored:
-          clearActiveGroup ? false : localPlaybackIgnored ?? this.localPlaybackIgnored,
     );
   }
 }
@@ -197,18 +192,6 @@ class SyncPlayController extends Notifier<SyncPlayState> {
 
   Future<void> stop() async {
     await _repo.stop();
-  }
-
-  Future<void> toggleLocalPlaybackIgnored() async {
-    final next = !state.localPlaybackIgnored;
-    state = state.copyWith(localPlaybackIgnored: next);
-    if (next) {
-      if (_handler.playbackState.value.playing) {
-        await _handler.pause();
-      }
-    } else {
-      await _sendReady();
-    }
   }
 
   Future<void> seek(Duration position) async {
@@ -404,7 +387,6 @@ class SyncPlayController extends Notifier<SyncPlayState> {
   }
 
   Future<void> _handlePlayQueue(SyncPlayQueueUpdate update) async {
-    if (state.localPlaybackIgnored) return;
     if (update.playlist.isEmpty) return;
     if (kDebugMode) {
       debugPrint(
@@ -454,7 +436,6 @@ class SyncPlayController extends Notifier<SyncPlayState> {
   }
 
   Future<void> _handleCommand(SyncPlayCommand command) async {
-    if (state.localPlaybackIgnored) return;
     if (_isDuplicateCommand(command)) return;
     if (kDebugMode) {
       debugPrint(
