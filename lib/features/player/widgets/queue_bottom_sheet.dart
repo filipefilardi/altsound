@@ -46,6 +46,9 @@ class _QueueSheetState extends ConsumerState<_QueueSheet> {
     final loopMode = ref.watch(playerLoopModeProvider).value ?? LoopMode.off;
     final syncPlayActive =
         ref.watch(syncPlayControllerProvider).activeGroup != null;
+    final ignored = ref.watch(
+      syncPlayControllerProvider.select((s) => s.localPlaybackIgnored),
+    );
     final fullQueue = queueAsync.value ?? const <MediaItem>[];
     final absoluteIndex = stateAsync.value?.queueIndex;
 
@@ -78,7 +81,7 @@ class _QueueSheetState extends ConsumerState<_QueueSheet> {
                       itemCount: queue.length,
                       itemExtent: _kQueueRowHeight,
                       onReorder: (displayOld, displayNew) {
-                        if (syncPlayActive) return;
+                        if (syncPlayActive || ignored) return;
                         ref
                             .read(playerControllerProvider)
                             .reorderQueue(
@@ -99,13 +102,15 @@ class _QueueSheetState extends ConsumerState<_QueueSheet> {
                           isCurrent: isCurrent,
                           isUserQueued: isUserQueued,
                           loopMode: loopMode,
-                          canReorder: !syncPlayActive,
-                          onTap: () {
-                            ref
-                                .read(playerControllerProvider)
-                                .skipToIndex(i + offset);
-                            Navigator.of(context).pop();
-                          },
+                          canReorder: !syncPlayActive && !ignored,
+                          onTap: ignored
+                              ? null
+                              : () {
+                                  ref
+                                      .read(playerControllerProvider)
+                                      .skipToIndex(i + offset);
+                                  Navigator.of(context).pop();
+                                },
                         );
                       },
                     ),
@@ -207,7 +212,7 @@ class _QueueRow extends StatelessWidget {
   final bool isUserQueued;
   final LoopMode loopMode;
   final bool canReorder;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {

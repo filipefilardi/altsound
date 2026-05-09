@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -603,25 +604,30 @@ class JellyfinRepository {
     return items.map(Track.fromJson).toList();
   }
 
-  /// Fetch multiple tracks by id in a single call, preserving the input order.
-  /// Used by the home "For you" picks to resolve top-played item ids returned
-  /// by the Playback Reporting plugin into Track objects with artist info.
+  /// Fetch multiple tracks by id, preserving the input order. Chunked into
+  /// batches so very long id lists don't trip Dio's receive timeout (large
+  /// SyncPlay queues can hit 100+ ids).
   Future<List<Track>> tracksByIds(List<String> ids) async {
     if (ids.isEmpty) return const [];
+    const chunkSize = 50;
     final s = _session;
-    final res = await _api.dio.get<Map<String, dynamic>>(
-      '/Users/${s.userId}/Items',
-      queryParameters: {
-        'Ids': ids.join(','),
-        'IncludeItemTypes': 'Audio',
-        'Fields': _trackFields,
-        'EnableUserData': true,
-      },
-    );
-    final byId = {
-      for (final raw in (res.data?['Items'] as List?) ?? const [])
-        (raw as Map<String, dynamic>)['Id'] as String: Track.fromJson(raw),
-    };
+    final byId = <String, Track>{};
+    for (var i = 0; i < ids.length; i += chunkSize) {
+      final chunk = ids.sublist(i, math.min(i + chunkSize, ids.length));
+      final res = await _api.dio.get<Map<String, dynamic>>(
+        '/Users/${s.userId}/Items',
+        queryParameters: {
+          'Ids': chunk.join(','),
+          'IncludeItemTypes': 'Audio',
+          'Fields': _trackFields,
+          'EnableUserData': true,
+        },
+      );
+      for (final raw in (res.data?['Items'] as List?) ?? const []) {
+        final map = raw as Map<String, dynamic>;
+        byId[map['Id'] as String] = Track.fromJson(map);
+      }
+    }
     return [
       for (final id in ids)
         if (byId[id] != null) byId[id]!,

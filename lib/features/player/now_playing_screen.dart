@@ -475,7 +475,7 @@ class _SecondaryControls extends ConsumerWidget {
           tooltip: 'Lyrics',
         ),
         IconButton(
-          onPressed: offline || isRemote || isSyncPlay
+          onPressed: offline || isRemote
               ? null
               : () => unawaited(
                   _onPlaylistTap(
@@ -516,6 +516,9 @@ class PlayerScrubber extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final position = ref.watch(effectivePositionProvider);
     final duration = ref.watch(effectiveDurationProvider);
+    final ignored = ref.watch(
+      syncPlayControllerProvider.select((s) => s.localPlaybackIgnored),
+    );
 
     final clamped = position > duration ? duration : position;
     final maxMs = duration.inMilliseconds.toDouble().clamp(
@@ -539,9 +542,11 @@ class PlayerScrubber extends ConsumerWidget {
             value: value,
             min: 0,
             max: maxMs,
-            onChanged: (x) => ref
-                .read(playerControllerProvider)
-                .seek(Duration(milliseconds: x.toInt())),
+            onChanged: ignored
+                ? null
+                : (x) => ref
+                    .read(playerControllerProvider)
+                    .seek(Duration(milliseconds: x.toInt())),
           ),
         ),
         Padding(
@@ -576,6 +581,9 @@ class _MainControls extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.read(playerControllerProvider);
+    final ignored = ref.watch(
+      syncPlayControllerProvider.select((s) => s.localPlaybackIgnored),
+    );
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -585,10 +593,13 @@ class _MainControls extends ConsumerWidget {
             Icons.skip_previous_rounded,
             color: AppColors.textPrimary,
           ),
-          onPressed: controller.previous,
+          onPressed: ignored ? null : controller.previous,
         ),
         const SizedBox(width: 24),
-        PlayerPlayPauseButton(playing: playing, onTap: controller.togglePlay),
+        PlayerPlayPauseButton(
+          playing: playing,
+          onTap: ignored ? null : controller.togglePlay,
+        ),
         const SizedBox(width: 24),
         IconButton(
           iconSize: 32,
@@ -596,7 +607,7 @@ class _MainControls extends ConsumerWidget {
             Icons.skip_next_rounded,
             color: AppColors.textPrimary,
           ),
-          onPressed: controller.next,
+          onPressed: ignored ? null : controller.next,
         ),
       ],
     );
@@ -610,7 +621,7 @@ class PlayerPlayPauseButton extends StatelessWidget {
     super.key,
   });
   final bool playing;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
