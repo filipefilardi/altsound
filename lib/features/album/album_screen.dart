@@ -114,29 +114,31 @@ class _AlbumLoading extends StatelessWidget {
       child: Skeleton.group(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Skeleton.box(width: 220, height: 220),
-              const SizedBox(height: 16),
-              Skeleton.line(width: 220, height: 18),
-              const SizedBox(height: 8),
-              Skeleton.line(width: 140, height: 12),
-              const SizedBox(height: 28),
-              for (int i = 0; i < 8; i++)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 14),
-                  child: Row(
-                    children: [
-                      Skeleton.box(width: 28, height: 28, radius: 6),
-                      const SizedBox(width: 14),
-                      Expanded(child: Skeleton.line(height: 14)),
-                      const SizedBox(width: 14),
-                      Skeleton.line(width: 36, height: 12),
-                    ],
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Skeleton.box(width: 220, height: 220),
+                const SizedBox(height: 16),
+                Skeleton.line(width: 220, height: 18),
+                const SizedBox(height: 8),
+                Skeleton.line(width: 140, height: 12),
+                const SizedBox(height: 28),
+                for (int i = 0; i < 8; i++)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 14),
+                    child: Row(
+                      children: [
+                        Skeleton.box(width: 28, height: 28, radius: 6),
+                        const SizedBox(width: 14),
+                        Expanded(child: Skeleton.line(height: 14)),
+                        const SizedBox(width: 14),
+                        Skeleton.line(width: 36, height: 12),
+                      ],
+                    ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
