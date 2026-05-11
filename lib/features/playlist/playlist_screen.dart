@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/layout/adaptive_breakpoints.dart';
 import '../../core/navigation/app_navigation.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/search_normalization.dart';
@@ -23,6 +22,7 @@ import '../player/player_providers.dart';
 import '../player/widgets/add_track_to_playlist_sheet.dart';
 import '../player/widgets/mini_player_slot.dart';
 import '../player/widgets/playing_track_leading.dart';
+import '../player/widgets/track_listing_widgets.dart';
 import '../player/widgets/track_more_menu_button.dart';
 import 'playlist_providers.dart';
 
@@ -1312,11 +1312,12 @@ class _PlaylistView extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           if (filterController != null && playlist.tracks.isNotEmpty) ...[
-            _PlaylistFilterBar(
+            TrackFilterBar(
               controller: filterController!,
               filterQuery: filterQuery,
               visibleCount: visibleTracks.length,
               totalCount: playlist.tracks.length,
+              hintText: 'Filter playlist',
             ),
             const SizedBox(height: 8),
           ],
@@ -1424,69 +1425,6 @@ class _SelectionToolbarButton extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _PlaylistFilterBar extends StatelessWidget {
-  const _PlaylistFilterBar({
-    required this.controller,
-    required this.filterQuery,
-    required this.visibleCount,
-    required this.totalCount,
-  });
-
-  final TextEditingController controller;
-  final String filterQuery;
-  final int visibleCount;
-  final int totalCount;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: SizedBox(
-            height: 42,
-            child: TextField(
-              controller: controller,
-              style: const TextStyle(fontSize: 14),
-              textAlignVertical: TextAlignVertical.center,
-              decoration: InputDecoration(
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                hintText: 'Filter playlist',
-                prefixIcon: const Icon(Icons.search_rounded, size: 19),
-                prefixIconConstraints: const BoxConstraints(
-                  minWidth: 40,
-                  minHeight: 40,
-                ),
-                suffixIcon: filterQuery.isEmpty
-                    ? null
-                    : IconButton(
-                        tooltip: 'Clear filter',
-                        icon: const Icon(Icons.close_rounded, size: 18),
-                        onPressed: controller.clear,
-                      ),
-                suffixIconConstraints: const BoxConstraints(
-                  minWidth: 40,
-                  minHeight: 40,
-                ),
-              ),
-            ),
-          ),
-        ),
-        if (filterQuery.isNotEmpty) ...[
-          const SizedBox(width: 10),
-          Text(
-            '$visibleCount/$totalCount',
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 12,
-            ),
-          ),
-        ],
-      ],
     );
   }
 }
@@ -1677,120 +1615,123 @@ class _ActionRow extends ConsumerWidget {
                 icon: const Icon(Icons.more_vert_rounded),
                 onPressed: canOpenMore
                     ? () async {
-                      final action =
-                          await showModalBottomSheet<_PlaylistCollectionAction>(
-                            context: context,
-                            showDragHandle: true,
-                            builder: (sheetContext) => SafeArea(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (hasTracks) ...[
-                                    if (onEdit != null)
+                        final action =
+                            await showModalBottomSheet<
+                              _PlaylistCollectionAction
+                            >(
+                              context: context,
+                              showDragHandle: true,
+                              builder: (sheetContext) => SafeArea(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (hasTracks) ...[
+                                      if (onEdit != null)
+                                        ListTile(
+                                          leading: const Icon(
+                                            Icons.edit_note_rounded,
+                                          ),
+                                          title: const Text('Edit playlist'),
+                                          onTap: () => Navigator.of(
+                                            sheetContext,
+                                          ).pop(_PlaylistCollectionAction.edit),
+                                        ),
+                                      if (duplicateCount > 0 &&
+                                          onRemoveDuplicates != null)
+                                        ListTile(
+                                          leading: const Icon(
+                                            Icons.content_copy_rounded,
+                                          ),
+                                          title: Text(
+                                            'Remove $duplicateCount duplicate${duplicateCount == 1 ? '' : 's'}',
+                                          ),
+                                          onTap: () =>
+                                              Navigator.of(sheetContext).pop(
+                                                _PlaylistCollectionAction
+                                                    .removeDuplicates,
+                                              ),
+                                        ),
                                       ListTile(
                                         leading: const Icon(
-                                          Icons.edit_note_rounded,
+                                          Icons.playlist_add_rounded,
                                         ),
-                                        title: const Text('Edit playlist'),
-                                        onTap: () => Navigator.of(
-                                          sheetContext,
-                                        ).pop(_PlaylistCollectionAction.edit),
-                                      ),
-                                    if (duplicateCount > 0 &&
-                                        onRemoveDuplicates != null)
-                                      ListTile(
-                                        leading: const Icon(
-                                          Icons.content_copy_rounded,
-                                        ),
-                                        title: Text(
-                                          'Remove $duplicateCount duplicate${duplicateCount == 1 ? '' : 's'}',
-                                        ),
+                                        title: const Text('Add to playlist'),
                                         onTap: () =>
                                             Navigator.of(sheetContext).pop(
                                               _PlaylistCollectionAction
-                                                  .removeDuplicates,
+                                                  .addToPlaylist,
                                             ),
                                       ),
-                                    ListTile(
-                                      leading: const Icon(
-                                        Icons.playlist_add_rounded,
+                                      ListTile(
+                                        leading: const Icon(
+                                          Icons.add_to_queue_rounded,
+                                        ),
+                                        title: const Text('Add to queue'),
+                                        onTap: () =>
+                                            Navigator.of(sheetContext).pop(
+                                              _PlaylistCollectionAction
+                                                  .addToQueue,
+                                            ),
                                       ),
-                                      title: const Text('Add to playlist'),
-                                      onTap: () =>
-                                          Navigator.of(sheetContext).pop(
-                                            _PlaylistCollectionAction
-                                                .addToPlaylist,
-                                          ),
-                                    ),
-                                    ListTile(
-                                      leading: const Icon(
-                                        Icons.add_to_queue_rounded,
+                                    ],
+                                    if (onRename != null ||
+                                        onDelete != null) ...[
+                                      if (hasTracks) const Divider(height: 1),
+                                    ],
+                                    if (onRename != null) ...[
+                                      ListTile(
+                                        leading: const Icon(Icons.edit_rounded),
+                                        title: const Text('Rename playlist'),
+                                        onTap: () => Navigator.of(
+                                          sheetContext,
+                                        ).pop(_PlaylistCollectionAction.rename),
                                       ),
-                                      title: const Text('Add to queue'),
-                                      onTap: () =>
-                                          Navigator.of(sheetContext).pop(
-                                            _PlaylistCollectionAction
-                                                .addToQueue,
-                                          ),
-                                    ),
-                                  ],
-                                  if (onRename != null || onDelete != null) ...[
-                                    if (hasTracks) const Divider(height: 1),
-                                  ],
-                                  if (onRename != null) ...[
-                                    ListTile(
-                                      leading: const Icon(Icons.edit_rounded),
-                                      title: const Text('Rename playlist'),
-                                      onTap: () => Navigator.of(
-                                        sheetContext,
-                                      ).pop(_PlaylistCollectionAction.rename),
-                                    ),
-                                  ],
-                                  if (onDelete != null) ...[
-                                    ListTile(
-                                      leading: const Icon(
-                                        Icons.delete_rounded,
-                                        color: AppColors.error,
+                                    ],
+                                    if (onDelete != null) ...[
+                                      ListTile(
+                                        leading: const Icon(
+                                          Icons.delete_rounded,
+                                          color: AppColors.error,
+                                        ),
+                                        title: const Text('Delete playlist'),
+                                        onTap: () => Navigator.of(
+                                          sheetContext,
+                                        ).pop(_PlaylistCollectionAction.delete),
                                       ),
-                                      title: const Text('Delete playlist'),
-                                      onTap: () => Navigator.of(
-                                        sheetContext,
-                                      ).pop(_PlaylistCollectionAction.delete),
-                                    ),
+                                    ],
                                   ],
-                                ],
+                                ),
                               ),
-                            ),
-                          );
-                      if (action == null || !context.mounted) return;
-                      switch (action) {
-                        case _PlaylistCollectionAction.addToPlaylist:
-                          await openAddTracksToPlaylistFlow(
-                            context,
-                            ref,
-                            trackIds: visibleTracks.map((t) => t.id).toList(),
-                          );
-                        case _PlaylistCollectionAction.addToQueue:
-                          final added = await controller.addTracksToQueue(
-                            visibleTracks,
-                          );
-                          if (!context.mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Added $added song${added == 1 ? '' : 's'} to queue',
+                            );
+                        if (action == null || !context.mounted) return;
+                        switch (action) {
+                          case _PlaylistCollectionAction.addToPlaylist:
+                            await openAddTracksToPlaylistFlow(
+                              context,
+                              ref,
+                              trackIds: visibleTracks.map((t) => t.id).toList(),
+                            );
+                          case _PlaylistCollectionAction.addToQueue:
+                            final added = await controller.addTracksToQueue(
+                              visibleTracks,
+                            );
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Added $added song${added == 1 ? '' : 's'} to queue',
+                                ),
                               ),
-                            ),
-                          );
-                        case _PlaylistCollectionAction.delete:
-                          onDelete?.call();
-                        case _PlaylistCollectionAction.rename:
-                          onRename?.call();
-                        case _PlaylistCollectionAction.edit:
-                          onEdit?.call();
-                        case _PlaylistCollectionAction.removeDuplicates:
-                          onRemoveDuplicates?.call();
-                      }
+                            );
+                          case _PlaylistCollectionAction.delete:
+                            onDelete?.call();
+                          case _PlaylistCollectionAction.rename:
+                            onRename?.call();
+                          case _PlaylistCollectionAction.edit:
+                            onEdit?.call();
+                          case _PlaylistCollectionAction.removeDuplicates:
+                            onRemoveDuplicates?.call();
+                        }
                       }
                     : null,
               ),
@@ -1851,21 +1792,28 @@ class _PlaylistTrackTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final showAlbumColumn =
-        isDesktopLayout(context) &&
-        track.albumName != null &&
-        track.albumName!.isNotEmpty;
     final current = ref.watch(currentMediaItemProvider).value;
     final isCurrent =
         current != null && current.extras?['jellyfinId'] == track.id;
     final isDownloaded = ref
         .watch(downloadManagerProvider)
         .isDownloaded(track.id);
-    return ListTile(
-      dense: true,
-      visualDensity: VisualDensity.compact,
-      isThreeLine: inSelection,
+    return TrackListTile(
+      track: track,
+      index: index,
+      isCurrent: isCurrent,
+      isDownloaded: isDownloaded,
+      inSelection: inSelection,
+      isSelected: isSelected,
       onLongPress: onLongPress,
+      onToggleSelected: onToggleSelected,
+      onArtistTap: track.artistId == null || track.artistId!.isEmpty
+          ? null
+          : () => context.push('/artist/${track.artistId}'),
+      onAlbumTap: track.albumId == null || track.albumId!.isEmpty
+          ? null
+          : () => context.push('/album/${track.albumId}'),
+      showAlbumInTrailing: true,
       onTap: () {
         if (inSelection) {
           onToggleSelected();
@@ -1888,91 +1836,16 @@ class _PlaylistTrackTile extends ConsumerWidget {
               selectedTrack: true,
             );
       },
-      selected: isSelected,
-      selectedTileColor: AppColors.primary.withValues(alpha: 0.08),
-      leading: inSelection
-          ? Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
-              child: Checkbox(
-                value: isSelected,
-                onChanged: (_) => onToggleSelected(),
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                visualDensity: VisualDensity.compact,
-              ),
-            )
-          : PlayingTrackLeading(
-              jellyfinTrackId: track.id,
-              indexLabel: '${index + 1}',
-            ),
-      title: Text(
-        track.name,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          color: isCurrent && !inSelection
-              ? AppColors.primary
-              : AppColors.textPrimary,
-          fontWeight: isCurrent && !inSelection
-              ? FontWeight.w600
-              : FontWeight.w500,
-        ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          PlayingTrackDuration(
+            jellyfinTrackId: track.id,
+            trackDuration: track.duration,
+          ),
+          TrackMoreMenuButton(track: track),
+        ],
       ),
-      subtitle: InkWell(
-        onTap: inSelection
-            ? null
-            : (track.artistId == null || track.artistId!.isEmpty
-                  ? null
-                  : () => context.push('/artist/${track.artistId}')),
-        child: Text(
-          track.artistName,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
-        ),
-      ),
-      trailing: inSelection
-          ? null
-          : Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (showAlbumColumn) ...[
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 280),
-                    child: InkWell(
-                      onTap: track.albumId == null || track.albumId!.isEmpty
-                          ? null
-                          : () => context.push('/album/${track.albumId}'),
-                      child: Text(
-                        track.albumName!,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                ],
-                if (isDownloaded)
-                  const Padding(
-                    padding: EdgeInsets.only(right: 4),
-                    child: Icon(
-                      Icons.download_for_offline_rounded,
-                      size: 14,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                PlayingTrackDuration(
-                  jellyfinTrackId: track.id,
-                  trackDuration: track.duration,
-                ),
-                TrackMoreMenuButton(track: track),
-              ],
-            ),
     );
   }
 }

@@ -2,10 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/navigation/app_navigation.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/format.dart';
+import '../../core/utils/search_normalization.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/error_state.dart';
 import '../../core/widgets/local_or_network_image.dart';
@@ -19,6 +21,7 @@ import 'instant_mix.dart';
 import 'player_providers.dart';
 import 'widgets/mini_player_slot.dart';
 import 'widgets/playing_track_leading.dart';
+import 'widgets/track_listing_widgets.dart';
 import 'widgets/track_more_menu_button.dart';
 
 typedef _InstantMixRequest = ({String itemId, InstantMixSeedKind? kind});
@@ -63,7 +66,7 @@ final instantMixTracksProvider = FutureProvider.autoDispose
       );
     });
 
-class InstantMixScreen extends ConsumerWidget {
+class InstantMixScreen extends ConsumerStatefulWidget {
   const InstantMixScreen({
     required this.seedItemId,
     required this.seedKind,
@@ -76,7 +79,32 @@ class InstantMixScreen extends ConsumerWidget {
   final String? seedTitle;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<InstantMixScreen> createState() => _InstantMixScreenState();
+}
+
+class _InstantMixScreenState extends ConsumerState<InstantMixScreen> {
+  final _filterController = TextEditingController();
+  String _filterQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _filterController.addListener(() {
+      setState(() => _filterQuery = _filterController.text.trim());
+    });
+  }
+
+  @override
+  void dispose() {
+    _filterController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final seedItemId = widget.seedItemId;
+    final seedKind = widget.seedKind;
+    final seedTitle = widget.seedTitle;
     final request = (itemId: seedItemId, kind: seedKind);
     final mixAsync = ref.watch(instantMixTracksProvider(request));
 
@@ -94,56 +122,83 @@ class InstantMixScreen extends ConsumerWidget {
           message: '$e',
           onRetry: () => ref.invalidate(instantMixTracksProvider(request)),
         ),
-        data: (detail) => RefreshIndicator(
-          onRefresh: () async =>
-              ref.refresh(instantMixTracksProvider(request).future),
-          child: CustomScrollView(
-            slivers: [
-              SliverAppBar(
-                pinned: true,
-                stretch: true,
-                leading: const BackButton(),
-                expandedHeight: 380,
-                backgroundColor: AppColors.background,
-                flexibleSpace: FlexibleSpaceBar(
-                  background: _InstantMixHeader(
-                    seedTitle: seedTitle,
-                    artworkUrl: detail.artworkUrl,
-                    trackCount: detail.tracks.length,
+        data: (detail) {
+          final visibleTracks = _visibleMixTracks(detail.tracks, _filterQuery);
+          return RefreshIndicator(
+            onRefresh: () async =>
+                ref.refresh(instantMixTracksProvider(request).future),
+            child: CustomScrollView(
+              slivers: [
+                SliverAppBar(
+                  pinned: true,
+                  stretch: true,
+                  leading: const BackButton(),
+                  expandedHeight: 380,
+                  backgroundColor: AppColors.background,
+                  flexibleSpace: FlexibleSpaceBar(
+                    background: _InstantMixHeader(
+                      seedTitle: seedTitle,
+                      artworkUrl: detail.artworkUrl,
+                      trackCount: detail.tracks.length,
+                    ),
                   ),
                 ),
-              ),
-              if (detail.tracks.isEmpty)
-                const SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: EmptyState(
-                    icon: Icons.auto_awesome_rounded,
-                    title: 'No songs found',
-                    message: 'Jellyfin did not return any tracks for this mix.',
+                if (detail.tracks.isEmpty)
+                  const SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: EmptyState(
+                      icon: Icons.auto_awesome_rounded,
+                      title: 'No songs found',
+                      message:
+                          'Jellyfin did not return any tracks for this mix.',
+                    ),
+                  )
+                else ...[
+                  SliverToBoxAdapter(
+                    child: _InstantMixActionRow(
+                      seedItemId: seedItemId,
+                      seedKind: seedKind,
+                      seedTitle: seedTitle,
+                      tracks: visibleTracks,
+                    ),
                   ),
-                )
-              else ...[
-                SliverToBoxAdapter(
-                  child: _InstantMixActionRow(
-                    seedItemId: seedItemId,
-                    seedKind: seedKind,
-                    seedTitle: seedTitle,
-                    tracks: detail.tracks,
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                      child: TrackFilterBar(
+                        controller: _filterController,
+                        filterQuery: _filterQuery,
+                        visibleCount: visibleTracks.length,
+                        totalCount: detail.tracks.length,
+                        hintText: 'Filter mix',
+                      ),
+                    ),
                   ),
-                ),
-                SliverList.builder(
-                  itemCount: detail.tracks.length,
-                  itemBuilder: (context, index) => _InstantMixTrackTile(
-                    seedItemId: seedItemId,
-                    tracks: detail.tracks,
-                    index: index,
-                  ),
-                ),
-                const SliverToBoxAdapter(child: SizedBox(height: 32)),
+                  if (visibleTracks.isEmpty)
+                    const SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(16, 16, 16, 24),
+                        child: Text(
+                          'No songs match your filter.',
+                          style: TextStyle(color: AppColors.textSecondary),
+                        ),
+                      ),
+                    )
+                  else
+                    SliverList.builder(
+                      itemCount: visibleTracks.length,
+                      itemBuilder: (context, index) => _InstantMixTrackTile(
+                        seedItemId: seedItemId,
+                        tracks: visibleTracks,
+                        index: index,
+                      ),
+                    ),
+                  const SliverToBoxAdapter(child: SizedBox(height: 32)),
+                ],
               ],
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -283,6 +338,7 @@ class _InstantMixActionRow extends ConsumerWidget {
     final isMixPlaying =
         playbackState?.playing == true &&
         (currentMediaItem?.extras?['contextId'] as String?) == contextId;
+    final hasTracks = tracks.isNotEmpty;
     final request = (itemId: seedItemId, kind: seedKind);
     final mixAsync = ref.watch(instantMixTracksProvider(request));
     final isRegenerating = mixAsync.isLoading && mixAsync.hasValue;
@@ -292,18 +348,20 @@ class _InstantMixActionRow extends ConsumerWidget {
       child: Row(
         children: [
           PlayPill(
-            onTap: () {
-              final controller = ref.read(playerControllerProvider);
-              if (isMixPlaying) {
-                controller.togglePlay();
-                return;
-              }
-              controller.playTracks(
-                tracks,
-                contextId: contextId,
-                randomizeStart: false,
-              );
-            },
+            onTap: hasTracks
+                ? () {
+                    final controller = ref.read(playerControllerProvider);
+                    if (isMixPlaying) {
+                      controller.togglePlay();
+                      return;
+                    }
+                    controller.playTracks(
+                      tracks,
+                      contextId: contextId,
+                      randomizeStart: false,
+                    );
+                  }
+                : null,
             icon: isMixPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
             tooltip: isMixPlaying ? 'Pause' : 'Play',
           ),
@@ -365,14 +423,18 @@ class _InstantMixActionRow extends ConsumerWidget {
               if (action == null || !context.mounted) return;
               switch (action) {
                 case _InstantMixAction.addToQueue:
-                  await _addMixToQueue(context, ref, tracks);
+                  if (hasTracks) {
+                    await _addMixToQueue(context, ref, tracks);
+                  }
                 case _InstantMixAction.createPlaylist:
-                  await _createPlaylistFromMix(
-                    context,
-                    ref,
-                    seedTitle: seedTitle,
-                    tracks: tracks,
-                  );
+                  if (hasTracks) {
+                    await _createPlaylistFromMix(
+                      context,
+                      ref,
+                      seedTitle: seedTitle,
+                      tracks: tracks,
+                    );
+                  }
               }
             },
           ),
@@ -427,14 +489,18 @@ class _InstantMixTrackTile extends ConsumerWidget {
     final isDownloaded = ref
         .watch(downloadManagerProvider)
         .isDownloaded(track.id);
-    final album = track.albumName;
-    final subtitle = album == null || album.isEmpty
-        ? track.artistName
-        : '${track.artistName} · $album';
-
-    return ListTile(
-      dense: true,
-      visualDensity: VisualDensity.compact,
+    return TrackListTile(
+      track: track,
+      index: index,
+      isCurrent: isCurrent,
+      isDownloaded: isDownloaded,
+      onArtistTap: track.artistId == null || track.artistId!.isEmpty
+          ? null
+          : () => context.push('/artist/${track.artistId}'),
+      onAlbumTap: track.albumId == null || track.albumId!.isEmpty
+          ? null
+          : () => context.push('/album/${track.albumId}'),
+      showAlbumInTrailing: true,
       onTap: () {
         if (isCurrentInContext) {
           context.pushNowPlayingIfNeeded();
@@ -449,37 +515,9 @@ class _InstantMixTrackTile extends ConsumerWidget {
               selectedTrack: true,
             );
       },
-      leading: PlayingTrackLeading(
-        jellyfinTrackId: track.id,
-        indexLabel: '${index + 1}',
-      ),
-      title: Text(
-        track.name,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          color: isCurrent ? AppColors.primary : AppColors.textPrimary,
-          fontWeight: isCurrent ? FontWeight.w600 : FontWeight.w500,
-        ),
-      ),
-      subtitle: Text(
-        subtitle,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
-      ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (isDownloaded)
-            const Padding(
-              padding: EdgeInsets.only(right: 4),
-              child: Icon(
-                Icons.download_for_offline_rounded,
-                size: 14,
-                color: AppColors.primary,
-              ),
-            ),
           PlayingTrackDuration(
             jellyfinTrackId: track.id,
             trackDuration: track.duration,
@@ -527,6 +565,19 @@ class _InstantMixLoading extends StatelessWidget {
       ),
     );
   }
+}
+
+List<Track> _visibleMixTracks(List<Track> tracks, String query) {
+  if (query.isEmpty) return tracks;
+  return tracks
+      .where(
+        (track) => searchMatches(query, [
+          track.name,
+          track.artistName,
+          track.albumName,
+        ]),
+      )
+      .toList();
 }
 
 Future<void> _createPlaylistFromMix(
