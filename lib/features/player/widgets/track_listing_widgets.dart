@@ -36,6 +36,26 @@ class TrackFilterBar extends StatelessWidget {
                 isDense: true,
                 contentPadding: const EdgeInsets.symmetric(vertical: 10),
                 hintText: hintText,
+                hintStyle: TextStyle(
+                  color: AppColors.textSecondary.withValues(alpha: 0.62),
+                ),
+                filled: true,
+                fillColor: AppColors.surfaceElevated.withValues(alpha: 0.36),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(999),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(999),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(999),
+                  borderSide: BorderSide(
+                    color: AppColors.primary.withValues(alpha: 0.36),
+                    width: 1,
+                  ),
+                ),
                 prefixIcon: const Icon(Icons.search_rounded, size: 19),
                 prefixIconConstraints: const BoxConstraints(
                   minWidth: 40,

@@ -48,13 +48,16 @@ class MiniPlayer extends ConsumerWidget {
       child: ClipRRect(
         borderRadius: borderRadius,
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+          filter: ImageFilter.blur(sigmaX: 28, sigmaY: 28),
           child: Container(
             decoration: BoxDecoration(
               borderRadius: borderRadius,
-              color: AppColors.surfaceElevated,
-              border: Border.all(
-                color: AppColors.textPrimary.withValues(alpha: 0.06),
+              color: AppColors.surfaceElevated.withValues(alpha: 0.62),
+              border: Border(
+                top: BorderSide(
+                  color: AppColors.textPrimary.withValues(alpha: 0.14),
+                  width: 1,
+                ),
               ),
               boxShadow: [
                 BoxShadow(
@@ -159,6 +162,7 @@ class MiniPlayer extends ConsumerWidget {
                                   ? Icons.pause_rounded
                                   : Icons.play_arrow_rounded,
                               onTap: controller.togglePlay,
+                              emphasized: true,
                             ),
                           ],
                         ),
@@ -187,16 +191,24 @@ Future<void> _onMiniPlayerPlaylistTap(
 }
 
 class _RoundIcon extends StatelessWidget {
-  const _RoundIcon({required this.icon, required this.onTap, this.iconColor});
+  const _RoundIcon({
+    required this.icon,
+    required this.onTap,
+    this.iconColor,
+    this.emphasized = false,
+  });
   final IconData icon;
   final VoidCallback? onTap;
   final Color? iconColor;
+  final bool emphasized;
 
   @override
   Widget build(BuildContext context) {
     final disabled = onTap == null;
     return Material(
-      color: Colors.transparent,
+      color: emphasized
+          ? AppColors.textPrimary.withValues(alpha: 0.08)
+          : Colors.transparent,
       shape: const CircleBorder(),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -208,7 +220,7 @@ class _RoundIcon extends StatelessWidget {
             icon,
             color: disabled
                 ? AppColors.textSecondary.withValues(alpha: 0.4)
-                : (iconColor ?? AppColors.textPrimary),
+                : (iconColor ?? AppColors.textPrimary.withValues(alpha: 0.96)),
             size: 22,
           ),
         ),
