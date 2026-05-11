@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:just_audio/just_audio.dart';
 
+import '../../core/navigation/app_navigation.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/format.dart';
 import 'current_track_playlist_presence.dart';
@@ -44,7 +45,6 @@ class DesktopMiniPlayer extends ConsumerWidget {
       _ => false,
     };
     final artistId = mediaItem.extras?['artistId'] as String?;
-    final albumId = mediaItem.extras?['albumId'] as String?;
     final horizontal = edgeToEdge ? 16.0 : 10.0;
     final clampedPosition = position > duration ? duration : position;
     final sliderMax = duration.inMilliseconds.toDouble().clamp(
@@ -90,9 +90,7 @@ class DesktopMiniPlayer extends ConsumerWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           InkWell(
-                            onTap: albumId == null || albumId.isEmpty
-                                ? null
-                                : () => context.push('/album/$albumId'),
+                            onTap: context.pushNowPlayingIfNeeded,
                             child: Text(
                               mediaItem.title,
                               maxLines: 1,
