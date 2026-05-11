@@ -1619,61 +1619,64 @@ class _ActionRow extends ConsumerWidget {
       opacity: selectionActive ? 0.45 : 1,
       child: IgnorePointer(
         ignoring: selectionActive,
-        child: Row(
-          children: [
-            PlayPill(
-              onTap: enabled
-                  ? () {
-                      if (isPlaylistPlaying) {
-                        controller.togglePlay();
-                        return;
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              PlayPill(
+                onTap: enabled
+                    ? () {
+                        if (isPlaylistPlaying) {
+                          controller.togglePlay();
+                          return;
+                        }
+                        controller.playTracks(
+                          visibleTracks,
+                          contextId: playlist.id,
+                        );
                       }
-                      controller.playTracks(
-                        visibleTracks,
-                        contextId: playlist.id,
-                      );
-                    }
-                  : null,
-              icon: isPlaylistPlaying
-                  ? Icons.pause_rounded
-                  : Icons.play_arrow_rounded,
-              tooltip: isPlaylistPlaying ? 'Pause' : 'Play',
-            ),
-            const SizedBox(width: 12),
-            IconButton(
-              tooltip: 'Shuffle',
-              icon: Icon(
-                Icons.shuffle_rounded,
-                color: shuffleEnabled
-                    ? AppColors.primary
-                    : AppColors.textPrimary,
+                    : null,
+                icon: isPlaylistPlaying
+                    ? Icons.pause_rounded
+                    : Icons.play_arrow_rounded,
+                tooltip: isPlaylistPlaying ? 'Pause' : 'Play',
               ),
-              onPressed: enabled ? () => controller.toggleShuffle() : null,
-            ),
-            IconButton(
-              tooltip: 'Instant Mix',
-              icon: const Icon(Icons.auto_awesome_rounded),
-              onPressed: enabled
-                  ? () => openInstantMixPage(
-                      context,
-                      ref,
-                      itemId: playlist.id,
-                      kind: InstantMixSeedKind.playlist,
-                      title: playlist.name,
-                    )
-                  : null,
-            ),
-            IconButton(
-              tooltip: 'Sort',
-              icon: const Icon(Icons.sort_rounded),
-              onPressed: enabled ? onSort : null,
-            ),
-            PlaylistDownloadButton(playlist: playlist),
-            IconButton(
-              tooltip: 'More actions',
-              icon: const Icon(Icons.more_vert_rounded),
-              onPressed: canOpenMore
-                  ? () async {
+              const SizedBox(width: 12),
+              IconButton(
+                tooltip: 'Shuffle',
+                icon: Icon(
+                  Icons.shuffle_rounded,
+                  color: shuffleEnabled
+                      ? AppColors.primary
+                      : AppColors.textPrimary,
+                ),
+                onPressed: enabled ? () => controller.toggleShuffle() : null,
+              ),
+              IconButton(
+                tooltip: 'Instant Mix',
+                icon: const Icon(Icons.auto_awesome_rounded),
+                onPressed: enabled
+                    ? () => openInstantMixPage(
+                        context,
+                        ref,
+                        itemId: playlist.id,
+                        kind: InstantMixSeedKind.playlist,
+                        title: playlist.name,
+                      )
+                    : null,
+              ),
+              IconButton(
+                tooltip: 'Sort',
+                icon: const Icon(Icons.sort_rounded),
+                onPressed: enabled ? onSort : null,
+              ),
+              PlaylistDownloadButton(playlist: playlist),
+              IconButton(
+                tooltip: 'More actions',
+                icon: const Icon(Icons.more_vert_rounded),
+                onPressed: canOpenMore
+                    ? () async {
                       final action =
                           await showModalBottomSheet<_PlaylistCollectionAction>(
                             context: context,
@@ -1788,10 +1791,11 @@ class _ActionRow extends ConsumerWidget {
                         case _PlaylistCollectionAction.removeDuplicates:
                           onRemoveDuplicates?.call();
                       }
-                    }
-                  : null,
-            ),
-          ],
+                      }
+                    : null,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1900,10 +1904,80 @@ class _PlaylistTrackTile extends ConsumerWidget {
               jellyfinTrackId: track.id,
               indexLabel: '${index + 1}',
             ),
-      title: Row(
-        children: [
-          Expanded(
-            child: Text(
+      title: showAlbumColumn
+          ? SizedBox(
+              height: 34,
+              child: Stack(
+                children: [
+                  Align(
+                    alignment: Alignment.topLeft,
+                    child: Text(
+                      track.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: isCurrent && !inSelection
+                            ? AppColors.primary
+                            : AppColors.textPrimary,
+                        fontWeight: isCurrent && !inSelection
+                            ? FontWeight.w600
+                            : FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 24),
+                      child: SizedBox(
+                        width: 300,
+                        child: InkWell(
+                          onTap: inSelection
+                              ? null
+                              : (track.albumId == null || track.albumId!.isEmpty
+                                    ? null
+                                    : () =>
+                                        context.push('/album/${track.albumId}')),
+                          child: Text(
+                            track.albumName!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: inSelection
+                                  ? AppColors.textTertiary
+                                  : AppColors.textSecondary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Align(
+                    alignment: Alignment.bottomLeft,
+                    child: InkWell(
+                      onTap: inSelection
+                          ? null
+                          : (track.artistId == null || track.artistId!.isEmpty
+                                ? null
+                                : () => context.push('/artist/${track.artistId}')),
+                      child: Text(
+                        track.artistName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : Text(
               track.name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -1916,49 +1990,21 @@ class _PlaylistTrackTile extends ConsumerWidget {
                     : FontWeight.w500,
               ),
             ),
-          ),
-          if (showAlbumColumn) ...[
-            const SizedBox(width: 24),
-            Expanded(
-              child: Center(
-                child: InkWell(
-                  onTap: inSelection
-                      ? null
-                      : (track.albumId == null || track.albumId!.isEmpty
-                            ? null
-                            : () => context.push('/album/${track.albumId}')),
-                  child: Text(
-                    track.albumName!,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: inSelection
-                          ? AppColors.textTertiary
-                          : AppColors.textSecondary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
+      subtitle: showAlbumColumn
+          ? const SizedBox.shrink()
+          : InkWell(
+              onTap: inSelection
+                  ? null
+                  : (track.artistId == null || track.artistId!.isEmpty
+                        ? null
+                        : () => context.push('/artist/${track.artistId}')),
+              child: Text(
+                track.artistName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
               ),
             ),
-          ],
-        ],
-      ),
-      subtitle: InkWell(
-        onTap: inSelection
-            ? null
-            : (track.artistId == null || track.artistId!.isEmpty
-                  ? null
-                  : () => context.push('/artist/${track.artistId}')),
-        child: Text(
-          track.artistName,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
-        ),
-      ),
       trailing: inSelection
           ? null
           : Row(
