@@ -1904,112 +1904,59 @@ class _PlaylistTrackTile extends ConsumerWidget {
               jellyfinTrackId: track.id,
               indexLabel: '${index + 1}',
             ),
-      title: showAlbumColumn
-          ? SizedBox(
-              height: 34,
-              child: Stack(
-                children: [
-                  Align(
-                    alignment: Alignment.topLeft,
-                    child: Text(
-                      track.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: isCurrent && !inSelection
-                            ? AppColors.primary
-                            : AppColors.textPrimary,
-                        fontWeight: isCurrent && !inSelection
-                            ? FontWeight.w600
-                            : FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: 24),
-                      child: SizedBox(
-                        width: 300,
-                        child: InkWell(
-                          onTap: inSelection
-                              ? null
-                              : (track.albumId == null || track.albumId!.isEmpty
-                                    ? null
-                                    : () =>
-                                        context.push('/album/${track.albumId}')),
-                          child: Text(
-                            track.albumName!,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: inSelection
-                                  ? AppColors.textTertiary
-                                  : AppColors.textSecondary,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Align(
-                    alignment: Alignment.bottomLeft,
-                    child: InkWell(
-                      onTap: inSelection
-                          ? null
-                          : (track.artistId == null || track.artistId!.isEmpty
-                                ? null
-                                : () => context.push('/artist/${track.artistId}')),
-                      child: Text(
-                        track.artistName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            )
-          : Text(
-              track.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: isCurrent && !inSelection
-                    ? AppColors.primary
-                    : AppColors.textPrimary,
-                fontWeight: isCurrent && !inSelection
-                    ? FontWeight.w600
-                    : FontWeight.w500,
-              ),
-            ),
-      subtitle: showAlbumColumn
-          ? const SizedBox.shrink()
-          : InkWell(
-              onTap: inSelection
+      title: Text(
+        track.name,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          color: isCurrent && !inSelection
+              ? AppColors.primary
+              : AppColors.textPrimary,
+          fontWeight: isCurrent && !inSelection
+              ? FontWeight.w600
+              : FontWeight.w500,
+        ),
+      ),
+      subtitle: InkWell(
+        onTap: inSelection
+            ? null
+            : (track.artistId == null || track.artistId!.isEmpty
                   ? null
-                  : (track.artistId == null || track.artistId!.isEmpty
-                        ? null
-                        : () => context.push('/artist/${track.artistId}')),
-              child: Text(
-                track.artistName,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
-              ),
-            ),
+                  : () => context.push('/artist/${track.artistId}')),
+        child: Text(
+          track.artistName,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+        ),
+      ),
       trailing: inSelection
           ? null
           : Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                if (showAlbumColumn) ...[
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 280),
+                    child: InkWell(
+                      onTap: track.albumId == null || track.albumId!.isEmpty
+                          ? null
+                          : () => context.push('/album/${track.albumId}'),
+                      child: Text(
+                        track.albumName!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                ],
                 if (isDownloaded)
                   const Padding(
                     padding: EdgeInsets.only(right: 4),
