@@ -131,11 +131,7 @@ class MiniPlayer extends ConsumerWidget {
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: TextStyle(
-                                          color:
-                                              artistId == null ||
-                                                  artistId.isEmpty
-                                              ? AppColors.textSecondary
-                                              : AppColors.primary,
+                                          color: AppColors.textSecondary,
                                           fontSize: 12,
                                         ),
                                       ),

@@ -132,6 +132,7 @@ class TrackListTile extends StatelessWidget {
         track.albumName!.isNotEmpty;
 
     return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
       dense: true,
       visualDensity: VisualDensity.compact,
       isThreeLine: inSelection,
