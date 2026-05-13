@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 
-import 'audio_player_handler.dart';
+import 'playback_handler.dart';
 import 'player_providers.dart';
 
 final playbackSessionPersistenceProvider = Provider<PlaybackSessionPersistence>(
@@ -20,7 +20,7 @@ final playbackSessionPersistenceProvider = Provider<PlaybackSessionPersistence>(
 class PlaybackSessionPersistence {
   PlaybackSessionPersistence({required this.handler, required this.store});
 
-  final JellymusicAudioHandler handler;
+  final PlaybackHandler handler;
   final PlaybackSessionStore store;
 
   bool _attached = false;

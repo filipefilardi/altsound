@@ -12,7 +12,7 @@ import '../../core/theme/app_gradients.dart';
 import '../../core/utils/format.dart';
 import '../remote/remote_player_controller.dart';
 import '../syncplay/syncplay_controller.dart';
-import 'audio_player_handler.dart';
+import 'playback_handler.dart';
 import 'current_track_playlist_presence.dart';
 import 'instant_mix.dart';
 import 'player_providers.dart';

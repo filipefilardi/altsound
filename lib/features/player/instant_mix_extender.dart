@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/jellyfin/jellyfin_repository.dart';
-import 'audio_player_handler.dart';
+import 'playback_handler.dart';
 import 'player_providers.dart';
 
 /// Auto-extends the queue when an Instant Mix nears its end so playback
@@ -23,7 +23,7 @@ class InstantMixExtender {
   });
 
   final JellyfinRepository repo;
-  final JellymusicAudioHandler handler;
+  final PlaybackHandler handler;
   final PlayerController controller;
 
   static const _instantMixContextPrefix = 'instant-mix:';

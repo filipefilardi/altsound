@@ -9,7 +9,7 @@ import '../../data/jellyfin/jellyfin_repository.dart';
 import '../../data/jellyfin/models/media_item.dart' as jf;
 import '../../data/jellyfin/models/syncplay.dart';
 import '../../data/jellyfin/syncplay_repository.dart';
-import '../player/audio_player_handler.dart';
+import '../player/playback_handler.dart';
 import '../player/media_item_mapper.dart';
 import '../player/player_providers.dart';
 import 'syncplay_socket.dart';
@@ -73,7 +73,7 @@ class SyncPlayController extends Notifier<SyncPlayState> {
   late final SyncPlayRepository _repo;
   late final SyncPlaySocket _socket;
   late final JellyfinRepository _jellyfin;
-  late final JellymusicAudioHandler _handler;
+  late final PlaybackHandler _handler;
   late final DownloadManager _downloads;
   StreamSubscription<SyncPlaySocketEvent>? _socketSub;
   List<SyncPlayQueueItem> _queue = const [];

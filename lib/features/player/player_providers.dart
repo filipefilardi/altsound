@@ -7,10 +7,10 @@ import '../../data/jellyfin/jellyfin_repository.dart';
 import '../../data/jellyfin/models/media_item.dart' as jf;
 import '../remote/remote_player_controller.dart';
 import '../syncplay/syncplay_controller.dart';
-import 'audio_player_handler.dart';
+import 'playback_handler.dart';
 import 'media_item_mapper.dart';
 
-final audioHandlerProvider = Provider<JellymusicAudioHandler>((ref) {
+final audioHandlerProvider = Provider<PlaybackHandler>((ref) {
   throw UnimplementedError(
     'audioHandlerProvider must be overridden in main() with the AudioService.init() result.',
   );
@@ -133,7 +133,7 @@ class PlayerController {
   });
 
   final Ref ref;
-  final JellymusicAudioHandler handler;
+  final PlaybackHandler handler;
   final JellyfinRepository repo;
   final DownloadManager downloads;
 

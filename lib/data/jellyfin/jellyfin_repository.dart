@@ -1189,7 +1189,7 @@ class JellyfinRepository {
     final params = <String, String>{
       'UserId': s.userId,
       'api_key': s.accessToken,
-      'DeviceId': 'jellymusic-${s.userId}',
+      'DeviceId': 'altsound-${s.userId}',
       if (maxBitrate != null && maxBitrate > 0)
         'MaxStreamingBitrate': maxBitrate.toString(),
       // Keep stream progressive (non-HLS) so ExoPlayer/just_audio can parse it

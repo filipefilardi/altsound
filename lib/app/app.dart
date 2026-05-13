@@ -15,14 +15,14 @@ import '../features/player/player_providers.dart';
 import '../features/syncplay/syncplay_controller.dart';
 import 'router.dart';
 
-class JellymusicApp extends ConsumerStatefulWidget {
-  const JellymusicApp({super.key});
+class AltsoundApp extends ConsumerStatefulWidget {
+  const AltsoundApp({super.key});
 
   @override
-  ConsumerState<JellymusicApp> createState() => _JellymusicAppState();
+  ConsumerState<AltsoundApp> createState() => _AltsoundAppState();
 }
 
-class _JellymusicAppState extends ConsumerState<JellymusicApp> {
+class _AltsoundAppState extends ConsumerState<AltsoundApp> {
   ProviderSubscription<AuthState>? _authSub;
   PlaybackSessionPersistence? _playbackPersistence;
   bool _scrobblerAttached = false;

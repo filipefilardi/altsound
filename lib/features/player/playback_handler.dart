@@ -10,8 +10,8 @@ class PlayerError {
   final String message;
 }
 
-class JellymusicAudioHandler extends BaseAudioHandler with SeekHandler {
-  JellymusicAudioHandler({bool gaplessPlayback = true})
+class PlaybackHandler extends BaseAudioHandler with SeekHandler {
+  PlaybackHandler({bool gaplessPlayback = true})
     : _player = AudioPlayer(useLazyPreparation: !gaplessPlayback) {
     _player.playbackEventStream.listen(
       (_) => _syncPlaybackState(),

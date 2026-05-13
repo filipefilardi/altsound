@@ -9,7 +9,7 @@ import 'app/app.dart';
 import 'data/jellyfin/auth_repository.dart';
 import 'data/jellyfin/client_metadata.dart';
 import 'data/jellyfin/jellyfin_api.dart';
-import 'features/player/audio_player_handler.dart';
+import 'features/player/playback_handler.dart';
 import 'features/player/playback_session_persistence.dart';
 import 'features/player/player_providers.dart';
 
@@ -43,9 +43,9 @@ Future<void> main() async {
   );
 
   final handler = await AudioService.init(
-    builder: () => JellymusicAudioHandler(gaplessPlayback: gapless),
+    builder: () => PlaybackHandler(gaplessPlayback: gapless),
     config: const AudioServiceConfig(
-      androidNotificationChannelId: 'com.silent_summit.jellymusic.audio',
+      androidNotificationChannelId: 'com.silent_summit.altsound.audio',
       androidNotificationChannelName: 'AltSound playback',
       androidNotificationOngoing: true,
       androidStopForegroundOnPause: true,
@@ -69,7 +69,7 @@ Future<void> main() async {
         audioHandlerProvider.overrideWithValue(handler),
         jellyfinApiProvider.overrideWithValue(api),
       ],
-      child: const JellymusicApp(),
+      child: const AltsoundApp(),
     ),
   );
 }
