@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/theme/app_radius.dart';
+import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
 import 'package:altsound/data/jellyfin/models/media_item.dart';
-import 'package:altsound/features/playlist/playlist_providers.dart';
 import 'package:altsound/features/player/current_track_playlist_presence.dart';
 import 'package:altsound/features/player/now_playing_favorite.dart';
+import 'package:altsound/features/playlist/playlist_providers.dart';
 
 void _invalidateTrackPlaylistPresence(WidgetRef ref) {
   ref.invalidate(currentTrackPlaylistPresenceProvider);
@@ -255,14 +257,14 @@ class _ManageTrackPlaylistsSheetState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.xs, AppSpacing.md, AppSpacing.md),
           child: Text(
             'ADD TO PLAYLIST',
             style: Theme.of(context).textTheme.labelLarge,
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, AppSpacing.md),
           child: TextField(
             controller: _searchCtrl,
             decoration: const InputDecoration(
@@ -277,7 +279,7 @@ class _ManageTrackPlaylistsSheetState
               _NewPlaylistRow(
                 onTap: () => unawaited(_createPlaylistAndAttach(context)),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: AppSpacing.xs),
               _PlaylistToggleRow(
                 icon: Icons.favorite_rounded,
                 iconColor: AppColors.like,
@@ -311,7 +313,7 @@ class _ManageTrackPlaylistsSheetState
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.md),
             ],
           ),
         ),
@@ -474,13 +476,13 @@ class _NewPlaylistRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
       leading: Container(
         width: 44,
         height: 44,
         decoration: BoxDecoration(
           color: AppColors.primary.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppRadius.sm),
         ),
         child: const Icon(
           Icons.add_rounded,
@@ -515,13 +517,13 @@ class _PlaylistToggleRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+      contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
       leading: Container(
         width: 44,
         height: 44,
         decoration: BoxDecoration(
           color: iconColor.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppRadius.sm),
         ),
         child: Icon(icon, color: iconColor, size: 20),
       ),
@@ -584,14 +586,14 @@ class _PickPlaylistSheetState extends State<_PickPlaylistSheet> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.xs, AppSpacing.md, AppSpacing.md),
           child: Text(
             'ADD TO PLAYLIST',
             style: Theme.of(context).textTheme.labelLarge,
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, AppSpacing.md),
           child: TextField(
             controller: _searchCtrl,
             decoration: const InputDecoration(

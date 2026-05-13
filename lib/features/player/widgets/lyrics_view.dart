@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/core/widgets/empty_state.dart';
 import 'package:altsound/core/widgets/error_state.dart';
 import 'package:altsound/core/widgets/skeleton.dart';
@@ -68,11 +69,11 @@ class _LoadingLyrics extends StatelessWidget {
       // ListView (not Column) so the placeholder gracefully scrolls when the
       // available height is shorter than the rendered shimmer rows.
       child: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.xl),
         physics: const NeverScrollableScrollPhysics(),
         itemCount: _widths.length,
         itemBuilder: (_, i) => Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
           child: Center(
             child: Skeleton.line(
               width: maxWidth * _widths[i] * 0.8,
@@ -93,10 +94,10 @@ class _PlainLyrics extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.xl),
       itemCount: lyrics.lines.length,
       itemBuilder: (_, i) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
         child: Text(
           lyrics.lines[i].text,
           textAlign: TextAlign.center,
@@ -206,14 +207,14 @@ class _SyncedLyricsState extends ConsumerState<_SyncedLyrics> {
       },
       child: ListView.builder(
         controller: _scrollController,
-        padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.xl),
         itemCount: widget.lyrics.lines.length,
         itemBuilder: (_, i) {
           final line = widget.lyrics.lines[i];
           final isActive = i == _activeIndex;
           return Padding(
             key: _keyFor(i),
-            padding: const EdgeInsets.symmetric(vertical: 8),
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: line.start == null

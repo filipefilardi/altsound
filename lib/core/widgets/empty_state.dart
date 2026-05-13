@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/theme/app_spacing.dart';
 
 class EmptyState extends StatelessWidget {
   const EmptyState({
@@ -61,7 +62,7 @@ class EmptyState extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 if (message != null && !tight) ...[
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.sm),
                   Text(
                     message!,
                     textAlign: TextAlign.center,

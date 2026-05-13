@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/theme/app_radius.dart';
+import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/core/utils/search_normalization.dart';
 import 'package:altsound/core/widgets/empty_state.dart';
 import 'package:altsound/core/widgets/local_or_network_image.dart';
@@ -76,7 +78,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            padding: const EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, AppSpacing.md),
             child: TextField(
               controller: _ctrl,
               autofocus: true,
@@ -185,7 +187,7 @@ class _ResultTile extends ConsumerWidget {
           );
 
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
       leading: leading,
       title: Text(
         item.name,
@@ -208,7 +210,7 @@ class _ResultTile extends ConsumerWidget {
               children: [
                 if (isDownloaded)
                   const Padding(
-                    padding: EdgeInsets.only(right: 4),
+                    padding: EdgeInsets.only(right: AppSpacing.xs),
                     child: Icon(
                       Icons.download_for_offline_rounded,
                       size: 14,
@@ -334,11 +336,11 @@ class _SearchTrackMenuButton extends ConsumerWidget {
                 children: [
                   // ── Track header ──
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                    padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.xs, AppSpacing.md, AppSpacing.md),
                     child: Row(
                       children: [
                         ClipRRect(
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(AppRadius.sm),
                           child: SizedBox(
                             width: 48,
                             height: 48,
@@ -368,7 +370,7 @@ class _SearchTrackMenuButton extends ConsumerWidget {
                                   ),
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -385,7 +387,7 @@ class _SearchTrackMenuButton extends ConsumerWidget {
                                 ),
                               ),
                               if (track.albumName != null) ...[
-                                const SizedBox(height: 2),
+                                const SizedBox(height: AppSpacing.xs),
                                 Text(
                                   '${track.artistName} · ${track.albumName}',
                                   maxLines: 1,
@@ -396,7 +398,7 @@ class _SearchTrackMenuButton extends ConsumerWidget {
                                   ),
                                 ),
                               ] else ...[
-                                const SizedBox(height: 2),
+                                const SizedBox(height: AppSpacing.xs),
                                 Text(
                                   track.artistName,
                                   maxLines: 1,
@@ -449,7 +451,7 @@ class _SearchTrackMenuButton extends ConsumerWidget {
                       ).pop(_TrackMenuAction.goToArtist),
                     ),
                   ],
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.sm),
                 ],
               ),
             ),
@@ -499,7 +501,7 @@ class _GroupedResults extends StatelessWidget {
     ];
 
     return ListView.builder(
-      padding: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.only(bottom: AppSpacing.lg),
       itemCount: sections.fold<int>(
         0,
         (count, section) => count + 1 + section.$2.length,
@@ -538,7 +540,7 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 4),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.xs),
       child: Text(
         label.toUpperCase(),
         style: Theme.of(context).textTheme.labelLarge,
@@ -554,20 +556,20 @@ class _SearchResultsSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Skeleton.group(
       child: ListView.builder(
-        padding: const EdgeInsets.only(top: 8),
+        padding: const EdgeInsets.only(top: AppSpacing.sm),
         itemCount: 8,
         itemBuilder: (_, __) => Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
           child: Row(
             children: [
               Skeleton.box(width: 52, height: 52, radius: 6),
-              const SizedBox(width: 14),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Skeleton.line(width: 180, height: 14),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.sm),
                     Skeleton.line(width: 100, height: 10),
                   ],
                 ),

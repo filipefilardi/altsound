@@ -5,10 +5,12 @@ import 'package:go_router/go_router.dart';
 
 import 'package:altsound/core/navigation/app_navigation.dart';
 import 'package:altsound/core/theme/app_colors.dart';
-import 'package:altsound/core/utils/search_normalization.dart';
-import 'package:altsound/core/widgets/play_pill.dart';
+import 'package:altsound/core/theme/app_radius.dart';
+import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/core/utils/format.dart';
+import 'package:altsound/core/utils/search_normalization.dart';
 import 'package:altsound/core/widgets/error_state.dart';
+import 'package:altsound/core/widgets/play_pill.dart';
 import 'package:altsound/core/widgets/skeleton.dart';
 import 'package:altsound/data/downloads/download_manager.dart';
 import 'package:altsound/data/downloads/download_preferences.dart';
@@ -163,7 +165,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                 sheetContext,
               ).pop(_SelectionBulkAction.removeFromPlaylist),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
           ],
         ),
       ),
@@ -247,7 +249,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                 leadingWidth: 104,
                 leading: Row(
                   children: [
-                    const SizedBox(width: 4),
+                    const SizedBox(width: AppSpacing.xs),
                     _SelectionToolbarButton(
                       tooltip: 'Clear selection',
                       icon: Icons.close_rounded,
@@ -477,7 +479,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
               onTap: () =>
                   Navigator.of(sheetContext).pop(_PlaylistSort.dateAdded),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
           ],
         ),
       ),
@@ -753,7 +755,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
       builder: (sheetContext) {
         if (lists.isEmpty && !canPickLiked) {
           return const Padding(
-            padding: EdgeInsets.all(24),
+            padding: EdgeInsets.all(AppSpacing.lg),
             child: Text(
               'No other playlists. Create one from the Library tab.',
               style: TextStyle(color: AppColors.textSecondary),
@@ -786,7 +788,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                   onTap: () => Navigator.of(sheetContext).pop(p),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.md),
             ],
           ),
         );
@@ -1132,7 +1134,7 @@ class _PlaylistOrderEditorState extends State<_PlaylistOrderEditor> {
       child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+            padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.sm, AppSpacing.sm),
             child: Row(
               children: [
                 Expanded(
@@ -1156,7 +1158,7 @@ class _PlaylistOrderEditorState extends State<_PlaylistOrderEditor> {
           Expanded(
             child: ReorderableListView.builder(
               buildDefaultDragHandles: false,
-              padding: const EdgeInsets.only(bottom: 24),
+              padding: const EdgeInsets.only(bottom: AppSpacing.lg),
               itemCount: _tracks.length,
               onReorder: (oldIndex, newIndex) {
                 setState(() {
@@ -1190,7 +1192,7 @@ class _PlaylistOrderEditorState extends State<_PlaylistOrderEditor> {
                   trailing: ReorderableDragStartListener(
                     index: index,
                     child: const Padding(
-                      padding: EdgeInsets.all(12),
+                      padding: EdgeInsets.all(AppSpacing.md),
                       child: Icon(
                         Icons.drag_indicator_rounded,
                         color: AppColors.textTertiary,
@@ -1295,10 +1297,10 @@ class _PlaylistView extends ConsumerWidget {
     return RefreshIndicator(
       onRefresh: () async => ref.refresh(playlistProvider(playlist.id).future),
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+        padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.lg),
         children: [
           _PlaylistHeader(playlist: playlist),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.md),
           _ActionRow(
             playlist: playlist,
             visibleTracks: visibleTracks,
@@ -1310,7 +1312,7 @@ class _PlaylistView extends ConsumerWidget {
             onRename: onRename,
             onDelete: onDelete,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           if (filterController != null && playlist.tracks.isNotEmpty) ...[
             TrackFilterBar(
               controller: filterController!,
@@ -1319,11 +1321,11 @@ class _PlaylistView extends ConsumerWidget {
               totalCount: playlist.tracks.length,
               hintText: 'Filter playlist',
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
           ],
           if (visibleTracks.isEmpty)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 24),
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
               child: Text(
                 filterQuery.isEmpty
                     ? 'No songs in this playlist yet.'
@@ -1360,7 +1362,7 @@ class _PlaylistHeader extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         _PlaylistArtwork(playlist: playlist),
-        const SizedBox(width: 16),
+        const SizedBox(width: AppSpacing.md),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1371,7 +1373,7 @@ class _PlaylistHeader extends ConsumerWidget {
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: AppSpacing.sm),
               Text(
                 '${playlist.tracks.length} songs · ${formatLongDuration(playlist.totalDuration)}',
                 style: const TextStyle(
@@ -1402,14 +1404,14 @@ class _SelectionToolbarButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final enabled = onPressed != null;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 2),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
       child: Tooltip(
         message: tooltip,
         child: Material(
           color: enabled
               ? AppColors.surfaceElevated
               : AppColors.surfaceElevated.withValues(alpha: 0.45),
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: onPressed,
@@ -1451,7 +1453,7 @@ class _PlaylistArtwork extends ConsumerWidget {
     // Build cover from current playlist tracks to keep artwork synchronized.
     if (uniqueAlbumTracks.length > 1) {
       return ClipRRect(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.md),
         child: SizedBox(
           width: 120,
           height: 120,
@@ -1496,7 +1498,7 @@ class _PlaylistArtwork extends ConsumerWidget {
         : repo.imageUrl(artId, imageTag: artTag, size: 300);
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppRadius.md),
       child: SizedBox(
         width: 120,
         height: 120,
@@ -1580,7 +1582,7 @@ class _ActionRow extends ConsumerWidget {
                     : Icons.play_arrow_rounded,
                 tooltip: isPlaylistPlaying ? 'Pause' : 'Play',
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.md),
               IconButton(
                 tooltip: 'Shuffle',
                 icon: Icon(
@@ -1857,31 +1859,31 @@ class _PlaylistLoading extends StatelessWidget {
   Widget build(BuildContext context) {
     return Skeleton.group(
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+        padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.lg),
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Skeleton.box(width: 120, height: 120, radius: 12),
-              const SizedBox(width: 16),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Skeleton.line(width: 160, height: 20),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.sm),
                     Skeleton.line(width: 120, height: 13),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.md),
           Skeleton.box(width: 56, height: 56, radius: 28),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.md),
           for (int i = 0; i < 8; i++) ...[
             Skeleton.line(height: 14),
-            const SizedBox(height: 10),
+            const SizedBox(height: AppSpacing.sm),
           ],
         ],
       ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/core/utils/format.dart';
 import 'package:altsound/core/widgets/local_or_network_image.dart';
 import 'package:altsound/features/player/player_providers.dart';
@@ -93,7 +94,7 @@ class SearchTrackArtwork extends ConsumerWidget {
                   borderRadius: br,
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(2),
+                  padding: const EdgeInsets.all(AppSpacing.xs),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(isArtistShape ? 26 : 6),
                     child: artwork(),

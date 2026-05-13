@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/features/remote/remote_player_controller.dart';
 import 'package:altsound/features/remote/remote_sessions_sheet.dart';
 import 'package:altsound/features/syncplay/syncplay_controller.dart';
 import 'package:altsound/features/syncplay/syncplay_sheet.dart';
-import 'package:altsound/core/theme/app_colors.dart';
 
 class HeaderActionButtons extends ConsumerWidget {
   const HeaderActionButtons({super.key});
@@ -24,14 +25,14 @@ class HeaderActionButtons extends ConsumerWidget {
           tooltip: 'Search',
           onPressed: () => context.go('/search'),
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: AppSpacing.sm),
         _HeaderActionButton(
           icon: Icons.groups_rounded,
           tooltip: 'SyncPlay',
           active: syncPlayActive,
           onPressed: () => showSyncPlaySheet(context),
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: AppSpacing.sm),
         _HeaderActionButton(
           icon: castConnected
               ? Icons.cast_connected_rounded
@@ -40,13 +41,13 @@ class HeaderActionButtons extends ConsumerWidget {
           active: castConnected,
           onPressed: () => showRemoteSessionsSheet(context),
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: AppSpacing.sm),
         _HeaderActionButton(
           icon: Icons.download_rounded,
           tooltip: 'Downloads',
           onPressed: () => context.push('/downloads'),
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: AppSpacing.sm),
         _HeaderActionButton(
           icon: Icons.settings_rounded,
           tooltip: 'Settings',

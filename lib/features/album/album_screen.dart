@@ -6,14 +6,17 @@ import 'package:palette_generator/palette_generator.dart';
 
 import 'package:altsound/core/navigation/app_navigation.dart';
 import 'package:altsound/core/theme/app_colors.dart';
-import 'package:altsound/core/widgets/play_pill.dart';
+import 'package:altsound/core/theme/app_radius.dart';
+import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/core/utils/format.dart';
 import 'package:altsound/core/widgets/error_state.dart';
+import 'package:altsound/core/widgets/play_pill.dart';
 import 'package:altsound/core/widgets/skeleton.dart';
 import 'package:altsound/data/downloads/download_manager.dart';
 import 'package:altsound/data/downloads/download_preferences.dart';
 import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
 import 'package:altsound/data/jellyfin/models/media_item.dart';
+import 'package:altsound/features/album/album_controller.dart';
 import 'package:altsound/features/downloads/widgets/album_download_button.dart';
 import 'package:altsound/features/home/widgets/media_card.dart';
 import 'package:altsound/features/player/instant_mix.dart';
@@ -22,7 +25,6 @@ import 'package:altsound/features/player/widgets/add_track_to_playlist_sheet.dar
 import 'package:altsound/features/player/widgets/mini_player_slot.dart';
 import 'package:altsound/features/player/widgets/playing_track_leading.dart';
 import 'package:altsound/features/player/widgets/track_more_menu_button.dart';
-import 'package:altsound/features/album/album_controller.dart';
 
 class AlbumScreen extends ConsumerWidget {
   const AlbumScreen({required this.albumId, super.key});
@@ -113,26 +115,26 @@ class _AlbumLoading extends StatelessWidget {
     return SafeArea(
       child: Skeleton.group(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.lg, AppSpacing.md, 0),
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Skeleton.box(width: 220, height: 220),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.md),
                 Skeleton.line(width: 220, height: 18),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
                 Skeleton.line(width: 140, height: 12),
-                const SizedBox(height: 28),
+                const SizedBox(height: AppSpacing.lg),
                 for (int i = 0; i < 8; i++)
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 14),
+                    padding: const EdgeInsets.only(bottom: AppSpacing.md),
                     child: Row(
                       children: [
                         Skeleton.box(width: 28, height: 28, radius: 6),
-                        const SizedBox(width: 14),
+                        const SizedBox(width: AppSpacing.md),
                         Expanded(child: Skeleton.line(height: 14)),
-                        const SizedBox(width: 14),
+                        const SizedBox(width: AppSpacing.md),
                         Skeleton.line(width: 36, height: 12),
                       ],
                     ),
@@ -252,13 +254,13 @@ class _AlbumViewState extends ConsumerState<_AlbumView> {
                 ),
                 child: SafeArea(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                    padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.md),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         DecoratedBox(
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppRadius.md),
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withValues(alpha: 0.5),
@@ -269,7 +271,7 @@ class _AlbumViewState extends ConsumerState<_AlbumView> {
                             ],
                           ),
                           child: ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppRadius.md),
                             child: CachedNetworkImage(
                               imageUrl: imageUrl,
                               width: 220,
@@ -282,7 +284,7 @@ class _AlbumViewState extends ConsumerState<_AlbumView> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: AppSpacing.md),
                         Text(
                           album.name,
                           textAlign: TextAlign.center,
@@ -290,7 +292,7 @@ class _AlbumViewState extends ConsumerState<_AlbumView> {
                           overflow: TextOverflow.ellipsis,
                           style: Theme.of(context).textTheme.headlineMedium,
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: AppSpacing.xs),
                         Wrap(
                           alignment: WrapAlignment.center,
                           crossAxisAlignment: WrapCrossAlignment.center,
@@ -369,7 +371,7 @@ class _AlbumViewState extends ConsumerState<_AlbumView> {
             },
           ),
           SliverToBoxAdapter(child: _AlbumRecommendations(album: album)),
-          const SliverToBoxAdapter(child: SizedBox(height: 32)),
+          const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xl)),
         ],
       ),
     );
@@ -424,14 +426,14 @@ class _RecommendationShelf extends StatelessWidget {
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           physics: const NeverScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           child: Skeleton.group(
             child: Row(
               children: const [
                 _RecommendationSkeleton(),
-                SizedBox(width: 6),
+                SizedBox(width: AppSpacing.sm),
                 _RecommendationSkeleton(),
-                SizedBox(width: 6),
+                SizedBox(width: AppSpacing.sm),
                 _RecommendationSkeleton(),
               ],
             ),
@@ -445,9 +447,9 @@ class _RecommendationShelf extends StatelessWidget {
           title: title,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
             itemCount: items.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 6),
+            separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
             itemBuilder: (_, i) => MediaCard(item: items[i]),
           ),
         );
@@ -465,12 +467,12 @@ class _RecommendationShelfFrame extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 18),
+      padding: const EdgeInsets.only(top: AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
+            padding: const EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, AppSpacing.md),
             child: Text(
               title,
               maxLines: 1,
@@ -496,9 +498,9 @@ class _RecommendationSkeleton extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Skeleton.box(width: 156, height: 156, radius: 10),
-          const SizedBox(height: 10),
+          const SizedBox(height: AppSpacing.sm),
           Skeleton.line(width: 120),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpacing.sm),
           Skeleton.line(width: 80, height: 10),
         ],
       ),
@@ -544,7 +546,7 @@ class _ActionBar extends ConsumerWidget {
         (currentMediaItem?.extras?['contextId'] as String?) == album.id;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
       child: Row(
         children: [
           PlayPill(
@@ -563,7 +565,7 @@ class _ActionBar extends ConsumerWidget {
                 : Icons.play_arrow_rounded,
             tooltip: isAlbumPlaying ? 'Pause' : 'Play',
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.md),
           IconButton(
             tooltip: 'Shuffle',
             icon: Icon(
@@ -710,7 +712,7 @@ class _TrackTile extends ConsumerWidget {
         children: [
           if (isDownloaded)
             const Padding(
-              padding: EdgeInsets.only(right: 4),
+              padding: EdgeInsets.only(right: AppSpacing.xs),
               child: Icon(
                 Icons.download_for_offline_rounded,
                 size: 14,

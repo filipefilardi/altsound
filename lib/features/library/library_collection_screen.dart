@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/core/utils/search_normalization.dart';
 import 'package:altsound/core/widgets/empty_state.dart';
 import 'package:altsound/core/widgets/header_action_buttons.dart';
@@ -47,7 +48,7 @@ class _LibraryCollectionScreenState
         title: Text(title),
         actions: const [
           Padding(
-            padding: EdgeInsets.only(right: 8),
+            padding: EdgeInsets.only(right: AppSpacing.sm),
             child: HeaderActionButtons(),
           ),
         ],
@@ -74,7 +75,7 @@ class _LibraryCollectionScreenState
           return Column(
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                padding: const EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, AppSpacing.md),
                 child: TextField(
                   controller: _ctrl,
                   onChanged: (value) => setState(() => _term = value.trim()),
@@ -101,7 +102,7 @@ class _LibraryCollectionScreenState
                         message: 'Nothing matched "$_term".',
                       )
                     : ListView.builder(
-                        padding: const EdgeInsets.only(bottom: 96),
+                        padding: const EdgeInsets.only(bottom: AppSpacing.miniPlayerInset),
                         itemCount: filtered.length,
                         itemBuilder: (context, index) {
                           final item = filtered[index];
@@ -144,20 +145,20 @@ class _CollectionLoadingRows extends StatelessWidget {
   Widget build(BuildContext context) {
     return Skeleton.group(
       child: ListView.builder(
-        padding: const EdgeInsets.only(top: 8, bottom: 96),
+        padding: const EdgeInsets.only(top: AppSpacing.sm, bottom: AppSpacing.miniPlayerInset),
         itemCount: 10,
         itemBuilder: (context, index) => Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
           child: Row(
             children: [
               Skeleton.box(width: 52, height: 52, radius: 8),
-              const SizedBox(width: 14),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Skeleton.line(width: 180, height: 14),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: AppSpacing.sm),
                     Skeleton.line(width: 120, height: 11),
                   ],
                 ),
@@ -184,7 +185,7 @@ class _CollectionTile extends ConsumerWidget {
         : repo.imageUrl(item.id, imageTag: item.imageTag, size: 200);
 
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
       leading: ClipRRect(
         borderRadius: BorderRadius.circular(isArtist ? 28 : 6),
         child: SizedBox(

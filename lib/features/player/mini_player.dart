@@ -9,6 +9,8 @@ import 'package:go_router/go_router.dart';
 import 'package:altsound/core/navigation/app_navigation.dart';
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_gradients.dart';
+import 'package:altsound/core/theme/app_radius.dart';
+import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/features/player/current_track_playlist_presence.dart';
 import 'package:altsound/features/player/player_providers.dart';
 import 'package:altsound/features/player/widgets/add_track_to_playlist_sheet.dart';
@@ -40,7 +42,7 @@ class MiniPlayer extends ConsumerWidget {
 
     final borderRadius = edgeToEdge
         ? BorderRadius.zero
-        : BorderRadius.circular(12);
+        : BorderRadius.circular(AppRadius.md);
     final horizontalPadding = edgeToEdge ? 0.0 : 10.0;
 
     return Padding(
@@ -92,8 +94,8 @@ class MiniPlayer extends ConsumerWidget {
                     children: [
                       Padding(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 10,
+                          horizontal: AppSpacing.sm,
+                          vertical: AppSpacing.sm,
                         ),
                         child: Row(
                           children: [
@@ -102,7 +104,7 @@ class MiniPlayer extends ConsumerWidget {
                               mediaItem: mediaItem,
                               hero: true,
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: AppSpacing.md),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/theme/app_spacing.dart';
 
 class ErrorStateView extends StatelessWidget {
   const ErrorStateView({
@@ -20,7 +21,7 @@ class ErrorStateView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -33,14 +34,14 @@ class ErrorStateView extends StatelessWidget {
               ),
               child: Icon(icon, color: AppColors.error, size: 28),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.md),
             Text(
               title,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             if (message != null) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Text(
                 message!,
                 textAlign: TextAlign.center,
@@ -48,7 +49,7 @@ class ErrorStateView extends StatelessWidget {
               ),
             ],
             if (onRetry != null) ...[
-              const SizedBox(height: 20),
+              const SizedBox(height: AppSpacing.md),
               OutlinedButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh_rounded, size: 18),
@@ -58,8 +59,8 @@ class ErrorStateView extends StatelessWidget {
                   side: const BorderSide(color: AppColors.divider),
                   shape: const StadiumBorder(),
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.md,
                   ),
                 ),
               ),

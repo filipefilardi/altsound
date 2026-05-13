@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/theme/app_radius.dart';
+import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/data/playlists/playlist_backup_repository.dart';
 import 'package:altsound/features/auth/auth_controller.dart';
 import 'package:altsound/features/playlist/playlist_providers.dart';
@@ -31,7 +33,7 @@ class _PlaylistBackupScreenState extends ConsumerState<PlaylistBackupScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Playlist backups')),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 96),
+        padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.miniPlayerInset),
         children: [
           _SettingsGroup(
             label: 'Safety',
@@ -78,7 +80,7 @@ class _PlaylistBackupScreenState extends ConsumerState<PlaylistBackupScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.lg),
           _SettingsGroup(
             label: 'Portability',
             children: [
@@ -106,7 +108,7 @@ class _PlaylistBackupScreenState extends ConsumerState<PlaylistBackupScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.lg),
           _BackupList(
             backups: backups,
             busy: _busy,
@@ -343,7 +345,7 @@ class PlaylistBackupDetailScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: Text(
               'Could not read backup: $e',
               textAlign: TextAlign.center,
@@ -352,10 +354,10 @@ class PlaylistBackupDetailScreen extends ConsumerWidget {
           ),
         ),
         data: (document) => ListView(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 96),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.miniPlayerInset),
           children: [
             _BackupSummary(document: document, backup: backup),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.lg),
             _SettingsGroup(
               label: 'Playlists',
               children: document.playlists.isEmpty
@@ -461,13 +463,13 @@ class _BackupPlaylistTile extends StatelessWidget {
         if (playlist.tracks.isEmpty)
           const ListTile(
             title: Text('No songs saved'),
-            contentPadding: EdgeInsets.only(left: 72, right: 16),
+            contentPadding: EdgeInsets.only(left: 72, right: AppSpacing.md),
           )
         else
           for (final track in playlist.tracks)
             ListTile(
               dense: true,
-              contentPadding: const EdgeInsets.only(left: 72, right: 16),
+              contentPadding: const EdgeInsets.only(left: 72, right: AppSpacing.md),
               title: Text(
                 '${track.position}. ${track.title}',
                 maxLines: 1,
@@ -542,7 +544,7 @@ class _SettingsGroup extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(4, 0, 4, 10),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.xs, 0, AppSpacing.xs, AppSpacing.sm),
           child: Text(
             label.toUpperCase(),
             style: Theme.of(context).textTheme.labelLarge,
@@ -550,7 +552,7 @@ class _SettingsGroup extends StatelessWidget {
         ),
         Material(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
           clipBehavior: Clip.antiAlias,
           child: Column(children: tiles),
         ),

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'package:altsound/core/layout/adaptive_breakpoints.dart';
 import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/theme/app_radius.dart';
+import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/data/jellyfin/models/media_item.dart';
 import 'package:altsound/features/player/widgets/playing_track_leading.dart';
 
@@ -34,7 +36,7 @@ class TrackFilterBar extends StatelessWidget {
               textAlignVertical: TextAlignVertical.center,
               decoration: InputDecoration(
                 isDense: true,
-                contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
                 hintText: hintText,
                 hintStyle: TextStyle(
                   color: AppColors.textSecondary.withValues(alpha: 0.62),
@@ -42,15 +44,15 @@ class TrackFilterBar extends StatelessWidget {
                 filled: true,
                 fillColor: AppColors.surfaceElevated.withValues(alpha: 0.36),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(999),
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
                   borderSide: BorderSide.none,
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(999),
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
                   borderSide: BorderSide.none,
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(999),
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
                   borderSide: BorderSide(
                     color: AppColors.primary.withValues(alpha: 0.36),
                     width: 1,
@@ -77,7 +79,7 @@ class TrackFilterBar extends StatelessWidget {
           ),
         ),
         if (filterQuery.isNotEmpty) ...[
-          const SizedBox(width: 10),
+          const SizedBox(width: AppSpacing.sm),
           Text(
             '$visibleCount/$totalCount',
             style: const TextStyle(
@@ -142,7 +144,7 @@ class TrackListTile extends StatelessWidget {
       selectedTileColor: AppColors.primary.withValues(alpha: 0.08),
       leading: inSelection
           ? Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
               child: Checkbox(
                 value: isSelected,
                 onChanged: (_) => onToggleSelected?.call(),
@@ -199,11 +201,11 @@ class TrackListTile extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: AppSpacing.md),
                 ],
                 if (isDownloaded)
                   const Padding(
-                    padding: EdgeInsets.only(right: 4),
+                    padding: EdgeInsets.only(right: AppSpacing.xs),
                     child: Icon(
                       Icons.download_for_offline_rounded,
                       size: 14,

@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/theme/app_radius.dart';
+import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
 import 'package:altsound/data/jellyfin/models/media_item.dart';
 
@@ -21,7 +23,7 @@ class MediaCard extends ConsumerWidget {
         : repo.imageUrl(item.id, imageTag: item.imageTag);
 
     return InkWell(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppRadius.md),
       splashColor: AppColors.primary.withValues(alpha: 0.06),
       highlightColor: AppColors.primary.withValues(alpha: 0.03),
       onTap: () {
@@ -32,14 +34,14 @@ class MediaCard extends ConsumerWidget {
       child: SizedBox(
         width: width,
         child: Padding(
-          padding: const EdgeInsets.all(4),
+          padding: const EdgeInsets.all(AppSpacing.xs),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               AspectRatio(
                 aspectRatio: 1,
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       boxShadow: [
@@ -62,7 +64,7 @@ class MediaCard extends ConsumerWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: AppSpacing.sm),
               Text(
                 item.name,
                 maxLines: 1,
@@ -74,7 +76,7 @@ class MediaCard extends ConsumerWidget {
                 ),
               ),
               if (item.subtitle != null) ...[
-                const SizedBox(height: 2),
+                const SizedBox(height: AppSpacing.xs),
                 Text(
                   item.subtitle!,
                   maxLines: 1,

@@ -9,6 +9,8 @@ import 'package:path_provider/path_provider.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_gradients.dart';
+import 'package:altsound/core/theme/app_radius.dart';
+import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/data/downloads/download_manager.dart';
 import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
 import 'package:altsound/data/jellyfin/models/jellyfin_session.dart';
@@ -55,20 +57,20 @@ class SettingsScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 96),
+        padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.miniPlayerInset),
         children: [
           if (session != null) ...[
             _AccountCard(session: session),
-            const SizedBox(height: 28),
+            const SizedBox(height: AppSpacing.lg),
           ],
           const _PlaybackGroup(),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.lg),
           const _LibraryGroup(),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpacing.lg),
           const _StorageGroup(),
-          const SizedBox(height: 28),
+          const SizedBox(height: AppSpacing.lg),
           const _SignOutTile(),
-          const SizedBox(height: 28),
+          const SizedBox(height: AppSpacing.lg),
           const _VersionFooter(),
         ],
       ),
@@ -96,16 +98,16 @@ class _AccountCard extends ConsumerWidget {
 
     return Material(
       color: AppColors.surfaceElevated,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(AppRadius.lg),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () => _showAccountSheet(context, session),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.md),
           child: Row(
             children: [
               _Avatar(name: session.username),
-              const SizedBox(width: 14),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -116,11 +118,11 @@ class _AccountCard extends ConsumerWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppSpacing.xs),
                     Row(
                       children: [
                         _StatusDot(online: online),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: AppSpacing.sm),
                         Expanded(
                           child: Text(
                             session.serverUrl,
@@ -219,7 +221,7 @@ Future<void> _showAccountSheet(BuildContext context, JellyfinSession session) {
 
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+            padding: const EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, AppSpacing.lg),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
@@ -228,7 +230,7 @@ Future<void> _showAccountSheet(BuildContext context, JellyfinSession session) {
                   'Account',
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.md),
                 _DetailRow(label: 'User', value: session.username),
                 _DetailRow(label: 'Server', value: session.serverUrl),
                 _DetailRow(
@@ -257,7 +259,7 @@ class _DetailRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -410,7 +412,7 @@ class _SignOutTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Material(
       color: AppColors.surfaceElevated,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(AppRadius.lg),
       clipBehavior: Clip.antiAlias,
       child: ListTile(
         leading: const Icon(Icons.logout_rounded, color: AppColors.error),
@@ -456,7 +458,7 @@ Future<void> _showStreamingQualitySheet(BuildContext context) {
         final current = ref.watch(playbackPreferencesProvider).streamingQuality;
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+            padding: const EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, AppSpacing.md),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
@@ -465,7 +467,7 @@ Future<void> _showStreamingQualitySheet(BuildContext context) {
                   'Streaming quality',
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
                 RadioGroup<StreamingQuality>(
                   groupValue: current,
                   onChanged: (v) async {
@@ -524,7 +526,7 @@ class _SettingsGroup extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(4, 0, 4, 10),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.xs, 0, AppSpacing.xs, AppSpacing.sm),
           child: Text(
             label.toUpperCase(),
             style: Theme.of(context).textTheme.labelLarge,
@@ -532,7 +534,7 @@ class _SettingsGroup extends StatelessWidget {
         ),
         Material(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
           clipBehavior: Clip.antiAlias,
           child: Column(children: tiles),
         ),

@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/theme/app_radius.dart';
+import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/core/utils/format.dart';
 import 'package:altsound/core/widgets/empty_state.dart';
 import 'package:altsound/data/downloads/download_manager.dart';
@@ -53,7 +55,7 @@ class DownloadsScreen extends ConsumerWidget {
               message: 'Tap the download icon on any album to keep it offline.',
             )
           : ListView.builder(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+              padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.miniPlayerInset),
               itemCount: albumIds.length + 2,
               itemBuilder: (_, i) {
                 if (i == 0) {
@@ -66,7 +68,7 @@ class DownloadsScreen extends ConsumerWidget {
                 }
                 if (i == 1) {
                   return Padding(
-                    padding: const EdgeInsets.fromLTRB(4, 20, 0, 8),
+                    padding: const EdgeInsets.fromLTRB(AppSpacing.xs, AppSpacing.md, 0, AppSpacing.sm),
                     child: Text(
                       'READY OFFLINE',
                       style: Theme.of(context).textTheme.labelLarge,
@@ -112,10 +114,10 @@ class _DownloadsSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
       ),
       child: Row(
         children: [
@@ -124,7 +126,7 @@ class _DownloadsSummary extends StatelessWidget {
             height: 48,
             decoration: BoxDecoration(
               color: AppColors.primary.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppRadius.sm),
             ),
             child: const Icon(
               Icons.download_for_offline_rounded,
@@ -132,7 +134,7 @@ class _DownloadsSummary extends StatelessWidget {
               size: 25,
             ),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -192,19 +194,19 @@ class _DownloadedAlbumTile extends ConsumerWidget {
     final canOpen = albumId != 'unknown';
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: Material(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: canOpen ? () => context.push('/album/$albumId') : null,
           child: Padding(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(AppSpacing.sm),
             child: Row(
               children: [
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
                   child: SizedBox(
                     width: 58,
                     height: 58,
@@ -224,7 +226,7 @@ class _DownloadedAlbumTile extends ConsumerWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -248,7 +250,7 @@ class _DownloadedAlbumTile extends ConsumerWidget {
                           fontSize: 12,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: AppSpacing.sm),
                       Text(
                         '$trackCount tracks · ${formatLongDuration(totalDuration)} · ${_formatBytes(totalSize)}',
                         maxLines: 1,
@@ -261,7 +263,7 @@ class _DownloadedAlbumTile extends ConsumerWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.sm),
                 PopupMenuButton<_DownloadAction>(
                   icon: const Icon(
                     Icons.more_vert_rounded,

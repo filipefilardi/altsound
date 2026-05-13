@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import 'package:altsound/core/layout/adaptive_breakpoints.dart';
 import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/theme/app_radius.dart';
+import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/core/widgets/header_action_buttons.dart';
 import 'package:altsound/core/widgets/skeleton.dart';
 import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
@@ -40,11 +42,11 @@ class LibraryContent extends ConsumerWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+            padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.sm),
             sliver: const SliverToBoxAdapter(child: _LibraryHeader()),
           ),
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+            padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.md),
             sliver: SliverToBoxAdapter(
               child: _LibraryCategories(
                 onAlbums: () => context.push('/library/albums'),
@@ -62,7 +64,7 @@ class LibraryContent extends ConsumerWidget {
                 const SliverToBoxAdapter(child: _LibraryLoadingRows()),
             error: (e, _) => SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Text(
                   'Could not load playlists: $e',
                   style: const TextStyle(color: AppColors.textSecondary),
@@ -82,7 +84,7 @@ class LibraryContent extends ConsumerWidget {
                   .toList();
 
               return SliverPadding(
-                padding: const EdgeInsets.only(bottom: 96),
+                padding: const EdgeInsets.only(bottom: AppSpacing.miniPlayerInset),
                 sliver: SliverList.list(
                   children: [
                     _SectionTile(
@@ -181,17 +183,17 @@ class _LibraryLoadingRows extends StatelessWidget {
         children: [
           for (int i = 0; i < 6; i++)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
               child: Row(
                 children: [
                   Skeleton.box(width: 52, height: 52, radius: 12),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Skeleton.line(width: 160, height: 14),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: AppSpacing.sm),
                         Skeleton.line(width: 100, height: 11),
                       ],
                     ),
@@ -244,7 +246,7 @@ class _LibraryCategories extends StatelessWidget {
             onTap: onAlbums,
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppSpacing.sm),
         Expanded(
           child: _LibraryCategoryCard(
             icon: Icons.person_rounded,
@@ -274,14 +276,14 @@ class _LibraryCategoryCard extends StatelessWidget {
 
     return Material(
       color: AppColors.surface,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(AppRadius.sm),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         child: SizedBox(
           height: 68,
           child: Padding(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(AppSpacing.sm),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -290,11 +292,11 @@ class _LibraryCategoryCard extends StatelessWidget {
                   height: 36,
                   decoration: BoxDecoration(
                     color: iconColor.withValues(alpha: 0.14),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
                   ),
                   child: Icon(icon, color: iconColor, size: 21),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text(
                     label,
@@ -324,7 +326,7 @@ class _PlaylistsHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 16, 8),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.sm),
       child: Row(
         children: [
           Expanded(
@@ -364,15 +366,15 @@ class _SectionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
       child: Material(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(AppSpacing.sm),
             child: Row(
               children: [
                 Container(
@@ -382,11 +384,11 @@ class _SectionTile extends StatelessWidget {
                     color: iconColor == AppColors.textPrimary
                         ? AppColors.surfaceHighlight
                         : iconColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
                   ),
                   child: Icon(icon, color: iconColor, size: 22),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

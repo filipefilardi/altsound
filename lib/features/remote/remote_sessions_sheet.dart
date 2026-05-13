@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/data/jellyfin/models/remote_session.dart';
 import 'package:altsound/data/jellyfin/remote_sessions_repository.dart';
 import 'package:altsound/features/player/player_providers.dart';
@@ -32,13 +33,13 @@ class _RemoteSessionsSheet extends ConsumerWidget {
 
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+        padding: const EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, AppSpacing.md),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text('Play on', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.md),
             if (activeId != null)
               ListTile(
                 leading: const Icon(Icons.phone_android_rounded),
@@ -49,7 +50,7 @@ class _RemoteSessionsSheet extends ConsumerWidget {
               data: (sessions) {
                 if (sessions.isEmpty) {
                   return const Padding(
-                    padding: EdgeInsets.all(32),
+                    padding: EdgeInsets.all(AppSpacing.xl),
                     child: Text('No other devices available.'),
                   );
                 }
@@ -72,11 +73,11 @@ class _RemoteSessionsSheet extends ConsumerWidget {
                 );
               },
               loading: () => const Padding(
-                padding: EdgeInsets.all(32),
+                padding: EdgeInsets.all(AppSpacing.xl),
                 child: Center(child: CircularProgressIndicator()),
               ),
               error: (e, _) => Padding(
-                padding: const EdgeInsets.all(32),
+                padding: const EdgeInsets.all(AppSpacing.xl),
                 child: Text('Couldn\'t load devices: $e'),
               ),
             ),

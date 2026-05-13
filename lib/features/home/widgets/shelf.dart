@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/core/widgets/skeleton.dart';
 import 'package:altsound/data/jellyfin/models/media_item.dart';
 import 'package:altsound/features/home/widgets/media_card.dart';
@@ -23,7 +24,7 @@ class Shelf extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 24, 4, 14),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.lg, AppSpacing.xs, AppSpacing.md),
           child: Row(
             children: [
               Expanded(
@@ -46,21 +47,21 @@ class Shelf extends ConsumerWidget {
             loading: () => SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               physics: const NeverScrollableScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
               child: Skeleton.group(
                 child: Row(
                   children: const [
                     _ShelfSkeleton(),
-                    SizedBox(width: 6),
+                    SizedBox(width: AppSpacing.sm),
                     _ShelfSkeleton(),
-                    SizedBox(width: 6),
+                    SizedBox(width: AppSpacing.sm),
                     _ShelfSkeleton(),
                   ],
                 ),
               ),
             ),
             error: (e, _) => Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
               child: Text(
                 "Couldn't load",
                 style: Theme.of(context).textTheme.bodyMedium,
@@ -69,7 +70,7 @@ class Shelf extends ConsumerWidget {
             data: (list) {
               if (list.isEmpty) {
                 return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                   child: Text(
                     'Nothing here yet.',
                     style: Theme.of(context).textTheme.bodyMedium,
@@ -78,9 +79,9 @@ class Shelf extends ConsumerWidget {
               }
               return ListView.separated(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                 itemCount: list.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 6),
+                separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
                 itemBuilder: (_, i) => MediaCard(item: list[i]),
               );
             },
@@ -100,9 +101,9 @@ class _ShelfSkeleton extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Skeleton.box(width: 156, height: 156, radius: 12),
-        const SizedBox(height: 10),
+        const SizedBox(height: AppSpacing.sm),
         Skeleton.line(width: 120),
-        const SizedBox(height: 6),
+        const SizedBox(height: AppSpacing.sm),
         Skeleton.line(width: 80, height: 10),
       ],
     );

@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import 'package:altsound/core/layout/adaptive_breakpoints.dart';
 import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/theme/app_radius.dart';
+import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/core/widgets/header_action_buttons.dart';
 import 'package:altsound/core/widgets/local_or_network_image.dart';
 import 'package:altsound/data/jellyfin/auth_repository.dart';
@@ -13,11 +15,11 @@ import 'package:altsound/data/last_played/last_played_record.dart';
 import 'package:altsound/data/local/connectivity_provider.dart';
 import 'package:altsound/features/auth/auth_controller.dart';
 import 'package:altsound/features/downloads/offline_library_view.dart';
-import 'package:altsound/features/player/instant_mix.dart';
 import 'package:altsound/features/home/home_controller.dart';
 import 'package:altsound/features/home/recommendations_cache.dart';
 import 'package:altsound/features/home/recommendations_provider.dart';
 import 'package:altsound/features/home/widgets/shelf.dart';
+import 'package:altsound/features/player/instant_mix.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -43,12 +45,12 @@ class HomeContent extends ConsumerWidget {
         slivers: [
           if (!desktop)
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
               sliver: SliverToBoxAdapter(child: _Greeting(username: username)),
             ),
           if (!desktop)
             const SliverPadding(
-              padding: EdgeInsets.fromLTRB(20, 8, 20, 8),
+              padding: EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.sm),
               sliver: SliverToBoxAdapter(child: _ResumeCard()),
             ),
           const SliverToBoxAdapter(child: _ForYouSection()),
@@ -82,18 +84,18 @@ class HomeContent extends ConsumerWidget {
         slivers: [
           if (!desktop)
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+              padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.sm),
               sliver: SliverToBoxAdapter(child: _Greeting(username: username)),
             ),
           if (!desktop)
             const SliverPadding(
-              padding: EdgeInsets.fromLTRB(20, 8, 20, 8),
+              padding: EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.sm),
               sliver: SliverToBoxAdapter(child: _ResumeCard()),
             ),
           const SliverToBoxAdapter(child: _ForYouSection()),
           SliverList.list(
             children: [
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Shelf(
                 title: 'Recently added',
                 items: ref.watch(recentlyAddedProvider),
@@ -107,7 +109,7 @@ class HomeContent extends ConsumerWidget {
                 title: 'Recently played',
                 items: ref.watch(recentlyPlayedProvider),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: AppSpacing.xl),
             ],
           ),
         ],
@@ -154,12 +156,12 @@ class _ResumeCard extends ConsumerWidget {
 
     final albumId = record.albumId;
     return InkWell(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(AppRadius.lg),
       onTap: albumId == null ? null : () => context.push('/album/$albumId'),
       child: Container(
         height: 96,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
           color: AppColors.surface,
         ),
         clipBehavior: Clip.antiAlias,
@@ -176,7 +178,7 @@ class _ResumeCard extends ConsumerWidget {
                       errorBuilder: (_) => const _ResumeArtFallback(),
                     ),
                   ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -186,7 +188,7 @@ class _ResumeCard extends ConsumerWidget {
                           'PICK UP WHERE YOU LEFT OFF',
                           style: Theme.of(context).textTheme.labelLarge,
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: AppSpacing.sm),
                         Text(
                           record.trackName,
                           maxLines: 1,
@@ -202,7 +204,7 @@ class _ResumeCard extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  if (albumId != null) const SizedBox(width: 12),
+                  if (albumId != null) const SizedBox(width: AppSpacing.md),
                 ],
               ),
             ),
@@ -332,7 +334,7 @@ class _ForYouSection extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 14),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.md),
           child: Text(
             'For you',
             style: Theme.of(context).textTheme.headlineSmall,
@@ -342,9 +344,9 @@ class _ForYouSection extends ConsumerWidget {
           height: 248,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
             itemCount: tiles.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 6),
+            separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
             itemBuilder: (_, i) => tiles[i],
           ),
         ),
@@ -376,21 +378,21 @@ class _ForYouCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final fallback = _ForYouCardArtFallback(icon: fallbackIcon);
     return InkWell(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppRadius.md),
       splashColor: AppColors.primary.withValues(alpha: 0.06),
       highlightColor: AppColors.primary.withValues(alpha: 0.03),
       onTap: onTap,
       child: SizedBox(
         width: width,
         child: Padding(
-          padding: const EdgeInsets.all(4),
+          padding: const EdgeInsets.all(AppSpacing.xs),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               AspectRatio(
                 aspectRatio: 1,
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       boxShadow: [
@@ -412,14 +414,14 @@ class _ForYouCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: AppSpacing.sm),
               Text(
                 eyebrow,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.labelLarge,
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: AppSpacing.xs),
               Text(
                 title,
                 maxLines: 1,
@@ -430,7 +432,7 @@ class _ForYouCard extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: AppSpacing.xs),
               Text(
                 subtitle,
                 maxLines: 1,

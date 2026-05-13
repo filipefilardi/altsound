@@ -3,10 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
-import 'package:altsound/features/remote/remote_player_controller.dart';
+import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/features/player/now_playing_screen.dart';
 import 'package:altsound/features/player/player_providers.dart';
 import 'package:altsound/features/player/widgets/lyrics_view.dart';
+import 'package:altsound/features/remote/remote_player_controller.dart';
 
 /// Full-screen lyrics view rendered on top of [NowPlayingScreen].
 ///
@@ -53,11 +54,11 @@ class LyricsScreen extends ConsumerWidget {
           SafeArea(
             child: PlayerDismissibleSurface(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 22),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                 child: Column(
                   children: [
                     const PlayerDragHandle(),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppSpacing.xs),
                     _LyricsTopBar(
                       label: headerLabel,
                       album: albumName,
@@ -66,17 +67,17 @@ class LyricsScreen extends ConsumerWidget {
                     ),
                     Expanded(
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
                         child: LyricsView(trackId: trackId),
                       ),
                     ),
                     const PlayerScrubber(),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppSpacing.md),
                     PlayerPlayPauseButton(
                       playing: playing,
                       onTap: controller.togglePlay,
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppSpacing.lg),
                   ],
                 ),
               ),
@@ -109,7 +110,7 @@ class _LyricsTopBar extends StatelessWidget {
     // centered text stays centered.
     const sideReserve = 48.0;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
       child: SizedBox(
         height: 48,
         child: Stack(
@@ -134,7 +135,7 @@ class _LyricsTopBar extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: AppSpacing.xs),
                       InkWell(
                         onTap: albumId == null || albumId!.isEmpty || album.isEmpty
                             ? null

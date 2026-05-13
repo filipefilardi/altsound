@@ -4,9 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import 'package:altsound/core/layout/adaptive_breakpoints.dart';
 import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/data/local/connectivity_provider.dart';
-import 'package:altsound/features/player/widgets/mini_player_slot.dart';
 import 'package:altsound/features/player/player_providers.dart';
+import 'package:altsound/features/player/widgets/mini_player_slot.dart';
 import 'package:altsound/features/shell/desktop_shell.dart';
 
 class AppShell extends ConsumerStatefulWidget {
@@ -118,7 +119,7 @@ class _OfflineBanner extends StatelessWidget {
     return Container(
       width: double.infinity,
       color: AppColors.surfaceHighlight,
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       child: const Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -127,7 +128,7 @@ class _OfflineBanner extends StatelessWidget {
             size: 13,
             color: AppColors.textSecondary,
           ),
-          SizedBox(width: 6),
+          SizedBox(width: AppSpacing.sm),
           Text(
             'Offline · playing from downloads',
             style: TextStyle(

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/layout/adaptive_breakpoints.dart';
 import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/features/player/desktop_mini_player.dart';
 import 'package:altsound/features/player/mini_player.dart';
 import 'package:altsound/features/player/player_providers.dart';
@@ -56,7 +57,7 @@ class MiniPlayerSlot extends ConsumerWidget {
       child: SafeArea(
         top: false,
         bottom: applyBottomSafeArea,
-        minimum: const EdgeInsets.only(bottom: 6),
+        minimum: const EdgeInsets.only(bottom: AppSpacing.sm),
         child: desktop
             ? DesktopMiniPlayer(edgeToEdge: edgeToEdgeOnDesktop)
             : const MiniPlayer(),

@@ -9,16 +9,18 @@ import 'package:just_audio/just_audio.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_gradients.dart';
+import 'package:altsound/core/theme/app_radius.dart';
+import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/core/utils/format.dart';
-import 'package:altsound/features/remote/remote_player_controller.dart';
-import 'package:altsound/features/syncplay/syncplay_controller.dart';
-import 'package:altsound/features/player/playback_handler.dart';
 import 'package:altsound/features/player/current_track_playlist_presence.dart';
 import 'package:altsound/features/player/instant_mix.dart';
+import 'package:altsound/features/player/playback_handler.dart';
 import 'package:altsound/features/player/player_providers.dart';
 import 'package:altsound/features/player/widgets/add_track_to_playlist_sheet.dart';
 import 'package:altsound/features/player/widgets/player_hero_art.dart';
 import 'package:altsound/features/player/widgets/queue_bottom_sheet.dart';
+import 'package:altsound/features/remote/remote_player_controller.dart';
+import 'package:altsound/features/syncplay/syncplay_controller.dart';
 
 class NowPlayingScreen extends ConsumerStatefulWidget {
   const NowPlayingScreen({super.key});
@@ -80,11 +82,11 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
           SafeArea(
             child: PlayerDismissibleSurface(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 22),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                 child: Column(
                   children: [
                     const PlayerDragHandle(),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppSpacing.xs),
                     _TopBar(
                       album: mediaItem.album ?? '',
                       albumId: albumId,
@@ -109,7 +111,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 28),
+                              const SizedBox(height: AppSpacing.lg),
                               Text(
                                 mediaItem.title,
                                 maxLines: 2,
@@ -119,7 +121,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                                   context,
                                 ).textTheme.headlineMedium,
                               ),
-                              const SizedBox(height: 6),
+                              const SizedBox(height: AppSpacing.sm),
                               InkWell(
                                 onTap: artistId == null || artistId.isEmpty
                                     ? null
@@ -153,14 +155,14 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                         },
                         onDismiss: () => setState(() => _error = null),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: AppSpacing.md),
                     ],
                     _SecondaryControls(mediaItem: mediaItem),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.md),
                     const PlayerScrubber(),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppSpacing.md),
                     _MainControls(playing: playing),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppSpacing.lg),
                   ],
                 ),
               ),
@@ -259,7 +261,7 @@ class PlayerDragHandle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 6),
+      padding: const EdgeInsets.only(top: AppSpacing.sm),
       child: Container(
         width: 36,
         height: 4,
@@ -310,7 +312,7 @@ class _TopBar extends ConsumerWidget {
     // pushed off-center by edge icons (one icon per side, ~48 px each).
     const sideReserve = 48.0;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
       child: SizedBox(
         height: 48,
         child: Stack(
@@ -335,7 +337,7 @@ class _TopBar extends ConsumerWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: AppSpacing.xs),
                       InkWell(
                         onTap:
                             albumId == null || albumId!.isEmpty || album.isEmpty
@@ -531,7 +533,7 @@ class PlayerScrubber extends ConsumerWidget {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -573,9 +575,9 @@ class _MainControls extends ConsumerWidget {
           ),
           onPressed: controller.previous,
         ),
-        const SizedBox(width: 24),
+        const SizedBox(width: AppSpacing.lg),
         PlayerPlayPauseButton(playing: playing, onTap: controller.togglePlay),
-        const SizedBox(width: 24),
+        const SizedBox(width: AppSpacing.lg),
         IconButton(
           iconSize: 32,
           icon: const Icon(
@@ -647,10 +649,10 @@ class _ErrorBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(14, 10, 8, 10),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.sm, AppSpacing.sm),
       decoration: BoxDecoration(
         color: AppColors.error.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.md),
         border: Border.all(color: AppColors.error.withValues(alpha: 0.35)),
       ),
       child: Row(
@@ -660,7 +662,7 @@ class _ErrorBanner extends StatelessWidget {
             color: AppColors.error,
             size: 18,
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
               error.title,
@@ -678,7 +680,7 @@ class _ErrorBanner extends StatelessWidget {
             style: TextButton.styleFrom(
               foregroundColor: AppColors.textPrimary,
               minimumSize: const Size(0, 32),
-              padding: const EdgeInsets.symmetric(horizontal: 10),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
             ),
             child: const Text('Skip'),
           ),

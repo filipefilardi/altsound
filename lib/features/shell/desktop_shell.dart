@@ -4,12 +4,13 @@ import 'package:go_router/go_router.dart';
 
 import 'package:altsound/core/layout/adaptive_breakpoints.dart';
 import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/data/local/connectivity_provider.dart';
-import 'package:altsound/features/syncplay/syncplay_controller.dart';
-import 'package:altsound/features/syncplay/syncplay_sheet.dart';
 import 'package:altsound/features/home/home_screen.dart';
 import 'package:altsound/features/library/library_screen.dart';
 import 'package:altsound/features/player/widgets/mini_player_slot.dart';
+import 'package:altsound/features/syncplay/syncplay_controller.dart';
+import 'package:altsound/features/syncplay/syncplay_sheet.dart';
 
 class DesktopShell extends StatelessWidget {
   const DesktopShell({required this.navigationShell, super.key});
@@ -113,7 +114,7 @@ class _DesktopTopNavBar extends ConsumerWidget {
 
     return Container(
       height: 64,
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       decoration: const BoxDecoration(
         border: Border(
           bottom: BorderSide(color: AppColors.divider, width: 0.5),
@@ -139,7 +140,7 @@ class _DesktopTopNavBar extends ConsumerWidget {
                 isSelected: selected('/'),
                 onTap: () => goIfNeeded('/'),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: AppSpacing.sm),
               _TopNavPill(
                 icon: Icons.search_rounded,
                 label: 'Search',
@@ -160,14 +161,14 @@ class _DesktopTopNavBar extends ConsumerWidget {
                     isSelected: syncPlayActive,
                     onPressed: () => showSyncPlaySheet(context),
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: AppSpacing.sm),
                   _TopNavIconButton(
                     icon: Icons.download_rounded,
                     tooltip: 'Downloads',
                     isSelected: selected('/downloads'),
                     onPressed: () => context.push('/downloads'),
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: AppSpacing.sm),
                   _TopNavIconButton(
                     icon: Icons.settings_rounded,
                     tooltip: 'Settings',
@@ -210,12 +211,12 @@ class _TopNavPill extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(icon, size: 18, color: fg),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               Text(
                 label,
                 style: TextStyle(
@@ -272,7 +273,7 @@ class _DesktopOfflineBanner extends StatelessWidget {
     return Container(
       width: double.infinity,
       color: AppColors.surfaceHighlight,
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       child: const Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -281,7 +282,7 @@ class _DesktopOfflineBanner extends StatelessWidget {
             size: 13,
             color: AppColors.textSecondary,
           ),
-          SizedBox(width: 6),
+          SizedBox(width: AppSpacing.sm),
           Text(
             'Offline · playing from downloads',
             style: TextStyle(

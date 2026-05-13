@@ -4,12 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/theme/app_radius.dart';
+import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/core/widgets/artwork_placeholder.dart';
 import 'package:altsound/core/widgets/error_state.dart';
 import 'package:altsound/core/widgets/skeleton.dart';
 import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
-import 'package:altsound/features/player/widgets/mini_player_slot.dart';
 import 'package:altsound/features/home/home_controller.dart';
+import 'package:altsound/features/player/widgets/mini_player_slot.dart';
 
 class RecentlyAddedScreen extends ConsumerWidget {
   const RecentlyAddedScreen({super.key});
@@ -42,7 +44,7 @@ class RecentlyAddedScreen extends ConsumerWidget {
           }
           final repo = ref.watch(jellyfinRepositoryProvider);
           return GridView.builder(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+            padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.lg),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               mainAxisSpacing: 12,
@@ -56,7 +58,7 @@ class RecentlyAddedScreen extends ConsumerWidget {
                   ? null
                   : repo.imageUrl(item.id, imageTag: item.imageTag, size: 400);
               return InkWell(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.md),
                 onTap: () => context.push('/album/${item.id}'),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -64,7 +66,7 @@ class RecentlyAddedScreen extends ConsumerWidget {
                     AspectRatio(
                       aspectRatio: 1,
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppRadius.md),
                         child: imageUrl == null
                             ? const ArtworkPlaceholder()
                             : CachedNetworkImage(
@@ -79,7 +81,7 @@ class RecentlyAddedScreen extends ConsumerWidget {
                               ),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.sm),
                     Text(
                       item.name,
                       maxLines: 1,
@@ -118,7 +120,7 @@ class _GridLoading extends StatelessWidget {
   Widget build(BuildContext context) {
     return Skeleton.group(
       child: GridView.builder(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+        padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.lg),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           mainAxisSpacing: 12,
@@ -136,9 +138,9 @@ class _GridLoading extends StatelessWidget {
                 height: double.infinity,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             Skeleton.line(height: 12),
-            const SizedBox(height: 6),
+            const SizedBox(height: AppSpacing.sm),
             Skeleton.line(width: 80, height: 10),
           ],
         ),

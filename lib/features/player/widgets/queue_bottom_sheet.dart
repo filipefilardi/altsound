@@ -5,8 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
-import 'package:altsound/features/syncplay/syncplay_controller.dart';
+import 'package:altsound/core/theme/app_radius.dart';
+import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/features/player/player_providers.dart';
+import 'package:altsound/features/syncplay/syncplay_controller.dart';
 
 const double _kQueueRowHeight = 64;
 
@@ -90,7 +92,7 @@ class _QueueSheetState extends ConsumerState<_QueueSheet> {
             _Header(total: queue.length, loopMode: loopMode),
             if (syncPlayActive && queue.length > 1)
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                padding: const EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, AppSpacing.sm),
                 child: Align(
                   alignment: Alignment.centerRight,
                   child: TextButton.icon(
@@ -117,7 +119,7 @@ class _QueueSheetState extends ConsumerState<_QueueSheet> {
                   : ReorderableListView.builder(
                       scrollController: _scrollController,
                       buildDefaultDragHandles: false,
-                      padding: const EdgeInsets.only(bottom: 24),
+                      padding: const EdgeInsets.only(bottom: AppSpacing.lg),
                       itemCount: queue.length,
                       itemExtent: _kQueueRowHeight,
                       onReorder: (displayOld, displayNew) {
@@ -175,15 +177,15 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     final label = total == 0 ? '' : '$total ${total == 1 ? 'track' : 'tracks'}';
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.xs, AppSpacing.md, AppSpacing.md),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Text('Up next', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(width: 10),
+          const SizedBox(width: AppSpacing.sm),
           if (label.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.only(bottom: 2),
+              padding: const EdgeInsets.only(bottom: AppSpacing.xs),
               child: Text(
                 label,
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
@@ -195,7 +197,7 @@ class _Header extends StatelessWidget {
           const Spacer(),
           if (loopMode != LoopMode.off)
             Padding(
-              padding: const EdgeInsets.only(bottom: 2),
+              padding: const EdgeInsets.only(bottom: AppSpacing.xs),
               child: _RepeatBadge(loopMode: loopMode),
             ),
         ],
@@ -214,16 +216,16 @@ class _RepeatBadge extends StatelessWidget {
     final label = isOne ? 'Repeat track' : 'Repeat queue';
     final icon = isOne ? Icons.repeat_one_rounded : Icons.repeat_rounded;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
       decoration: BoxDecoration(
         color: AppColors.primary.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 14, color: AppColors.primary),
-          const SizedBox(width: 6),
+          const SizedBox(width: AppSpacing.sm),
           Text(
             label,
             style: Theme.of(context).textTheme.labelLarge?.copyWith(
@@ -267,11 +269,11 @@ class _QueueRow extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
         child: Row(
           children: [
             _RowArt(art: item.artUri),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -289,7 +291,7 @@ class _QueueRow extends StatelessWidget {
                       fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w500,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: AppSpacing.xs),
                   Text(
                     item.artist ?? '',
                     maxLines: 1,
@@ -304,7 +306,7 @@ class _QueueRow extends StatelessWidget {
             ),
             if (isCurrent && loopMode == LoopMode.one)
               const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 8),
+                padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
                 child: Icon(
                   Icons.repeat_one_rounded,
                   color: AppColors.primary,
@@ -313,7 +315,7 @@ class _QueueRow extends StatelessWidget {
               )
             else if (!isCurrent && isUserQueued)
               const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 8),
+                padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
                 child: Icon(
                   Icons.queue_music_rounded,
                   color: AppColors.textTertiary,
@@ -335,7 +337,7 @@ class _QueueRow extends StatelessWidget {
               ReorderableDragStartListener(
                 index: index,
                 child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                  padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.md),
                   child: Icon(
                     Icons.drag_indicator_rounded,
                     color: AppColors.textTertiary,
@@ -357,7 +359,7 @@ class _RowArt extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(AppRadius.sm),
       child: SizedBox(
         width: 44,
         height: 44,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/features/remote/remote_player_controller.dart';
 import 'package:altsound/features/syncplay/syncplay_controller.dart';
 
@@ -55,7 +56,7 @@ class _SyncPlaySheetState extends ConsumerState<_SyncPlaySheet> {
             else
               _buildJoinGroup(context, state, controller),
             if (state.error != null) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Text(
                 state.error!,
                 style: const TextStyle(color: AppColors.error, fontSize: 13),
@@ -73,7 +74,7 @@ class _SyncPlaySheetState extends ConsumerState<_SyncPlaySheet> {
       children: [
         Text('SyncPlay', style: Theme.of(context).textTheme.titleLarge),
         const Padding(
-          padding: EdgeInsets.symmetric(vertical: 16),
+          padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
           child: Text('Switch back to this device to use SyncPlay.'),
         ),
       ],
@@ -90,10 +91,10 @@ class _SyncPlaySheetState extends ConsumerState<_SyncPlaySheet> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text('Join a group', style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         if (state.loading && state.groups.isEmpty)
           const Padding(
-            padding: EdgeInsets.all(32),
+            padding: EdgeInsets.all(AppSpacing.xl),
             child: Center(child: CircularProgressIndicator()),
           )
         else ...[
@@ -149,14 +150,14 @@ class _SyncPlaySheetState extends ConsumerState<_SyncPlaySheet> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(group.name, style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: 4),
+        const SizedBox(height: AppSpacing.xs),
         Text(
           participants,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             color: AppColors.textSecondary,
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.md),
         ListTile(
           contentPadding: EdgeInsets.zero,
           leading: const Icon(Icons.logout_rounded),

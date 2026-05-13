@@ -8,6 +8,7 @@ import 'package:just_audio/just_audio.dart';
 
 import 'package:altsound/core/navigation/app_navigation.dart';
 import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/core/utils/format.dart';
 import 'package:altsound/features/player/current_track_playlist_presence.dart';
 import 'package:altsound/features/player/instant_mix.dart';
@@ -77,7 +78,7 @@ class DesktopMiniPlayer extends ConsumerWidget {
             child: Padding(
               padding: EdgeInsets.symmetric(
                 horizontal: horizontal,
-                vertical: 6,
+                vertical: AppSpacing.sm,
               ),
               child: Row(
                 children: [
@@ -90,7 +91,7 @@ class DesktopMiniPlayer extends ConsumerWidget {
                           mediaItem: mediaItem,
                           hero: true,
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -151,7 +152,7 @@ class DesktopMiniPlayer extends ConsumerWidget {
                               constraints: _auxButtonConstraints,
                               visualDensity: VisualDensity.compact,
                             ),
-                            const SizedBox(width: 6),
+                            const SizedBox(width: AppSpacing.sm),
                             IconButton(
                               icon: const Icon(
                                 Icons.skip_previous_rounded,
@@ -202,7 +203,7 @@ class DesktopMiniPlayer extends ConsumerWidget {
                               constraints: _controlButtonConstraints,
                               visualDensity: VisualDensity.compact,
                             ),
-                            const SizedBox(width: 6),
+                            const SizedBox(width: AppSpacing.sm),
                             IconButton(
                               icon: Icon(
                                 loopMode == LoopMode.one
@@ -221,7 +222,7 @@ class DesktopMiniPlayer extends ConsumerWidget {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: AppSpacing.xs),
                         Center(
                           child: ConstrainedBox(
                             constraints: const BoxConstraints(maxWidth: 560),
@@ -238,7 +239,7 @@ class DesktopMiniPlayer extends ConsumerWidget {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: AppSpacing.sm),
                                 Expanded(
                                   child: SliderTheme(
                                     data: SliderTheme.of(context).copyWith(
@@ -265,7 +266,7 @@ class DesktopMiniPlayer extends ConsumerWidget {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: AppSpacing.sm),
                                 SizedBox(
                                   width: 40,
                                   child: Text(
@@ -312,7 +313,7 @@ class DesktopMiniPlayer extends ConsumerWidget {
                               visualDensity: VisualDensity.compact,
                               color: AppColors.textSecondary,
                             ),
-                            const SizedBox(width: 2),
+                            const SizedBox(width: AppSpacing.xs),
                             IconButton(
                               icon: const Icon(Icons.mic_rounded, size: 20),
                               onPressed: () => context.push('/lyrics'),
@@ -322,7 +323,7 @@ class DesktopMiniPlayer extends ConsumerWidget {
                               visualDensity: VisualDensity.compact,
                               color: AppColors.textSecondary,
                             ),
-                            const SizedBox(width: 2),
+                            const SizedBox(width: AppSpacing.xs),
                             IconButton(
                               icon: Icon(
                                 muted
@@ -363,7 +364,7 @@ class DesktopMiniPlayer extends ConsumerWidget {
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 2),
+                            const SizedBox(width: AppSpacing.xs),
                             IconButton(
                               icon: const Icon(
                                 Icons.queue_music_rounded,
@@ -377,7 +378,7 @@ class DesktopMiniPlayer extends ConsumerWidget {
                               visualDensity: VisualDensity.compact,
                               color: AppColors.textSecondary,
                             ),
-                            const SizedBox(width: 2),
+                            const SizedBox(width: AppSpacing.xs),
                             IconButton(
                               icon: Icon(
                                 saved

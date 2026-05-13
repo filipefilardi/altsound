@@ -5,9 +5,11 @@ import 'package:go_router/go_router.dart';
 
 import 'package:altsound/core/navigation/app_navigation.dart';
 import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/theme/app_radius.dart';
+import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/core/widgets/artwork_placeholder.dart';
-import 'package:altsound/core/widgets/play_pill.dart';
 import 'package:altsound/core/widgets/error_state.dart';
+import 'package:altsound/core/widgets/play_pill.dart';
 import 'package:altsound/core/widgets/skeleton.dart';
 import 'package:altsound/data/downloads/download_manager.dart';
 import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
@@ -15,9 +17,9 @@ import 'package:altsound/data/jellyfin/models/media_item.dart';
 import 'package:altsound/data/wikipedia/wikipedia_repository.dart';
 import 'package:altsound/features/downloads/widgets/artist_download_button.dart';
 import 'package:altsound/features/player/instant_mix.dart';
-import 'package:altsound/features/player/widgets/mini_player_slot.dart';
 import 'package:altsound/features/player/player_providers.dart';
 import 'package:altsound/features/player/widgets/add_track_to_playlist_sheet.dart';
+import 'package:altsound/features/player/widgets/mini_player_slot.dart';
 import 'package:altsound/features/player/widgets/playing_track_leading.dart';
 import 'package:altsound/features/player/widgets/track_more_menu_button.dart';
 
@@ -129,7 +131,7 @@ class _ArtistView extends ConsumerWidget {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: AppSpacing.xs),
                         Text(
                           '${artist.albums.length} albums',
                           style: const TextStyle(
@@ -145,7 +147,7 @@ class _ArtistView extends ConsumerWidget {
           ),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
               child: _ArtistActionRow(artist: artist),
             ),
           ),
@@ -153,7 +155,7 @@ class _ArtistView extends ConsumerWidget {
             _PopularTracksSection(artist: artist),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 20, 4, 8),
+              padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.xs, AppSpacing.sm),
               child: Row(
                 children: [
                   Expanded(
@@ -176,7 +178,7 @@ class _ArtistView extends ConsumerWidget {
           if (artist.albums.isEmpty)
             const SliverToBoxAdapter(
               child: Padding(
-                padding: EdgeInsets.fromLTRB(16, 0, 16, 24),
+                padding: EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, AppSpacing.lg),
                 child: Text(
                   'No albums found in your Jellyfin library.',
                   style: TextStyle(color: AppColors.textSecondary),
@@ -189,16 +191,16 @@ class _ArtistView extends ConsumerWidget {
                 height: 220,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                   itemCount: artist.albums.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 12),
+                  separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.md),
                   itemBuilder: (_, i) =>
                       _AlbumCarouselTile(album: artist.albums[i]),
                 ),
               ),
             ),
           _AboutSection(artistName: artist.name),
-          const SliverToBoxAdapter(child: SizedBox(height: 32)),
+          const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xl)),
         ],
       ),
     );
@@ -230,7 +232,7 @@ class _PopularTracksSectionState extends State<_PopularTracksSection> {
       slivers: [
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+            padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.sm),
             child: Text(
               'Popular',
               style: Theme.of(context).textTheme.titleMedium,
@@ -254,8 +256,8 @@ class _PopularTracksSectionState extends State<_PopularTracksSection> {
               onTap: () => setState(() => _expanded = !_expanded),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.md,
                 ),
                 child: Row(
                   children: [
@@ -266,7 +268,7 @@ class _PopularTracksSectionState extends State<_PopularTracksSection> {
                       size: 18,
                       color: AppColors.primary,
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppSpacing.sm),
                     Text(
                       _expanded
                           ? 'Show less'
@@ -299,12 +301,12 @@ class _AboutSection extends ConsumerWidget {
     }
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+        padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('About', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             _ExpandableBio(bio: bio),
           ],
         ),
@@ -379,7 +381,7 @@ class _ArtistActionRow extends ConsumerWidget {
               : Icons.play_arrow_rounded,
           tooltip: isArtistPlaying ? 'Pause' : 'Play',
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppSpacing.md),
         IconButton(
           tooltip: 'Shuffle',
           icon: Icon(
@@ -483,7 +485,7 @@ class _AlbumCarouselTile extends ConsumerWidget {
     return SizedBox(
       width: 150,
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.md),
         onTap: () => context.push('/album/${album.id}'),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -491,7 +493,7 @@ class _AlbumCarouselTile extends ConsumerWidget {
             AspectRatio(
               aspectRatio: 1,
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.md),
                 child: imageUrl == null
                     ? const ArtworkPlaceholder()
                     : CachedNetworkImage(
@@ -504,7 +506,7 @@ class _AlbumCarouselTile extends ConsumerWidget {
                       ),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             Text(album.name, maxLines: 1, overflow: TextOverflow.ellipsis),
             Text(
               album.subtitle ?? 'Album',
@@ -577,7 +579,7 @@ class _PopularTrackTile extends ConsumerWidget {
         children: [
           if (isDownloaded)
             const Padding(
-              padding: EdgeInsets.only(right: 4),
+              padding: EdgeInsets.only(right: AppSpacing.xs),
               child: Icon(
                 Icons.download_for_offline_rounded,
                 size: 14,
@@ -634,14 +636,14 @@ class _ArtistLoading extends StatelessWidget {
             ),
           ),
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+            padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 Skeleton.line(width: 120, height: 16),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.md),
                 for (int i = 0; i < 5; i++) ...[
                   Skeleton.line(height: 14),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: AppSpacing.sm),
                 ],
               ]),
             ),
