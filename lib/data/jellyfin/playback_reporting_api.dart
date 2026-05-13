@@ -2,8 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'auth_repository.dart';
-import 'jellyfin_api.dart';
+import 'package:altsound/data/jellyfin/auth_repository.dart';
+import 'package:altsound/data/jellyfin/jellyfin_api.dart';
 
 /// One ranked track built from Playback Reporting `GetItems` rows.
 class PlaybackReportingPlay {

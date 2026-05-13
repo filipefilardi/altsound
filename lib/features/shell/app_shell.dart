@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/layout/adaptive_breakpoints.dart';
-import '../../core/theme/app_colors.dart';
-import '../../data/local/connectivity_provider.dart';
-import '../player/widgets/mini_player_slot.dart';
-import '../player/player_providers.dart';
-import 'desktop_shell.dart';
+import 'package:altsound/core/layout/adaptive_breakpoints.dart';
+import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/data/local/connectivity_provider.dart';
+import 'package:altsound/features/player/widgets/mini_player_slot.dart';
+import 'package:altsound/features/player/player_providers.dart';
+import 'package:altsound/features/shell/desktop_shell.dart';
 
 class AppShell extends ConsumerStatefulWidget {
   const AppShell({required this.navigationShell, super.key});

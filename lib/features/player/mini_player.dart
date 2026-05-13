@@ -6,13 +6,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/navigation/app_navigation.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_gradients.dart';
-import 'current_track_playlist_presence.dart';
-import 'player_providers.dart';
-import 'widgets/add_track_to_playlist_sheet.dart';
-import 'widgets/player_hero_art.dart';
+import 'package:altsound/core/navigation/app_navigation.dart';
+import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/theme/app_gradients.dart';
+import 'package:altsound/features/player/current_track_playlist_presence.dart';
+import 'package:altsound/features/player/player_providers.dart';
+import 'package:altsound/features/player/widgets/add_track_to_playlist_sheet.dart';
+import 'package:altsound/features/player/widgets/player_hero_art.dart';
 
 class MiniPlayer extends ConsumerWidget {
   const MiniPlayer({this.edgeToEdge = false, super.key});

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/layout/adaptive_breakpoints.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../data/jellyfin/models/media_item.dart';
-import 'playing_track_leading.dart';
+import 'package:altsound/core/layout/adaptive_breakpoints.dart';
+import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/data/jellyfin/models/media_item.dart';
+import 'package:altsound/features/player/widgets/playing_track_leading.dart';
 
 class TrackFilterBar extends StatelessWidget {
   const TrackFilterBar({

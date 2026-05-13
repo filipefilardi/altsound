@@ -4,8 +4,8 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
-import 'auth_repository.dart';
-import 'jellyfin_api.dart';
+import 'package:altsound/data/jellyfin/auth_repository.dart';
+import 'package:altsound/data/jellyfin/jellyfin_api.dart';
 
 const _ticksPerMs = 10000;
 const _progressInterval = Duration(seconds: 10);

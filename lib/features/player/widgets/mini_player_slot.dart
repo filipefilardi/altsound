@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/layout/adaptive_breakpoints.dart';
-import '../../../core/theme/app_colors.dart';
-import '../desktop_mini_player.dart';
-import '../mini_player.dart';
-import '../player_providers.dart';
+import 'package:altsound/core/layout/adaptive_breakpoints.dart';
+import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/features/player/desktop_mini_player.dart';
+import 'package:altsound/features/player/mini_player.dart';
+import 'package:altsound/features/player/player_providers.dart';
 
 class MiniPlayerSlot extends ConsumerWidget {
   const MiniPlayerSlot({

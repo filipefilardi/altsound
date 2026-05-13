@@ -2,10 +2,10 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/jellyfin/models/media_item.dart' as jf;
-import '../../data/jellyfin/models/remote_session.dart';
-import '../../data/jellyfin/remote_sessions_repository.dart';
-import 'remote_session_socket.dart';
+import 'package:altsound/data/jellyfin/models/media_item.dart' as jf;
+import 'package:altsound/data/jellyfin/models/remote_session.dart';
+import 'package:altsound/data/jellyfin/remote_sessions_repository.dart';
+import 'package:altsound/features/remote/remote_session_socket.dart';
 
 /// Active remote target. `null` means playback is local.
 final activeRemoteSessionIdProvider =

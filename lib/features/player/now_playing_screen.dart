@@ -7,18 +7,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:just_audio/just_audio.dart';
 
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_gradients.dart';
-import '../../core/utils/format.dart';
-import '../remote/remote_player_controller.dart';
-import '../syncplay/syncplay_controller.dart';
-import 'playback_handler.dart';
-import 'current_track_playlist_presence.dart';
-import 'instant_mix.dart';
-import 'player_providers.dart';
-import 'widgets/add_track_to_playlist_sheet.dart';
-import 'widgets/player_hero_art.dart';
-import 'widgets/queue_bottom_sheet.dart';
+import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/theme/app_gradients.dart';
+import 'package:altsound/core/utils/format.dart';
+import 'package:altsound/features/remote/remote_player_controller.dart';
+import 'package:altsound/features/syncplay/syncplay_controller.dart';
+import 'package:altsound/features/player/playback_handler.dart';
+import 'package:altsound/features/player/current_track_playlist_presence.dart';
+import 'package:altsound/features/player/instant_mix.dart';
+import 'package:altsound/features/player/player_providers.dart';
+import 'package:altsound/features/player/widgets/add_track_to_playlist_sheet.dart';
+import 'package:altsound/features/player/widgets/player_hero_art.dart';
+import 'package:altsound/features/player/widgets/queue_bottom_sheet.dart';
 
 class NowPlayingScreen extends ConsumerStatefulWidget {
   const NowPlayingScreen({super.key});

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../data/downloads/download_manager.dart';
-import '../../../data/downloads/download_preferences.dart';
-import '../../../data/jellyfin/models/media_item.dart';
-import 'wifi_required_dialog.dart';
+import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/data/downloads/download_manager.dart';
+import 'package:altsound/data/downloads/download_preferences.dart';
+import 'package:altsound/data/jellyfin/models/media_item.dart';
+import 'package:altsound/features/downloads/widgets/wifi_required_dialog.dart';
 
 /// Shared download-button shell for "a fixed list of tracks" — albums and
 /// playlists. Surfaces four states (downloaded, in-progress, blocked-on-wifi,

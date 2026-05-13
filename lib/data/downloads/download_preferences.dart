@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../local/secure_storage.dart';
+import 'package:altsound/data/local/secure_storage.dart';
 
 const _key = 'download_preferences_v1';
 

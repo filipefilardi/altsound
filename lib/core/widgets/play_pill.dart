@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart';
-import '../theme/app_gradients.dart';
+import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/theme/app_gradients.dart';
 
 /// Circular accent-gradient play/pause button used at the top of album,
 /// artist, and playlist screens. Pass [onTap] = null to render a disabled

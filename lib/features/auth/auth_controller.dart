@@ -1,10 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/jellyfin/auth_repository.dart';
-import '../../data/jellyfin/jellyfin_api.dart';
-import '../../data/jellyfin/models/jellyfin_session.dart';
-import '../../data/last_played/last_played_controller.dart';
+import 'package:altsound/data/jellyfin/auth_repository.dart';
+import 'package:altsound/data/jellyfin/jellyfin_api.dart';
+import 'package:altsound/data/jellyfin/models/jellyfin_session.dart';
+import 'package:altsound/data/last_played/last_played_controller.dart';
 
 sealed class AuthState {
   const AuthState();

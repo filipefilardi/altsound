@@ -1,4 +1,4 @@
-import '../jellyfin/models/media_item.dart';
+import 'package:altsound/data/jellyfin/models/media_item.dart';
 
 class DownloadedTrack {
   const DownloadedTrack({

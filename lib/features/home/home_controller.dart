@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/jellyfin/jellyfin_repository.dart';
-import '../../data/jellyfin/models/media_item.dart';
-import '../../data/jellyfin/playback_reporting_api.dart';
+import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
+import 'package:altsound/data/jellyfin/models/media_item.dart';
+import 'package:altsound/data/jellyfin/playback_reporting_api.dart';
 
 final recentlyAddedProvider = FutureProvider.autoDispose<List<BrowseItem>>(
   (ref) => ref.watch(jellyfinRepositoryProvider).recentlyAddedAlbums(),

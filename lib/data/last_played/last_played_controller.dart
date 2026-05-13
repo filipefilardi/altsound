@@ -7,8 +7,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../../features/player/player_providers.dart';
-import 'last_played_record.dart';
+import 'package:altsound/features/player/player_providers.dart';
+import 'package:altsound/data/last_played/last_played_record.dart';
 
 final lastPlayedProvider =
     NotifierProvider<LastPlayedController, LastPlayedRecord?>(

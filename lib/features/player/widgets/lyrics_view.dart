@@ -3,13 +3,13 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/widgets/empty_state.dart';
-import '../../../core/widgets/error_state.dart';
-import '../../../core/widgets/skeleton.dart';
-import '../../../data/jellyfin/models/lyrics.dart';
-import '../lyrics_provider.dart';
-import '../player_providers.dart';
+import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/widgets/empty_state.dart';
+import 'package:altsound/core/widgets/error_state.dart';
+import 'package:altsound/core/widgets/skeleton.dart';
+import 'package:altsound/data/jellyfin/models/lyrics.dart';
+import 'package:altsound/features/player/lyrics_provider.dart';
+import 'package:altsound/features/player/player_providers.dart';
 
 /// Renders the lyrics for [trackId]. Designed to fill its parent's bounds —
 /// place it inside an [Expanded] so it can scroll within the available space.

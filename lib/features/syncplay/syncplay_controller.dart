@@ -4,15 +4,15 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/downloads/download_manager.dart';
-import '../../data/jellyfin/jellyfin_repository.dart';
-import '../../data/jellyfin/models/media_item.dart' as jf;
-import '../../data/jellyfin/models/syncplay.dart';
-import '../../data/jellyfin/syncplay_repository.dart';
-import '../player/playback_handler.dart';
-import '../player/media_item_mapper.dart';
-import '../player/player_providers.dart';
-import 'syncplay_socket.dart';
+import 'package:altsound/data/downloads/download_manager.dart';
+import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
+import 'package:altsound/data/jellyfin/models/media_item.dart' as jf;
+import 'package:altsound/data/jellyfin/models/syncplay.dart';
+import 'package:altsound/data/jellyfin/syncplay_repository.dart';
+import 'package:altsound/features/player/playback_handler.dart';
+import 'package:altsound/features/player/media_item_mapper.dart';
+import 'package:altsound/features/player/player_providers.dart';
+import 'package:altsound/features/syncplay/syncplay_socket.dart';
 
 final syncPlayControllerProvider =
     NotifierProvider<SyncPlayController, SyncPlayState>(SyncPlayController.new);

@@ -7,13 +7,13 @@ import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_gradients.dart';
-import '../../data/downloads/download_manager.dart';
-import '../../data/jellyfin/jellyfin_repository.dart';
-import '../../data/jellyfin/models/jellyfin_session.dart';
-import '../../data/local/playback_preferences.dart';
-import '../auth/auth_controller.dart';
+import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/theme/app_gradients.dart';
+import 'package:altsound/data/downloads/download_manager.dart';
+import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
+import 'package:altsound/data/jellyfin/models/jellyfin_session.dart';
+import 'package:altsound/data/local/playback_preferences.dart';
+import 'package:altsound/features/auth/auth_controller.dart';
 
 final _serverInfoProvider = FutureProvider.autoDispose<JellyfinServerInfo?>(
   (ref) => ref.watch(jellyfinRepositoryProvider).serverInfo(),

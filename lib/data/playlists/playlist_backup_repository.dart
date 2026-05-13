@@ -6,11 +6,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../../core/utils/search_normalization.dart';
-import '../jellyfin/jellyfin_repository.dart';
-import '../jellyfin/models/jellyfin_session.dart';
-import '../jellyfin/models/media_item.dart';
-import '../local/secure_storage.dart';
+import 'package:altsound/core/utils/search_normalization.dart';
+import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
+import 'package:altsound/data/jellyfin/models/jellyfin_session.dart';
+import 'package:altsound/data/jellyfin/models/media_item.dart';
+import 'package:altsound/data/local/secure_storage.dart';
 
 const _backupPrefsKey = 'playlist_backup_preferences_v1';
 const _backupSchema = 'altsound.playlists.backup.v1';

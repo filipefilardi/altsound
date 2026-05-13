@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/layout/adaptive_breakpoints.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/widgets/header_action_buttons.dart';
-import '../../core/widgets/skeleton.dart';
-import '../../data/jellyfin/jellyfin_repository.dart';
-import '../../data/jellyfin/models/media_item.dart';
-import '../playlist/playlist_providers.dart';
+import 'package:altsound/core/layout/adaptive_breakpoints.dart';
+import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/widgets/header_action_buttons.dart';
+import 'package:altsound/core/widgets/skeleton.dart';
+import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
+import 'package:altsound/data/jellyfin/models/media_item.dart';
+import 'package:altsound/features/playlist/playlist_providers.dart';
 
 class LibraryScreen extends ConsumerWidget {
   const LibraryScreen({super.key});

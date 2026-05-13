@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/theme/app_colors.dart';
-import '../../data/jellyfin/models/remote_session.dart';
-import '../../data/jellyfin/remote_sessions_repository.dart';
-import '../player/player_providers.dart';
-import 'remote_player_controller.dart';
+import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/data/jellyfin/models/remote_session.dart';
+import 'package:altsound/data/jellyfin/remote_sessions_repository.dart';
+import 'package:altsound/features/player/player_providers.dart';
+import 'package:altsound/features/remote/remote_player_controller.dart';
 
 final _sessionsListProvider = FutureProvider.autoDispose<List<RemoteSession>>((
   ref,

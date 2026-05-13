@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../syncplay/syncplay_controller.dart';
-import '../player_providers.dart';
+import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/features/syncplay/syncplay_controller.dart';
+import 'package:altsound/features/player/player_providers.dart';
 
 const double _kQueueRowHeight = 64;
 

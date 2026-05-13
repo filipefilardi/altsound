@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../data/downloads/download_manager.dart';
-import '../../../data/downloads/download_preferences.dart';
-import '../../../data/jellyfin/models/media_item.dart';
-import 'collection_download_button.dart';
+import 'package:altsound/data/downloads/download_manager.dart';
+import 'package:altsound/data/downloads/download_preferences.dart';
+import 'package:altsound/data/jellyfin/models/media_item.dart';
+import 'package:altsound/features/downloads/widgets/collection_download_button.dart';
 
 class PlaylistDownloadButton extends ConsumerWidget {
   const PlaylistDownloadButton({required this.playlist, super.key});

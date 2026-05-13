@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_gradients.dart';
-import 'auth_controller.dart';
+import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/theme/app_gradients.dart';
+import 'package:altsound/features/auth/auth_controller.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});

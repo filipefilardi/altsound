@@ -8,12 +8,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 
-import 'auth_repository.dart';
-import '../../core/utils/search_normalization.dart';
-import 'jellyfin_api.dart';
-import 'models/jellyfin_session.dart';
-import 'models/lyrics.dart';
-import 'models/media_item.dart';
+import 'package:altsound/data/jellyfin/auth_repository.dart';
+import 'package:altsound/core/utils/search_normalization.dart';
+import 'package:altsound/data/jellyfin/jellyfin_api.dart';
+import 'package:altsound/data/jellyfin/models/jellyfin_session.dart';
+import 'package:altsound/data/jellyfin/models/lyrics.dart';
+import 'package:altsound/data/jellyfin/models/media_item.dart';
 
 class _NoSession implements Exception {
   @override

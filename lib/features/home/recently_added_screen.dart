@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/theme/app_colors.dart';
-import '../../core/widgets/artwork_placeholder.dart';
-import '../../core/widgets/error_state.dart';
-import '../../core/widgets/skeleton.dart';
-import '../../data/jellyfin/jellyfin_repository.dart';
-import '../player/widgets/mini_player_slot.dart';
-import 'home_controller.dart';
+import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/widgets/artwork_placeholder.dart';
+import 'package:altsound/core/widgets/error_state.dart';
+import 'package:altsound/core/widgets/skeleton.dart';
+import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
+import 'package:altsound/features/player/widgets/mini_player_slot.dart';
+import 'package:altsound/features/home/home_controller.dart';
 
 class RecentlyAddedScreen extends ConsumerWidget {
   const RecentlyAddedScreen({super.key});

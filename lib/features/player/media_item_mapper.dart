@@ -1,10 +1,10 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/downloads/download_manager.dart';
-import '../../data/jellyfin/jellyfin_repository.dart';
-import '../../data/jellyfin/models/media_item.dart' as jf;
-import '../../data/local/playback_preferences.dart';
+import 'package:altsound/data/downloads/download_manager.dart';
+import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
+import 'package:altsound/data/jellyfin/models/media_item.dart' as jf;
+import 'package:altsound/data/local/playback_preferences.dart';
 
 MediaItem mediaItemForTrack({
   required Ref ref,

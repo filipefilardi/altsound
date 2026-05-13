@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/utils/format.dart';
-import '../../../core/widgets/local_or_network_image.dart';
-import '../player_providers.dart';
+import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/utils/format.dart';
+import 'package:altsound/core/widgets/local_or_network_image.dart';
+import 'package:altsound/features/player/player_providers.dart';
 
 /// Leading column for track rows: index number, highlighted when playing.
 class PlayingTrackLeading extends ConsumerWidget {

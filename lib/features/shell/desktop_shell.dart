@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/layout/adaptive_breakpoints.dart';
-import '../../core/theme/app_colors.dart';
-import '../../data/local/connectivity_provider.dart';
-import '../syncplay/syncplay_controller.dart';
-import '../syncplay/syncplay_sheet.dart';
-import '../home/home_screen.dart';
-import '../library/library_screen.dart';
-import '../player/widgets/mini_player_slot.dart';
+import 'package:altsound/core/layout/adaptive_breakpoints.dart';
+import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/data/local/connectivity_provider.dart';
+import 'package:altsound/features/syncplay/syncplay_controller.dart';
+import 'package:altsound/features/syncplay/syncplay_sheet.dart';
+import 'package:altsound/features/home/home_screen.dart';
+import 'package:altsound/features/library/library_screen.dart';
+import 'package:altsound/features/player/widgets/mini_player_slot.dart';
 
 class DesktopShell extends StatelessWidget {
   const DesktopShell({required this.navigationShell, super.key});

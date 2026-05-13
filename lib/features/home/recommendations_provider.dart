@@ -3,12 +3,12 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/jellyfin/auth_repository.dart';
-import '../../data/jellyfin/jellyfin_repository.dart';
-import '../../data/jellyfin/models/media_item.dart';
-import '../../data/jellyfin/playback_reporting_api.dart';
-import '../../data/local/connectivity_provider.dart';
-import 'recommendations_cache.dart';
+import 'package:altsound/data/jellyfin/auth_repository.dart';
+import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
+import 'package:altsound/data/jellyfin/models/media_item.dart';
+import 'package:altsound/data/jellyfin/playback_reporting_api.dart';
+import 'package:altsound/data/local/connectivity_provider.dart';
+import 'package:altsound/features/home/recommendations_cache.dart';
 
 /// Snapshot of "For you" picks rendered on Home.
 ///

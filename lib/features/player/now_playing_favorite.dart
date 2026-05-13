@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/jellyfin/jellyfin_repository.dart';
-import 'current_track_playlist_presence.dart';
-import 'player_providers.dart';
+import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
+import 'package:altsound/features/player/current_track_playlist_presence.dart';
+import 'package:altsound/features/player/player_providers.dart';
 
 final nowPlayingFavoriteProvider =
     AsyncNotifierProvider<NowPlayingFavorite, bool?>(NowPlayingFavorite.new);

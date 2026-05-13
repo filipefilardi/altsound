@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/downloads/download_manager.dart';
-import '../../data/jellyfin/jellyfin_repository.dart';
-import '../../data/jellyfin/models/media_item.dart';
-import '../../data/local/connectivity_provider.dart';
+import 'package:altsound/data/downloads/download_manager.dart';
+import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
+import 'package:altsound/data/jellyfin/models/media_item.dart';
+import 'package:altsound/data/local/connectivity_provider.dart';
 
 final albumProvider = FutureProvider.autoDispose.family<Album, String>((
   ref,

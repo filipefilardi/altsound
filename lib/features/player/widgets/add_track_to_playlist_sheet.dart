@@ -3,12 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../data/jellyfin/jellyfin_repository.dart';
-import '../../../data/jellyfin/models/media_item.dart';
-import '../../playlist/playlist_providers.dart';
-import '../current_track_playlist_presence.dart';
-import '../now_playing_favorite.dart';
+import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
+import 'package:altsound/data/jellyfin/models/media_item.dart';
+import 'package:altsound/features/playlist/playlist_providers.dart';
+import 'package:altsound/features/player/current_track_playlist_presence.dart';
+import 'package:altsound/features/player/now_playing_favorite.dart';
 
 void _invalidateTrackPlaylistPresence(WidgetRef ref) {
   ref.invalidate(currentTrackPlaylistPresenceProvider);

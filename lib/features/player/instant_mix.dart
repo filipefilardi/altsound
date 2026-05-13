@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../data/local/connectivity_provider.dart';
+import 'package:altsound/data/local/connectivity_provider.dart';
 
 enum InstantMixSeedKind {
   album('album'),

@@ -5,13 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:uuid/uuid.dart';
 
-import 'app/app.dart';
-import 'data/jellyfin/auth_repository.dart';
-import 'data/jellyfin/client_metadata.dart';
-import 'data/jellyfin/jellyfin_api.dart';
-import 'features/player/playback_handler.dart';
-import 'features/player/playback_session_persistence.dart';
-import 'features/player/player_providers.dart';
+import 'package:altsound/app/app.dart';
+import 'package:altsound/data/jellyfin/auth_repository.dart';
+import 'package:altsound/data/jellyfin/client_metadata.dart';
+import 'package:altsound/data/jellyfin/jellyfin_api.dart';
+import 'package:altsound/features/player/playback_handler.dart';
+import 'package:altsound/features/player/playback_session_persistence.dart';
+import 'package:altsound/features/player/player_providers.dart';
 
 const _secureStorage = FlutterSecureStorage(
   iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),

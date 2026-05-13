@@ -4,9 +4,9 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/jellyfin/jellyfin_repository.dart';
-import 'playback_handler.dart';
-import 'player_providers.dart';
+import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
+import 'package:altsound/features/player/playback_handler.dart';
+import 'package:altsound/features/player/player_providers.dart';
 
 /// Auto-extends the queue when an Instant Mix nears its end so playback
 /// continues forever, seeded by whatever track is currently playing.

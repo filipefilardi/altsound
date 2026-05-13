@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/theme/app_colors.dart';
-import '../remote/remote_player_controller.dart';
-import 'syncplay_controller.dart';
+import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/features/remote/remote_player_controller.dart';
+import 'package:altsound/features/syncplay/syncplay_controller.dart';
 
 Future<void> showSyncPlaySheet(BuildContext context) {
   return showModalBottomSheet(

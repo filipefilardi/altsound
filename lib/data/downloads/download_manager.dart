@@ -8,11 +8,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../jellyfin/jellyfin_repository.dart';
-import '../jellyfin/models/media_item.dart';
-import 'download_preferences.dart';
-import 'downloaded_playlist.dart';
-import 'downloaded_track.dart';
+import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
+import 'package:altsound/data/jellyfin/models/media_item.dart';
+import 'package:altsound/data/downloads/download_preferences.dart';
+import 'package:altsound/data/downloads/downloaded_playlist.dart';
+import 'package:altsound/data/downloads/downloaded_track.dart';
 
 class DownloadsState {
   const DownloadsState({

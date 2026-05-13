@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/theme/app_colors.dart';
-import '../../core/utils/search_normalization.dart';
-import '../../core/widgets/empty_state.dart';
-import '../../core/widgets/header_action_buttons.dart';
-import '../../core/widgets/local_or_network_image.dart';
-import '../../core/widgets/skeleton.dart';
-import '../../data/jellyfin/jellyfin_repository.dart';
-import '../../data/jellyfin/models/media_item.dart';
+import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/utils/search_normalization.dart';
+import 'package:altsound/core/widgets/empty_state.dart';
+import 'package:altsound/core/widgets/header_action_buttons.dart';
+import 'package:altsound/core/widgets/local_or_network_image.dart';
+import 'package:altsound/core/widgets/skeleton.dart';
+import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
+import 'package:altsound/data/jellyfin/models/media_item.dart';
 
 enum LibraryCollectionKind { albums, artists }
 

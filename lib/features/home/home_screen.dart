@@ -2,22 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/layout/adaptive_breakpoints.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/widgets/header_action_buttons.dart';
-import '../../core/widgets/local_or_network_image.dart';
-import '../../data/jellyfin/auth_repository.dart';
-import '../../data/jellyfin/jellyfin_repository.dart';
-import '../../data/last_played/last_played_controller.dart';
-import '../../data/last_played/last_played_record.dart';
-import '../../data/local/connectivity_provider.dart';
-import '../auth/auth_controller.dart';
-import '../downloads/offline_library_view.dart';
-import '../player/instant_mix.dart';
-import 'home_controller.dart';
-import 'recommendations_cache.dart';
-import 'recommendations_provider.dart';
-import 'widgets/shelf.dart';
+import 'package:altsound/core/layout/adaptive_breakpoints.dart';
+import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/widgets/header_action_buttons.dart';
+import 'package:altsound/core/widgets/local_or_network_image.dart';
+import 'package:altsound/data/jellyfin/auth_repository.dart';
+import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
+import 'package:altsound/data/last_played/last_played_controller.dart';
+import 'package:altsound/data/last_played/last_played_record.dart';
+import 'package:altsound/data/local/connectivity_provider.dart';
+import 'package:altsound/features/auth/auth_controller.dart';
+import 'package:altsound/features/downloads/offline_library_view.dart';
+import 'package:altsound/features/player/instant_mix.dart';
+import 'package:altsound/features/home/home_controller.dart';
+import 'package:altsound/features/home/recommendations_cache.dart';
+import 'package:altsound/features/home/recommendations_provider.dart';
+import 'package:altsound/features/home/widgets/shelf.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});

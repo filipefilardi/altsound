@@ -5,8 +5,8 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 
-import 'playback_handler.dart';
-import 'player_providers.dart';
+import 'package:altsound/features/player/playback_handler.dart';
+import 'package:altsound/features/player/player_providers.dart';
 
 final playbackSessionPersistenceProvider = Provider<PlaybackSessionPersistence>(
   (ref) {

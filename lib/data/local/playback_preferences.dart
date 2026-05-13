@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'secure_storage.dart';
+import 'package:altsound/data/local/secure_storage.dart';
 
 const _bitrateKey = 'playback_streaming_bitrate_v1';
 const _gaplessKey = 'playback_gapless_v1';

@@ -4,7 +4,7 @@ import 'package:audio_service/audio_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:altsound/core/theme/app_colors.dart';
 
 const double kPlayerArtCornerRadius = 20;
 

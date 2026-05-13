@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/widgets/skeleton.dart';
-import '../../../data/jellyfin/models/media_item.dart';
-import 'media_card.dart';
+import 'package:altsound/core/widgets/skeleton.dart';
+import 'package:altsound/data/jellyfin/models/media_item.dart';
+import 'package:altsound/features/home/widgets/media_card.dart';
 
 class Shelf extends ConsumerWidget {
   const Shelf({

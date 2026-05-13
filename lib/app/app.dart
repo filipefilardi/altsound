@@ -3,17 +3,17 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../core/theme/app_theme.dart';
-import '../data/jellyfin/jellyfin_repository.dart';
-import '../data/jellyfin/scrobbler.dart';
-import '../data/last_played/last_played_controller.dart';
-import '../data/playlists/playlist_backup_repository.dart';
-import '../features/auth/auth_controller.dart';
-import '../features/player/instant_mix_extender.dart';
-import '../features/player/playback_session_persistence.dart';
-import '../features/player/player_providers.dart';
-import '../features/syncplay/syncplay_controller.dart';
-import 'router.dart';
+import 'package:altsound/core/theme/app_theme.dart';
+import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
+import 'package:altsound/data/jellyfin/scrobbler.dart';
+import 'package:altsound/data/last_played/last_played_controller.dart';
+import 'package:altsound/data/playlists/playlist_backup_repository.dart';
+import 'package:altsound/features/auth/auth_controller.dart';
+import 'package:altsound/features/player/instant_mix_extender.dart';
+import 'package:altsound/features/player/playback_session_persistence.dart';
+import 'package:altsound/features/player/player_providers.dart';
+import 'package:altsound/features/syncplay/syncplay_controller.dart';
+import 'package:altsound/app/router.dart';
 
 class AltsoundApp extends ConsumerStatefulWidget {
   const AltsoundApp({super.key});

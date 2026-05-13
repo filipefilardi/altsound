@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/theme/app_colors.dart';
-import '../../core/widgets/empty_state.dart';
-import '../../core/widgets/local_or_network_image.dart';
-import '../../data/downloads/download_manager.dart';
-import '../../data/downloads/downloaded_playlist.dart';
-import '../../data/downloads/downloaded_track.dart';
-import '../../data/jellyfin/jellyfin_repository.dart';
-import '../../data/local/connectivity_provider.dart';
+import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/widgets/empty_state.dart';
+import 'package:altsound/core/widgets/local_or_network_image.dart';
+import 'package:altsound/data/downloads/download_manager.dart';
+import 'package:altsound/data/downloads/downloaded_playlist.dart';
+import 'package:altsound/data/downloads/downloaded_track.dart';
+import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
+import 'package:altsound/data/local/connectivity_provider.dart';
 
 class OfflineLibraryView extends ConsumerWidget {
   const OfflineLibraryView({

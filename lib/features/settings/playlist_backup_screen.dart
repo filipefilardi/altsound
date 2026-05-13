@@ -3,10 +3,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/theme/app_colors.dart';
-import '../../data/playlists/playlist_backup_repository.dart';
-import '../auth/auth_controller.dart';
-import '../playlist/playlist_providers.dart';
+import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/data/playlists/playlist_backup_repository.dart';
+import 'package:altsound/features/auth/auth_controller.dart';
+import 'package:altsound/features/playlist/playlist_providers.dart';
 
 class PlaylistBackupScreen extends ConsumerStatefulWidget {
   const PlaylistBackupScreen({super.key});

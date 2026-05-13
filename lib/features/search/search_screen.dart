@@ -4,19 +4,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/theme/app_colors.dart';
-import '../../core/utils/search_normalization.dart';
-import '../../core/widgets/empty_state.dart';
-import '../../core/widgets/local_or_network_image.dart';
-import '../../core/widgets/skeleton.dart';
-import '../../data/downloads/download_manager.dart';
-import '../../data/downloads/downloaded_track.dart';
-import '../../data/jellyfin/jellyfin_repository.dart';
-import '../../data/jellyfin/models/media_item.dart';
-import '../../data/local/connectivity_provider.dart';
-import '../player/player_providers.dart';
-import '../player/widgets/add_track_to_playlist_sheet.dart';
-import '../player/widgets/playing_track_leading.dart';
+import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/utils/search_normalization.dart';
+import 'package:altsound/core/widgets/empty_state.dart';
+import 'package:altsound/core/widgets/local_or_network_image.dart';
+import 'package:altsound/core/widgets/skeleton.dart';
+import 'package:altsound/data/downloads/download_manager.dart';
+import 'package:altsound/data/downloads/downloaded_track.dart';
+import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
+import 'package:altsound/data/jellyfin/models/media_item.dart';
+import 'package:altsound/data/local/connectivity_provider.dart';
+import 'package:altsound/features/player/player_providers.dart';
+import 'package:altsound/features/player/widgets/add_track_to_playlist_sheet.dart';
+import 'package:altsound/features/player/widgets/playing_track_leading.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});

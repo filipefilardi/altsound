@@ -2,13 +2,13 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 
-import '../../data/downloads/download_manager.dart';
-import '../../data/jellyfin/jellyfin_repository.dart';
-import '../../data/jellyfin/models/media_item.dart' as jf;
-import '../remote/remote_player_controller.dart';
-import '../syncplay/syncplay_controller.dart';
-import 'playback_handler.dart';
-import 'media_item_mapper.dart';
+import 'package:altsound/data/downloads/download_manager.dart';
+import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
+import 'package:altsound/data/jellyfin/models/media_item.dart' as jf;
+import 'package:altsound/features/remote/remote_player_controller.dart';
+import 'package:altsound/features/syncplay/syncplay_controller.dart';
+import 'package:altsound/features/player/playback_handler.dart';
+import 'package:altsound/features/player/media_item_mapper.dart';
 
 final audioHandlerProvider = Provider<PlaybackHandler>((ref) {
   throw UnimplementedError(

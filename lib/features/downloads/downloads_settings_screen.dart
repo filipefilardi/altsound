@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/theme/app_colors.dart';
-import '../../data/downloads/download_manager.dart';
-import '../../data/downloads/download_preferences.dart';
+import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/data/downloads/download_manager.dart';
+import 'package:altsound/data/downloads/download_preferences.dart';
 
 class DownloadsSettingsScreen extends ConsumerWidget {
   const DownloadsSettingsScreen({super.key});

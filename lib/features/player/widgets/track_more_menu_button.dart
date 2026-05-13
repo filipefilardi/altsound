@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../data/jellyfin/models/media_item.dart';
-import '../instant_mix.dart';
-import '../player_providers.dart';
-import 'add_track_to_playlist_sheet.dart';
+import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/data/jellyfin/models/media_item.dart';
+import 'package:altsound/features/player/instant_mix.dart';
+import 'package:altsound/features/player/player_providers.dart';
+import 'package:altsound/features/player/widgets/add_track_to_playlist_sheet.dart';
 
 class TrackMoreMenuButton extends ConsumerWidget {
   const TrackMoreMenuButton({required this.track, super.key});

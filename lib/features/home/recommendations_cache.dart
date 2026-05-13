@@ -5,8 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../../data/jellyfin/models/media_item.dart';
-import 'recommendations_provider.dart';
+import 'package:altsound/data/jellyfin/models/media_item.dart';
+import 'package:altsound/features/home/recommendations_provider.dart';
 
 /// Persisted form of `HomeRecommendations`. The `dateKey` is local-day
 /// (`YYYY-MM-DD`) — comparing it against today's local-day key tells the

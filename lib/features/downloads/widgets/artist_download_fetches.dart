@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../data/downloads/download_manager.dart';
-import '../../../data/downloads/download_preferences.dart';
-import '../../../data/jellyfin/jellyfin_repository.dart';
-import '../../../data/jellyfin/models/media_item.dart';
+import 'package:altsound/data/downloads/download_manager.dart';
+import 'package:altsound/data/downloads/download_preferences.dart';
+import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
+import 'package:altsound/data/jellyfin/models/media_item.dart';
 
 /// Outcome of [ArtistDownloadFetchesController.downloadAll].
 typedef ArtistDownloadResult = ({int enqueued, int failed});
