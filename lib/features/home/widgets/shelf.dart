@@ -35,7 +35,7 @@ class Shelf extends ConsumerWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: Theme.of(context).textTheme.headlineSmall,
+                  style: Theme.of(context).textTheme.headlineMedium,
                 ),
               ),
               if (onSeeAll != null)

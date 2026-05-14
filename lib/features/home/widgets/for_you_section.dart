@@ -109,7 +109,7 @@ class ForYouSection extends ConsumerWidget {
           ),
           child: Text(
             'For you',
-            style: Theme.of(context).textTheme.headlineSmall,
+            style: Theme.of(context).textTheme.headlineMedium,
           ),
         ),
         SizedBox(

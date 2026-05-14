@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -32,59 +34,88 @@ class ResumeCard extends ConsumerWidget {
           color: AppColors.surface,
         ),
         clipBehavior: Clip.antiAlias,
-        child: Column(
+        child: Stack(
           children: [
-            Expanded(
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 92,
-                    height: 92,
-                    child: LocalOrNetworkImage(
-                      source: record.imageUrl,
-                      errorBuilder: (_) => const ArtworkPlaceholder(
-                        iconSize: 32,
-                        backgroundColor: AppColors.surface,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'PICK UP WHERE YOU LEFT OFF',
-                          style: Theme.of(context).textTheme.labelLarge,
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-                        Text(
-                          record.trackName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        Text(
-                          _resumeSubtitle(record),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (albumId != null) const SizedBox(width: AppSpacing.md),
-                ],
+            Positioned.fill(
+              child: ImageFiltered(
+                imageFilter: ImageFilter.blur(sigmaX: 28, sigmaY: 28),
+                child: LocalOrNetworkImage(
+                  source: record.imageUrl,
+                  errorBuilder: (_) => const SizedBox.shrink(),
+                ),
               ),
             ),
-            if (record.durationMs > 0)
-              LinearProgressIndicator(
-                value: record.progress,
-                minHeight: 2,
-                backgroundColor: AppColors.surfaceHighlight,
-                color: AppColors.primary,
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    colors: [
+                      AppColors.background.withValues(alpha: 0.55),
+                      AppColors.surface.withValues(alpha: 0.85),
+                    ],
+                  ),
+                ),
               ),
+            ),
+            Column(
+              children: [
+                Expanded(
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 92,
+                        height: 92,
+                        child: LocalOrNetworkImage(
+                          source: record.imageUrl,
+                          errorBuilder: (_) => const ArtworkPlaceholder(
+                            iconSize: 32,
+                            backgroundColor: AppColors.surface,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'PICK UP WHERE YOU LEFT OFF',
+                              style: Theme.of(context).textTheme.labelLarge,
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            Text(
+                              record.trackName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            Text(
+                              _resumeSubtitle(record),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (albumId != null) const SizedBox(width: AppSpacing.md),
+                    ],
+                  ),
+                ),
+                if (record.durationMs > 0)
+                  LinearProgressIndicator(
+                    value: record.progress,
+                    minHeight: 2,
+                    backgroundColor: AppColors.surfaceHighlight.withValues(
+                      alpha: 0.6,
+                    ),
+                    color: AppColors.primary,
+                  ),
+              ],
+            ),
           ],
         ),
       ),
