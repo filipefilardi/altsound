@@ -58,6 +58,7 @@ class _AppShellState extends ConsumerState<AppShell> {
     }
 
     return Scaffold(
+      extendBody: true,
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -77,32 +78,35 @@ class _AppShellState extends ConsumerState<AppShell> {
         mainAxisSize: MainAxisSize.min,
         children: [
           const MiniPlayerSlot(applyBottomSafeArea: false),
-          SafeArea(
-            top: false,
-            child: NavigationBar(
-              labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
-              selectedIndex: widget.navigationShell.currentIndex,
-              onDestinationSelected: (i) => widget.navigationShell.goBranch(
-                i,
-                initialLocation: i == widget.navigationShell.currentIndex,
+          ColoredBox(
+            color: AppColors.surface,
+            child: SafeArea(
+              top: false,
+              child: NavigationBar(
+                labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
+                selectedIndex: widget.navigationShell.currentIndex,
+                onDestinationSelected: (i) => widget.navigationShell.goBranch(
+                  i,
+                  initialLocation: i == widget.navigationShell.currentIndex,
+                ),
+                destinations: const [
+                  NavigationDestination(
+                    icon: Icon(Icons.home_rounded),
+                    selectedIcon: Icon(Icons.home_rounded),
+                    label: 'Home',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.search_rounded),
+                    selectedIcon: Icon(Icons.search_rounded),
+                    label: 'Search',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.library_music_rounded),
+                    selectedIcon: Icon(Icons.library_music_rounded),
+                    label: 'Library',
+                  ),
+                ],
               ),
-              destinations: const [
-                NavigationDestination(
-                  icon: Icon(Icons.home_rounded),
-                  selectedIcon: Icon(Icons.home_rounded),
-                  label: 'Home',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.search_rounded),
-                  selectedIcon: Icon(Icons.search_rounded),
-                  label: 'Search',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.library_music_rounded),
-                  selectedIcon: Icon(Icons.library_music_rounded),
-                  label: 'Library',
-                ),
-              ],
             ),
           ),
         ],
