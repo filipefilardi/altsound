@@ -4,20 +4,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
-import 'package:altsound/core/theme/app_radius.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
-import 'package:altsound/core/widgets/artwork_placeholder.dart';
 import 'package:altsound/core/widgets/error_state.dart';
-import 'package:altsound/core/widgets/play_pill.dart';
-import 'package:altsound/core/widgets/skeleton.dart';
 import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
 import 'package:altsound/data/jellyfin/models/media_item.dart';
-import 'package:altsound/data/wikipedia/wikipedia_repository.dart';
-import 'package:altsound/features/artist/widgets/popular_track_tile.dart';
-import 'package:altsound/features/downloads/widgets/artist_download_button.dart';
-import 'package:altsound/features/player/instant_mix.dart';
-import 'package:altsound/features/player/player_providers.dart';
-import 'package:altsound/features/player/widgets/add_track_to_playlist_sheet.dart';
+import 'package:altsound/features/artist/widgets/about_section.dart';
+import 'package:altsound/features/artist/widgets/album_carousel_tile.dart';
+import 'package:altsound/features/artist/widgets/artist_action_row.dart';
+import 'package:altsound/features/artist/widgets/artist_loading.dart';
+import 'package:altsound/features/artist/widgets/popular_tracks_section.dart';
 import 'package:altsound/features/player/widgets/mini_player_slot.dart';
 
 final artistProvider = FutureProvider.autoDispose.family<Artist, String>((
@@ -41,7 +36,7 @@ class ArtistScreen extends ConsumerWidget {
         reserveSpaceWhenEmpty: true,
       ),
       body: async.when(
-        loading: () => const _ArtistLoading(),
+        loading: () => const ArtistLoading(),
         error: (e, _) => SafeArea(
           child: Stack(
             children: [
@@ -145,11 +140,11 @@ class _ArtistView extends ConsumerWidget {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
-              child: _ArtistActionRow(artist: artist),
+              child: ArtistActionRow(artist: artist),
             ),
           ),
           if (artist.popularTracks.isNotEmpty)
-            _PopularTracksSection(artist: artist),
+            PopularTracksSection(artist: artist),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.xs, AppSpacing.sm),
@@ -192,11 +187,11 @@ class _ArtistView extends ConsumerWidget {
                   itemCount: artist.albums.length,
                   separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.md),
                   itemBuilder: (_, i) =>
-                      _AlbumCarouselTile(album: artist.albums[i]),
+                      AlbumCarouselTile(album: artist.albums[i]),
                 ),
               ),
             ),
-          _AboutSection(artistName: artist.name),
+          AboutSection(artistName: artist.name),
           const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xl)),
         ],
       ),
@@ -204,354 +199,12 @@ class _ArtistView extends ConsumerWidget {
   }
 }
 
-const _kDefaultTrackCount = 5;
 
-class _PopularTracksSection extends StatefulWidget {
-  const _PopularTracksSection({required this.artist});
 
-  final Artist artist;
 
-  @override
-  State<_PopularTracksSection> createState() => _PopularTracksSectionState();
-}
 
-class _PopularTracksSectionState extends State<_PopularTracksSection> {
-  bool _expanded = false;
 
-  @override
-  Widget build(BuildContext context) {
-    final tracks = widget.artist.popularTracks;
-    final shown = _expanded
-        ? tracks
-        : tracks.take(_kDefaultTrackCount).toList();
 
-    return SliverMainAxisGroup(
-      slivers: [
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.sm),
-            child: Text(
-              'Popular',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-          ),
-        ),
-        SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (_, i) => PopularTrackTile(
-              rank: i + 1,
-              track: shown[i],
-              allTracks: tracks,
-              contextId: widget.artist.id,
-            ),
-            childCount: shown.length,
-          ),
-        ),
-        if (tracks.length > _kDefaultTrackCount)
-          SliverToBoxAdapter(
-            child: InkWell(
-              onTap: () => setState(() => _expanded = !_expanded),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: AppSpacing.md,
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      _expanded
-                          ? Icons.expand_less_rounded
-                          : Icons.expand_more_rounded,
-                      size: 18,
-                      color: AppColors.primary,
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Text(
-                      _expanded
-                          ? 'Show less'
-                          : 'See all ${tracks.length} songs',
-                      style: const TextStyle(
-                        color: AppColors.primary,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-}
 
-class _AboutSection extends ConsumerWidget {
-  const _AboutSection({required this.artistName});
-  final String artistName;
 
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final bio = ref.watch(artistBioProvider(artistName)).value;
-    if (bio == null || bio.isEmpty) {
-      return const SliverToBoxAdapter(child: SizedBox.shrink());
-    }
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('About', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: AppSpacing.sm),
-            _ExpandableBio(bio: bio),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
-class _ExpandableBio extends StatefulWidget {
-  const _ExpandableBio({required this.bio});
-  final String bio;
-
-  @override
-  State<_ExpandableBio> createState() => _ExpandableBioState();
-}
-
-class _ExpandableBioState extends State<_ExpandableBio> {
-  bool _expanded = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => setState(() => _expanded = !_expanded),
-      child: Text(
-        widget.bio,
-        maxLines: _expanded ? null : 3,
-        overflow: _expanded ? TextOverflow.visible : TextOverflow.ellipsis,
-        style: const TextStyle(
-          color: AppColors.textSecondary,
-          fontSize: 13,
-          height: 1.5,
-        ),
-      ),
-    );
-  }
-}
-
-class _ArtistActionRow extends ConsumerWidget {
-  const _ArtistActionRow({required this.artist});
-
-  final Artist artist;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final shuffleEnabled =
-        ref.watch(playerShuffleEnabledProvider).value ?? false;
-    final isArtistPlaying = ref.watch(isContextPlayingProvider(artist.id));
-    final hasTracks = artist.popularTracks.isNotEmpty;
-
-    return Row(
-      children: [
-        PlayPill(
-          onTap: hasTracks
-              ? () {
-                  final controller = ref.read(playerControllerProvider);
-                  if (isArtistPlaying) {
-                    controller.togglePlay();
-                    return;
-                  }
-                  controller.playTracks(
-                    artist.popularTracks,
-                    contextId: artist.id,
-                  );
-                }
-              : null,
-          icon: isArtistPlaying
-              ? Icons.pause_rounded
-              : Icons.play_arrow_rounded,
-          tooltip: isArtistPlaying ? 'Pause' : 'Play',
-        ),
-        const SizedBox(width: AppSpacing.md),
-        IconButton(
-          tooltip: 'Shuffle',
-          icon: Icon(
-            Icons.shuffle_rounded,
-            color: shuffleEnabled ? AppColors.primary : AppColors.textPrimary,
-          ),
-          onPressed: hasTracks
-              ? () => ref.read(playerControllerProvider).toggleShuffle()
-              : null,
-        ),
-        IconButton(
-          tooltip: 'Instant Mix',
-          icon: const Icon(Icons.auto_awesome_rounded),
-          onPressed: hasTracks
-              ? () => openInstantMixPage(
-                  context,
-                  ref,
-                  itemId: artist.id,
-                  kind: InstantMixSeedKind.artist,
-                  title: artist.name,
-                )
-              : null,
-        ),
-        ArtistDownloadButton(artist: artist),
-        IconButton(
-          tooltip: 'More actions',
-          icon: const Icon(Icons.more_vert_rounded),
-          onPressed: hasTracks
-              ? () async {
-                  final action =
-                      await showModalBottomSheet<_ArtistCollectionAction>(
-                        context: context,
-                        showDragHandle: true,
-                        builder: (sheetContext) => SafeArea(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              ListTile(
-                                leading: const Icon(Icons.playlist_add_rounded),
-                                title: const Text('Add top songs to playlist'),
-                                onTap: () => Navigator.of(
-                                  sheetContext,
-                                ).pop(_ArtistCollectionAction.addToPlaylist),
-                              ),
-                              ListTile(
-                                leading: const Icon(Icons.add_to_queue_rounded),
-                                title: const Text('Add to queue'),
-                                onTap: () => Navigator.of(
-                                  sheetContext,
-                                ).pop(_ArtistCollectionAction.addToQueue),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                  if (action == null || !context.mounted) return;
-                  final controller = ref.read(playerControllerProvider);
-                  switch (action) {
-                    case _ArtistCollectionAction.addToPlaylist:
-                      await openAddTracksToPlaylistFlow(
-                        context,
-                        ref,
-                        trackIds: artist.popularTracks
-                            .map((t) => t.id)
-                            .toList(),
-                      );
-                    case _ArtistCollectionAction.addToQueue:
-                      final added = await controller.addTracksToQueue(
-                        artist.popularTracks,
-                      );
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Added $added song${added == 1 ? '' : 's'} to queue',
-                          ),
-                        ),
-                      );
-                  }
-                }
-              : null,
-        ),
-      ],
-    );
-  }
-}
-
-enum _ArtistCollectionAction { addToPlaylist, addToQueue }
-
-class _AlbumCarouselTile extends ConsumerWidget {
-  const _AlbumCarouselTile({required this.album});
-
-  final BrowseItem album;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final repo = ref.watch(jellyfinRepositoryProvider);
-    final imageUrl = (album.imageTag == null || album.imageTag!.isEmpty)
-        ? null
-        : repo.imageUrl(album.id, imageTag: album.imageTag, size: 400);
-    return SizedBox(
-      width: 150,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        onTap: () => context.push('/album/${album.id}'),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AspectRatio(
-              aspectRatio: 1,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(AppRadius.md),
-                child: imageUrl == null
-                    ? const ArtworkPlaceholder()
-                    : CachedNetworkImage(
-                        imageUrl: imageUrl,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        placeholder: (_, __) =>
-                            Container(color: AppColors.surfaceElevated),
-                        errorWidget: (_, __, ___) => const ArtworkPlaceholder(),
-                      ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(album.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-            Text(
-              album.subtitle ?? 'Album',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 12,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ArtistLoading extends StatelessWidget {
-  const _ArtistLoading();
-
-  @override
-  Widget build(BuildContext context) {
-    return Skeleton.group(
-      child: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            expandedHeight: 300,
-            pinned: true,
-            leading: const BackButton(),
-            flexibleSpace: FlexibleSpaceBar(
-              background: Skeleton.box(
-                width: double.infinity,
-                height: double.infinity,
-                radius: 0,
-              ),
-            ),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                Skeleton.line(width: 120, height: 16),
-                const SizedBox(height: AppSpacing.md),
-                for (int i = 0; i < 5; i++) ...[
-                  Skeleton.line(height: 14),
-                  const SizedBox(height: AppSpacing.sm),
-                ],
-              ]),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
