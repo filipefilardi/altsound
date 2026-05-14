@@ -85,7 +85,9 @@ class _LibraryCollectionScreenState
                   onChanged: (value) => setState(() => _term = value.trim()),
                   decoration: InputDecoration(
                     hintText: 'Search ${title.toLowerCase()}',
-                    prefixIcon: const Icon(PhosphorIconsRegular.magnifyingGlass),
+                    prefixIcon: const Icon(
+                      PhosphorIconsRegular.magnifyingGlass,
+                    ),
                     suffixIcon: _ctrl.text.isEmpty
                         ? null
                         : IconButton(

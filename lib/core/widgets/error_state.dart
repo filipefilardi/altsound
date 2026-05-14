@@ -53,7 +53,10 @@ class ErrorStateView extends StatelessWidget {
               const SizedBox(height: AppSpacing.md),
               OutlinedButton.icon(
                 onPressed: onRetry,
-                icon: const Icon(PhosphorIconsRegular.arrowsClockwise, size: 18),
+                icon: const Icon(
+                  PhosphorIconsRegular.arrowsClockwise,
+                  size: 18,
+                ),
                 label: const Text('Retry'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.textPrimary,

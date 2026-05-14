@@ -74,7 +74,9 @@ class _PlaylistBackupScreenState extends ConsumerState<PlaylistBackupScreen> {
                 onTap: _createBackup,
               ),
               ListTile(
-                leading: const Icon(PhosphorIconsRegular.arrowsCounterClockwise),
+                leading: const Icon(
+                  PhosphorIconsRegular.arrowsCounterClockwise,
+                ),
                 title: const Text('Restore latest backup'),
                 subtitle: Text(
                   latest == null

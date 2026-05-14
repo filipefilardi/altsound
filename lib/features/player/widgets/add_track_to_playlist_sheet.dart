@@ -553,7 +553,9 @@ class _PlaylistToggleRow extends StatelessWidget {
       trailing: AnimatedSwitcher(
         duration: const Duration(milliseconds: 200),
         child: Icon(
-          selected ? PhosphorIconsRegular.checkCircle : PhosphorIconsRegular.circle,
+          selected
+              ? PhosphorIconsRegular.checkCircle
+              : PhosphorIconsRegular.circle,
           key: ValueKey(selected),
           color: selected ? AppColors.primary : AppColors.textTertiary,
           size: 22,

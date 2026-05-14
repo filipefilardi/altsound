@@ -49,7 +49,9 @@ class PlaylistArtwork extends ConsumerWidget {
             itemBuilder: (_, index) {
               final track = uniqueAlbumTracks[index % uniqueAlbumTracks.length];
               if (track.imageTag == null || track.imageTag!.isEmpty) {
-                return const ArtworkPlaceholder(icon: PhosphorIconsRegular.queue);
+                return const ArtworkPlaceholder(
+                  icon: PhosphorIconsRegular.queue,
+                );
               }
               final artId = track.albumImageItemId ?? track.id;
               final imageUrl = repo.imageUrl(
