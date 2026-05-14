@@ -18,7 +18,10 @@ Bring your music collection back into a focused listening app. AltSound connects
   </a>
 </p>
 
-iOS and macOS builds are in development.
+### Other platforms
+
+- **macOS** — download the unsigned `.app` from the [latest GitHub Release](https://github.com/filipefilardi/altsound/releases/latest). Right-click → *Open* on first launch to bypass Gatekeeper. No re-signing or expiry.
+- **iOS** — download the unsigned `.ipa` from the [latest GitHub Release](https://github.com/filipefilardi/altsound/releases/latest) and sideload with [AltStore](https://altstore.io/), [SideStore](https://sidestore.io/), or [Sideloadly](https://sideloadly.io/). A free Apple ID is enough — the app needs to be re-signed every 7 days (the sideloading tools automate this).
 
 ## What you need
 
