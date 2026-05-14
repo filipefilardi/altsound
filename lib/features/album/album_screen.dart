@@ -8,21 +8,17 @@ import 'package:altsound/core/navigation/app_navigation.dart';
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_radius.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
-import 'package:altsound/core/utils/format.dart';
 import 'package:altsound/core/widgets/artwork_placeholder.dart';
 import 'package:altsound/core/widgets/error_state.dart';
-import 'package:altsound/core/widgets/play_pill.dart';
-import 'package:altsound/core/widgets/skeleton.dart';
 import 'package:altsound/data/downloads/download_manager.dart';
 import 'package:altsound/data/downloads/download_preferences.dart';
 import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
 import 'package:altsound/data/jellyfin/models/media_item.dart';
 import 'package:altsound/features/album/album_controller.dart';
-import 'package:altsound/features/downloads/widgets/album_download_button.dart';
-import 'package:altsound/features/home/widgets/media_card.dart';
-import 'package:altsound/features/player/instant_mix.dart';
+import 'package:altsound/features/album/widgets/album_action_bar.dart';
+import 'package:altsound/features/album/widgets/album_loading.dart';
+import 'package:altsound/features/album/widgets/album_recommendations.dart';
 import 'package:altsound/features/player/player_providers.dart';
-import 'package:altsound/features/player/widgets/add_track_to_playlist_sheet.dart';
 import 'package:altsound/features/player/widgets/mini_player_slot.dart';
 import 'package:altsound/features/player/widgets/playing_track_leading.dart';
 import 'package:altsound/features/player/widgets/track_listing_widgets.dart';
@@ -59,7 +55,7 @@ class AlbumScreen extends ConsumerWidget {
           if (offlineAlbum != null) {
             return _AlbumView(album: offlineAlbum);
           }
-          return const _AlbumLoading();
+          return const AlbumLoading();
         },
         error: (e, _) {
           final offlineAlbum = _buildOfflineAlbum(albumId, downloads);
@@ -109,46 +105,6 @@ class AlbumScreen extends ConsumerWidget {
   }
 }
 
-class _AlbumLoading extends StatelessWidget {
-  const _AlbumLoading();
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Skeleton.group(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.lg, AppSpacing.md, 0),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Skeleton.box(width: 220, height: 220),
-                const SizedBox(height: AppSpacing.md),
-                Skeleton.line(width: 220, height: 18),
-                const SizedBox(height: AppSpacing.sm),
-                Skeleton.line(width: 140, height: 12),
-                const SizedBox(height: AppSpacing.lg),
-                for (int i = 0; i < 8; i++)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                    child: Row(
-                      children: [
-                        Skeleton.box(width: 28, height: 28, radius: 6),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(child: Skeleton.line(height: 14)),
-                        const SizedBox(width: AppSpacing.md),
-                        Skeleton.line(width: 36, height: 12),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _AlbumView extends ConsumerStatefulWidget {
   const _AlbumView({required this.album});
@@ -349,7 +305,7 @@ class _AlbumViewState extends ConsumerState<_AlbumView> {
           ),
           SliverPersistentHeader(
             pinned: true,
-            delegate: _ActionBarDelegate(child: _ActionBar(album: album)),
+            delegate: AlbumActionBarDelegate(child: AlbumActionBar(album: album)),
           ),
           SliverList.builder(
             itemCount: album.tracks.length,
@@ -396,7 +352,7 @@ class _AlbumViewState extends ConsumerState<_AlbumView> {
               );
             },
           ),
-          SliverToBoxAdapter(child: _AlbumRecommendations(album: album)),
+          SliverToBoxAdapter(child: AlbumRecommendations(album: album)),
           const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xl)),
         ],
       ),
@@ -404,284 +360,10 @@ class _AlbumViewState extends ConsumerState<_AlbumView> {
   }
 }
 
-class _AlbumRecommendations extends ConsumerWidget {
-  const _AlbumRecommendations({required this.album});
 
-  final Album album;
 
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final artistId = album.artistId;
-    final moreFromArtist = artistId == null || artistId.isEmpty
-        ? const AsyncValue<List<BrowseItem>>.data([])
-        : ref.watch(
-            moreAlbumsByArtistProvider((
-              artistId: artistId,
-              excludeAlbumId: album.id,
-            )),
-          );
-    final similarAlbums = ref.watch(
-      similarAlbumsProvider((albumId: album.id, artistName: album.artistName)),
-    );
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (artistId != null && artistId.isNotEmpty)
-          _RecommendationShelf(
-            title: 'More from ${album.artistName}',
-            items: moreFromArtist,
-          ),
-        _RecommendationShelf(title: 'More Like This', items: similarAlbums),
-      ],
-    );
-  }
-}
 
-class _RecommendationShelf extends StatelessWidget {
-  const _RecommendationShelf({required this.title, required this.items});
 
-  final String title;
-  final AsyncValue<List<BrowseItem>> items;
 
-  @override
-  Widget build(BuildContext context) {
-    return items.when(
-      loading: () => _RecommendationShelfFrame(
-        title: title,
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: const NeverScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-          child: Skeleton.group(
-            child: Row(
-              children: const [
-                _RecommendationSkeleton(),
-                SizedBox(width: AppSpacing.sm),
-                _RecommendationSkeleton(),
-                SizedBox(width: AppSpacing.sm),
-                _RecommendationSkeleton(),
-              ],
-            ),
-          ),
-        ),
-      ),
-      error: (_, __) => const SizedBox.shrink(),
-      data: (items) {
-        if (items.isEmpty) return const SizedBox.shrink();
-        return _RecommendationShelfFrame(
-          title: title,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-            itemCount: items.length,
-            separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
-            itemBuilder: (_, i) => MediaCard(item: items[i]),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _RecommendationShelfFrame extends StatelessWidget {
-  const _RecommendationShelfFrame({required this.title, required this.child});
-
-  final String title;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, AppSpacing.md),
-            child: Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-          ),
-          SizedBox(height: 220, child: child),
-        ],
-      ),
-    );
-  }
-}
-
-class _RecommendationSkeleton extends StatelessWidget {
-  const _RecommendationSkeleton();
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 156,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Skeleton.box(width: 156, height: 156, radius: 10),
-          const SizedBox(height: AppSpacing.sm),
-          Skeleton.line(width: 120),
-          const SizedBox(height: AppSpacing.sm),
-          Skeleton.line(width: 80, height: 10),
-        ],
-      ),
-    );
-  }
-}
-
-class _ActionBarDelegate extends SliverPersistentHeaderDelegate {
-  _ActionBarDelegate({required this.child});
-  final Widget child;
-
-  @override
-  double get minExtent => 72;
-  @override
-  double get maxExtent => 72;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return Container(color: AppColors.background, child: child);
-  }
-
-  @override
-  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) =>
-      false;
-}
-
-class _ActionBar extends ConsumerWidget {
-  const _ActionBar({required this.album});
-  final Album album;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final shuffleEnabled =
-        ref.watch(playerShuffleEnabledProvider).value ?? false;
-    final isAlbumPlaying = ref.watch(isContextPlayingProvider(album.id));
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
-      child: Row(
-        children: [
-          PlayPill(
-            onTap: album.tracks.isEmpty
-                ? null
-                : () {
-                    final controller = ref.read(playerControllerProvider);
-                    if (isAlbumPlaying) {
-                      controller.togglePlay();
-                      return;
-                    }
-                    controller.playTracks(album.tracks, contextId: album.id);
-                  },
-            icon: isAlbumPlaying
-                ? Icons.pause_rounded
-                : Icons.play_arrow_rounded,
-            tooltip: isAlbumPlaying ? 'Pause' : 'Play',
-          ),
-          const SizedBox(width: AppSpacing.md),
-          IconButton(
-            tooltip: 'Shuffle',
-            icon: Icon(
-              Icons.shuffle_rounded,
-              color: shuffleEnabled ? AppColors.primary : AppColors.textPrimary,
-            ),
-            onPressed: album.tracks.isEmpty
-                ? null
-                : () => ref.read(playerControllerProvider).toggleShuffle(),
-          ),
-          IconButton(
-            tooltip: 'Instant Mix',
-            icon: const Icon(Icons.auto_awesome_rounded),
-            onPressed: album.tracks.isEmpty
-                ? null
-                : () => openInstantMixPage(
-                    context,
-                    ref,
-                    itemId: album.id,
-                    kind: InstantMixSeedKind.album,
-                    title: album.name,
-                  ),
-          ),
-          AlbumDownloadButton(album: album),
-          IconButton(
-            tooltip: 'More actions',
-            icon: const Icon(Icons.more_vert_rounded),
-            onPressed: album.tracks.isEmpty
-                ? null
-                : () async {
-                    final action =
-                        await showModalBottomSheet<_CollectionAction>(
-                          context: context,
-                          showDragHandle: true,
-                          builder: (sheetContext) => SafeArea(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                ListTile(
-                                  leading: const Icon(
-                                    Icons.playlist_add_rounded,
-                                  ),
-                                  title: const Text('Add album to playlist'),
-                                  onTap: () => Navigator.of(
-                                    sheetContext,
-                                  ).pop(_CollectionAction.addToPlaylist),
-                                ),
-                                ListTile(
-                                  leading: const Icon(
-                                    Icons.add_to_queue_rounded,
-                                  ),
-                                  title: const Text('Add to queue'),
-                                  onTap: () => Navigator.of(
-                                    sheetContext,
-                                  ).pop(_CollectionAction.addToQueue),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                    if (action == null || !context.mounted) return;
-                    final controller = ref.read(playerControllerProvider);
-                    switch (action) {
-                      case _CollectionAction.addToPlaylist:
-                        await openAddTracksToPlaylistFlow(
-                          context,
-                          ref,
-                          trackIds: album.tracks.map((t) => t.id).toList(),
-                        );
-                      case _CollectionAction.addToQueue:
-                        final added = await controller.addTracksToQueue(
-                          album.tracks,
-                        );
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Added $added song${added == 1 ? '' : 's'} to queue',
-                            ),
-                          ),
-                        );
-                    }
-                  },
-          ),
-          const Spacer(),
-          Text(
-            formatLongDuration(album.totalDuration),
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-enum _CollectionAction { addToPlaylist, addToQueue }
 
