@@ -148,8 +148,9 @@ class PlaylistActionRow extends ConsumerWidget {
                 ListTile(
                   leading: const Icon(Icons.edit_note_rounded),
                   title: const Text('Edit playlist'),
-                  onTap: () =>
-                      Navigator.of(sheetContext).pop(_PlaylistCollectionAction.edit),
+                  onTap: () => Navigator.of(
+                    sheetContext,
+                  ).pop(_PlaylistCollectionAction.edit),
                 ),
               if (duplicateCount > 0 && onRemoveDuplicates != null)
                 ListTile(
@@ -157,20 +158,23 @@ class PlaylistActionRow extends ConsumerWidget {
                   title: Text(
                     'Remove $duplicateCount duplicate${duplicateCount == 1 ? '' : 's'}',
                   ),
-                  onTap: () => Navigator.of(sheetContext)
-                      .pop(_PlaylistCollectionAction.removeDuplicates),
+                  onTap: () => Navigator.of(
+                    sheetContext,
+                  ).pop(_PlaylistCollectionAction.removeDuplicates),
                 ),
               ListTile(
                 leading: const Icon(Icons.playlist_add_rounded),
                 title: const Text('Add to playlist'),
-                onTap: () => Navigator.of(sheetContext)
-                    .pop(_PlaylistCollectionAction.addToPlaylist),
+                onTap: () => Navigator.of(
+                  sheetContext,
+                ).pop(_PlaylistCollectionAction.addToPlaylist),
               ),
               ListTile(
                 leading: const Icon(Icons.add_to_queue_rounded),
                 title: const Text('Add to queue'),
-                onTap: () => Navigator.of(sheetContext)
-                    .pop(_PlaylistCollectionAction.addToQueue),
+                onTap: () => Navigator.of(
+                  sheetContext,
+                ).pop(_PlaylistCollectionAction.addToQueue),
               ),
             ],
             if (onRename != null || onDelete != null) ...[
@@ -180,8 +184,9 @@ class PlaylistActionRow extends ConsumerWidget {
               ListTile(
                 leading: const Icon(Icons.edit_rounded),
                 title: const Text('Rename playlist'),
-                onTap: () =>
-                    Navigator.of(sheetContext).pop(_PlaylistCollectionAction.rename),
+                onTap: () => Navigator.of(
+                  sheetContext,
+                ).pop(_PlaylistCollectionAction.rename),
               ),
             if (onDelete != null)
               ListTile(
@@ -190,8 +195,9 @@ class PlaylistActionRow extends ConsumerWidget {
                   color: AppColors.error,
                 ),
                 title: const Text('Delete playlist'),
-                onTap: () =>
-                    Navigator.of(sheetContext).pop(_PlaylistCollectionAction.delete),
+                onTap: () => Navigator.of(
+                  sheetContext,
+                ).pop(_PlaylistCollectionAction.delete),
               ),
           ],
         ),
@@ -210,9 +216,7 @@ class PlaylistActionRow extends ConsumerWidget {
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              'Added $added song${added == 1 ? '' : 's'} to queue',
-            ),
+            content: Text('Added $added song${added == 1 ? '' : 's'} to queue'),
           ),
         );
       case _PlaylistCollectionAction.delete:

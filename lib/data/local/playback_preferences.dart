@@ -52,8 +52,8 @@ class PlaybackPreferences {
 
 final playbackPreferencesProvider =
     NotifierProvider<PlaybackPreferencesController, PlaybackPreferences>(
-  PlaybackPreferencesController.new,
-);
+      PlaybackPreferencesController.new,
+    );
 
 class PlaybackPreferencesController extends Notifier<PlaybackPreferences> {
   @override

@@ -495,7 +495,8 @@ class SyncPlayController extends Notifier<SyncPlayState> {
     SyncPlayQueueUpdate update,
     List<SyncPlayQueueItem> previousQueue,
   ) {
-    if (previousQueue.isEmpty || update.playlist.length <= previousQueue.length) {
+    if (previousQueue.isEmpty ||
+        update.playlist.length <= previousQueue.length) {
       return false;
     }
     for (var i = 0; i < previousQueue.length; i++) {
@@ -623,7 +624,8 @@ class SyncPlayController extends Notifier<SyncPlayState> {
     if (items.isEmpty) return;
     // Resolve the playing item by playlistItemId — clamping the server index
     // would land on a different song if any track failed to load locally.
-    final playingItemId = update.playingItemIndex >= 0 &&
+    final playingItemId =
+        update.playingItemIndex >= 0 &&
             update.playingItemIndex < update.playlist.length
         ? update.playlist[update.playingItemIndex].playlistItemId
         : null;

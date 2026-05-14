@@ -139,7 +139,12 @@ class _ArtistView extends ConsumerWidget {
           ),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.md,
+                0,
+              ),
               child: ArtistActionRow(artist: artist),
             ),
           ),
@@ -147,7 +152,12 @@ class _ArtistView extends ConsumerWidget {
             PopularTracksSection(artist: artist),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.xs, AppSpacing.sm),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.xs,
+                AppSpacing.sm,
+              ),
               child: Row(
                 children: [
                   Expanded(
@@ -170,7 +180,12 @@ class _ArtistView extends ConsumerWidget {
           if (artist.albums.isEmpty)
             const SliverToBoxAdapter(
               child: Padding(
-                padding: EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, AppSpacing.lg),
+                padding: EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  0,
+                  AppSpacing.md,
+                  AppSpacing.lg,
+                ),
                 child: Text(
                   'No albums found in your Jellyfin library.',
                   style: TextStyle(color: AppColors.textSecondary),
@@ -183,9 +198,12 @@ class _ArtistView extends ConsumerWidget {
                 height: 220,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                  ),
                   itemCount: artist.albums.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.md),
+                  separatorBuilder: (_, __) =>
+                      const SizedBox(width: AppSpacing.md),
                   itemBuilder: (_, i) =>
                       AlbumCarouselTile(album: artist.albums[i]),
                 ),
@@ -198,13 +216,3 @@ class _ArtistView extends ConsumerWidget {
     );
   }
 }
-
-
-
-
-
-
-
-
-
-

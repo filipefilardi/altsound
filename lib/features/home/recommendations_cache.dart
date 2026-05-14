@@ -12,10 +12,7 @@ import 'package:altsound/features/home/recommendations_provider.dart';
 /// (`YYYY-MM-DD`) — comparing it against today's local-day key tells the
 /// provider whether the cache is fresh or needs a daily refresh.
 class CachedRecommendations {
-  const CachedRecommendations({
-    required this.dateKey,
-    required this.recs,
-  });
+  const CachedRecommendations({required this.dateKey, required this.recs});
   final String dateKey;
   final HomeRecommendations recs;
 }
@@ -65,16 +62,17 @@ class RecommendationsCache {
       if (!file.parent.existsSync()) {
         file.parent.createSync(recursive: true);
       }
-      await file.writeAsString(jsonEncode({
-        'version': _cacheVersion,
-        'serverId': serverId,
-        'userId': userId,
-        'date': dateKey,
-        'topSong': _trackToJson(recs.topSong),
-        'topArtists':
-            recs.topArtists.map((a) => a.toSearchJson()).toList(),
-        'discoveryTrack': _trackToJson(recs.discoveryTrack),
-      }));
+      await file.writeAsString(
+        jsonEncode({
+          'version': _cacheVersion,
+          'serverId': serverId,
+          'userId': userId,
+          'date': dateKey,
+          'topSong': _trackToJson(recs.topSong),
+          'topArtists': recs.topArtists.map((a) => a.toSearchJson()).toList(),
+          'discoveryTrack': _trackToJson(recs.discoveryTrack),
+        }),
+      );
     } catch (_) {
       // Cache failure is non-fatal — picks just won't survive across launches.
     }
@@ -94,7 +92,8 @@ class RecommendationsCache {
     if (kIsWeb) return null;
     try {
       final dir = await getApplicationDocumentsDirectory();
-      final key = base64Url.encode(utf8.encode('${serverId}_$userId'))
+      final key = base64Url
+          .encode(utf8.encode('${serverId}_$userId'))
           .replaceAll('=', '');
       return File('${dir.path}/recommendations/v${_cacheVersion}_$key.json');
     } catch (_) {
@@ -148,7 +147,6 @@ Track? _trackFromJson(Object? raw) {
     imageTag: raw['imageTag'] as String?,
     albumImageItemId: raw['albumImageItemId'] as String?,
     playlistItemId: raw['playlistItemId'] as String?,
-    dateAdded:
-        dateAddedRaw == null ? null : DateTime.tryParse(dateAddedRaw),
+    dateAdded: dateAddedRaw == null ? null : DateTime.tryParse(dateAddedRaw),
   );
 }

@@ -19,23 +19,23 @@ class CurrentTrackPlaylistPresence {
 
 final currentTrackPlaylistPresenceProvider =
     FutureProvider.autoDispose<CurrentTrackPlaylistPresence>((ref) async {
-  final item = ref.watch(currentMediaItemProvider).value;
-  if (item == null || item.extras?['isOffline'] == true) {
-    return const CurrentTrackPlaylistPresence(
-      isFavorite: false,
-      memberships: <PlaylistMembership>[],
-    );
-  }
-  final repo = ref.read(jellyfinRepositoryProvider);
-  final trackId = item.id;
-  final playlists = await repo.playlists();
-  final isFavorite = await repo.isFavorite(trackId);
-  final memberships = await repo.playlistsContainingTrack(
-    trackId,
-    playlistsCache: playlists,
-  );
-  return CurrentTrackPlaylistPresence(
-    isFavorite: isFavorite,
-    memberships: memberships,
-  );
-});
+      final item = ref.watch(currentMediaItemProvider).value;
+      if (item == null || item.extras?['isOffline'] == true) {
+        return const CurrentTrackPlaylistPresence(
+          isFavorite: false,
+          memberships: <PlaylistMembership>[],
+        );
+      }
+      final repo = ref.read(jellyfinRepositoryProvider);
+      final trackId = item.id;
+      final playlists = await repo.playlists();
+      final isFavorite = await repo.isFavorite(trackId);
+      final memberships = await repo.playlistsContainingTrack(
+        trackId,
+        playlistsCache: playlists,
+      );
+      return CurrentTrackPlaylistPresence(
+        isFavorite: isFavorite,
+        memberships: memberships,
+      );
+    });

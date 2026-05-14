@@ -36,7 +36,9 @@ class TrackFilterBar extends StatelessWidget {
               textAlignVertical: TextAlignVertical.center,
               decoration: InputDecoration(
                 isDense: true,
-                contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: AppSpacing.sm,
+                ),
                 hintText: hintText,
                 hintStyle: TextStyle(
                   color: AppColors.textSecondary.withValues(alpha: 0.62),

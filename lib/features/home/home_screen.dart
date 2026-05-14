@@ -40,12 +40,24 @@ class HomeContent extends ConsumerWidget {
         slivers: [
           if (!desktop)
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, 0),
-              sliver: SliverToBoxAdapter(child: HomeGreeting(username: username)),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.md,
+                0,
+              ),
+              sliver: SliverToBoxAdapter(
+                child: HomeGreeting(username: username),
+              ),
             ),
           if (!desktop)
             const SliverPadding(
-              padding: EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.sm),
+              padding: EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.sm,
+                AppSpacing.md,
+                AppSpacing.sm,
+              ),
               sliver: SliverToBoxAdapter(child: ResumeCard()),
             ),
           const SliverToBoxAdapter(child: ForYouSection()),
@@ -79,12 +91,24 @@ class HomeContent extends ConsumerWidget {
         slivers: [
           if (!desktop)
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.sm),
-              sliver: SliverToBoxAdapter(child: HomeGreeting(username: username)),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.sm,
+              ),
+              sliver: SliverToBoxAdapter(
+                child: HomeGreeting(username: username),
+              ),
             ),
           if (!desktop)
             const SliverPadding(
-              padding: EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.sm),
+              padding: EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.sm,
+                AppSpacing.md,
+                AppSpacing.sm,
+              ),
               sliver: SliverToBoxAdapter(child: ResumeCard()),
             ),
           const SliverToBoxAdapter(child: ForYouSection()),
@@ -112,9 +136,3 @@ class HomeContent extends ConsumerWidget {
     );
   }
 }
-
-
-
-
-
-

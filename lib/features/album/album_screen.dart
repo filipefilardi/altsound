@@ -105,7 +105,6 @@ class AlbumScreen extends ConsumerWidget {
   }
 }
 
-
 class _AlbumView extends ConsumerStatefulWidget {
   const _AlbumView({required this.album});
   final Album album;
@@ -212,7 +211,12 @@ class _AlbumViewState extends ConsumerState<_AlbumView> {
                 ),
                 child: SafeArea(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.md),
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.md,
+                      AppSpacing.md,
+                      AppSpacing.md,
+                      AppSpacing.md,
+                    ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
@@ -235,18 +239,16 @@ class _AlbumViewState extends ConsumerState<_AlbumView> {
                               width: 220,
                               height: 220,
                               fit: BoxFit.cover,
-                              placeholder: (_, __) =>
-                                  const SizedBox(
-                                    width: 220,
-                                    height: 220,
-                                    child: ArtworkPlaceholder(iconSize: 64),
-                                  ),
-                              errorWidget: (_, __, ___) =>
-                                  const SizedBox(
-                                    width: 220,
-                                    height: 220,
-                                    child: ArtworkPlaceholder(iconSize: 64),
-                                  ),
+                              placeholder: (_, __) => const SizedBox(
+                                width: 220,
+                                height: 220,
+                                child: ArtworkPlaceholder(iconSize: 64),
+                              ),
+                              errorWidget: (_, __, ___) => const SizedBox(
+                                width: 220,
+                                height: 220,
+                                child: ArtworkPlaceholder(iconSize: 64),
+                              ),
                             ),
                           ),
                         ),
@@ -305,7 +307,9 @@ class _AlbumViewState extends ConsumerState<_AlbumView> {
           ),
           SliverPersistentHeader(
             pinned: true,
-            delegate: AlbumActionBarDelegate(child: AlbumActionBar(album: album)),
+            delegate: AlbumActionBarDelegate(
+              child: AlbumActionBar(album: album),
+            ),
           ),
           SliverList.builder(
             itemCount: album.tracks.length,
@@ -359,11 +363,3 @@ class _AlbumViewState extends ConsumerState<_AlbumView> {
     );
   }
 }
-
-
-
-
-
-
-
-

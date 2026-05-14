@@ -76,12 +76,14 @@ class Scrobbler {
     _progressTimer = null;
 
     if (_currentItemId != null && _currentSessionId != null) {
-      _safe(() => _post('/Sessions/Playing/Stopped', {
-            'ItemId': _currentItemId,
-            'MediaSourceId': _currentItemId,
-            'PlaySessionId': _currentSessionId,
-            'PositionTicks': _lastPositionTicks,
-          }));
+      _safe(
+        () => _post('/Sessions/Playing/Stopped', {
+          'ItemId': _currentItemId,
+          'MediaSourceId': _currentItemId,
+          'PlaySessionId': _currentSessionId,
+          'PositionTicks': _lastPositionTicks,
+        }),
+      );
     }
 
     _currentItemId = newId;
@@ -93,14 +95,16 @@ class Scrobbler {
 
     _currentSessionId = _uuid.v4();
     if (_isOnline) {
-      _safe(() => _post('/Sessions/Playing', {
-            'ItemId': newId,
-            'MediaSourceId': newId,
-            'PlaySessionId': _currentSessionId,
-            'PositionTicks': _capturePosition(),
-            'IsPaused': false,
-            'PlayMethod': 'DirectStream',
-          }));
+      _safe(
+        () => _post('/Sessions/Playing', {
+          'ItemId': newId,
+          'MediaSourceId': newId,
+          'PlaySessionId': _currentSessionId,
+          'PositionTicks': _capturePosition(),
+          'IsPaused': false,
+          'PlayMethod': 'DirectStream',
+        }),
+      );
     }
 
     if (_wasPlaying == true) _startProgressTimer();
@@ -115,14 +119,16 @@ class Scrobbler {
     }
 
     final eventName = playing ? 'Unpause' : 'Pause';
-    _safe(() => _post('/Sessions/Playing/Progress', {
-          'ItemId': _currentItemId,
-          'MediaSourceId': _currentItemId,
-          'PlaySessionId': _currentSessionId,
-          'PositionTicks': _capturePosition(),
-          'IsPaused': !playing,
-          'EventName': eventName,
-        }));
+    _safe(
+      () => _post('/Sessions/Playing/Progress', {
+        'ItemId': _currentItemId,
+        'MediaSourceId': _currentItemId,
+        'PlaySessionId': _currentSessionId,
+        'PositionTicks': _capturePosition(),
+        'IsPaused': !playing,
+        'EventName': eventName,
+      }),
+    );
 
     if (playing) _startProgressTimer();
   }
@@ -135,14 +141,16 @@ class Scrobbler {
           !_isOnline) {
         return;
       }
-      _safe(() => _post('/Sessions/Playing/Progress', {
-            'ItemId': _currentItemId,
-            'MediaSourceId': _currentItemId,
-            'PlaySessionId': _currentSessionId,
-            'PositionTicks': _capturePosition(),
-            'IsPaused': false,
-            'EventName': 'TimeUpdate',
-          }));
+      _safe(
+        () => _post('/Sessions/Playing/Progress', {
+          'ItemId': _currentItemId,
+          'MediaSourceId': _currentItemId,
+          'PlaySessionId': _currentSessionId,
+          'PositionTicks': _capturePosition(),
+          'IsPaused': false,
+          'EventName': 'TimeUpdate',
+        }),
+      );
     });
   }
 
@@ -177,12 +185,14 @@ class Scrobbler {
     _itemSub?.cancel();
     _stateSub?.cancel();
     if (_currentItemId != null && _currentSessionId != null) {
-      _safe(() => _post('/Sessions/Playing/Stopped', {
-            'ItemId': _currentItemId,
-            'MediaSourceId': _currentItemId,
-            'PlaySessionId': _currentSessionId,
-            'PositionTicks': _lastPositionTicks,
-          }));
+      _safe(
+        () => _post('/Sessions/Playing/Stopped', {
+          'ItemId': _currentItemId,
+          'MediaSourceId': _currentItemId,
+          'PlaySessionId': _currentSessionId,
+          'PositionTicks': _lastPositionTicks,
+        }),
+      );
     }
   }
 }

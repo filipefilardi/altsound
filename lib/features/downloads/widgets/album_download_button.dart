@@ -19,9 +19,7 @@ class AlbumDownloadButton extends ConsumerWidget {
       downloadTooltip: 'Download album',
       onEnqueue: () {
         ref.read(downloadManagerProvider.notifier).enqueueAlbum(album);
-        ref
-            .read(downloadPreferencesProvider.notifier)
-            .subscribeAlbum(album.id);
+        ref.read(downloadPreferencesProvider.notifier).subscribeAlbum(album.id);
       },
       onDelete: () {
         ref.read(downloadManagerProvider.notifier).deleteAlbum(album.id);

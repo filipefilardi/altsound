@@ -139,5 +139,3 @@ Future<void> _confirmRemoveAll(
     }
   }
 }
-
-

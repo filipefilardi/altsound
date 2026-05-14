@@ -48,24 +48,24 @@ typedef _RankedTrack = ({Track track, int rank});
 ///   offline; refreshes once per day when online.
 final homeRecommendationsProvider =
     FutureProvider.autoDispose<HomeRecommendations?>((ref) async {
-  final cache = ref.watch(recommendationsCacheProvider);
-  final isOffline = ref.watch(isOfflineProvider);
-  final session = ref.watch(jellyfinApiProvider).session;
-  if (session == null) return null;
+      final cache = ref.watch(recommendationsCacheProvider);
+      final isOffline = ref.watch(isOfflineProvider);
+      final session = ref.watch(jellyfinApiProvider).session;
+      if (session == null) return null;
 
-  final cached = await cache.load(session.serverId, session.userId);
-  final today = todayDateKey();
+      final cached = await cache.load(session.serverId, session.userId);
+      final today = todayDateKey();
 
-  if (cached != null && cached.dateKey == today) return cached.recs;
-  if (isOffline) return cached?.recs;
+      if (cached != null && cached.dateKey == today) return cached.recs;
+      if (isOffline) return cached?.recs;
 
-  final fresh = await _fetchFromApi(ref);
-  if (fresh != null && !fresh.isEmpty) {
-    await cache.save(session.serverId, session.userId, today, fresh);
-    return fresh;
-  }
-  return cached?.recs ?? fresh;
-});
+      final fresh = await _fetchFromApi(ref);
+      if (fresh != null && !fresh.isEmpty) {
+        await cache.save(session.serverId, session.userId, today, fresh);
+        return fresh;
+      }
+      return cached?.recs ?? fresh;
+    });
 
 Future<HomeRecommendations?> _fetchFromApi(Ref ref) async {
   final repo = ref.read(jellyfinRepositoryProvider);
@@ -75,7 +75,8 @@ Future<HomeRecommendations?> _fetchFromApi(Ref ref) async {
   if (ranked.isEmpty) {
     if (kDebugMode) {
       debugPrint(
-          '[ForYou] no recent ranked tracks from plugin or Jellyfin — hiding');
+        '[ForYou] no recent ranked tracks from plugin or Jellyfin — hiding',
+      );
     }
     return null;
   }
@@ -112,7 +113,7 @@ Future<HomeRecommendations?> _fetchFromApi(Ref ref) async {
   final today = DateTime.now();
   final daySeed =
       DateTime(today.year, today.month, today.day).millisecondsSinceEpoch ~/
-          Duration.millisecondsPerDay;
+      Duration.millisecondsPerDay;
   final picked = List<String>.from(pool)..shuffle(Random(daySeed));
   final pickedArtistIds = picked.take(_artistsToShow).toList();
 
@@ -128,8 +129,8 @@ Future<HomeRecommendations?> _fetchFromApi(Ref ref) async {
       .toList(growable: false);
   Track? discoveryTrack;
   if (discoveryCandidates.isNotEmpty) {
-    final discovery =
-        List<Track>.from(discoveryCandidates)..shuffle(Random(daySeed ^ 0x5F3759DF));
+    final discovery = List<Track>.from(discoveryCandidates)
+      ..shuffle(Random(daySeed ^ 0x5F3759DF));
     discoveryTrack = discovery.first;
   }
 
@@ -140,7 +141,8 @@ Future<HomeRecommendations?> _fetchFromApi(Ref ref) async {
   );
   if (kDebugMode) {
     debugPrint(
-        '[ForYou] built: topSong=${recs.topSong?.name}, artists=${recs.topArtists.length}, discovery=${recs.discoveryTrack?.name ?? '(none)'}');
+      '[ForYou] built: topSong=${recs.topSong?.name}, artists=${recs.topArtists.length}, discovery=${recs.discoveryTrack?.name ?? '(none)'}',
+    );
   }
   return recs;
 }
@@ -173,7 +175,9 @@ Future<List<_RankedTrack>> _rankedRecent(
   if (kDebugMode) {
     debugPrint('[ForYou] plugin returned no usable rows; using Jellyfin stats');
   }
-  final since = DateTime.now().toUtc().subtract(const Duration(days: _windowDays));
+  final since = DateTime.now().toUtc().subtract(
+    const Duration(days: _windowDays),
+  );
   final tracks = await _safeTopPlayedSince(repo, since);
   return [
     for (var i = 0; i < tracks.length; i++)
@@ -182,7 +186,9 @@ Future<List<_RankedTrack>> _rankedRecent(
 }
 
 Future<List<Track>> _safeTracksByIds(
-    JellyfinRepository repo, List<String> ids) async {
+  JellyfinRepository repo,
+  List<String> ids,
+) async {
   if (ids.isEmpty) return const [];
   try {
     return await repo.tracksByIds(ids);
@@ -193,7 +199,9 @@ Future<List<Track>> _safeTracksByIds(
 }
 
 Future<List<BrowseItem>> _safeItemsByIds(
-    JellyfinRepository repo, List<String> ids) async {
+  JellyfinRepository repo,
+  List<String> ids,
+) async {
   if (ids.isEmpty) return const [];
   try {
     return await repo.itemsByIds(ids);
@@ -204,7 +212,9 @@ Future<List<BrowseItem>> _safeItemsByIds(
 }
 
 Future<List<Track>> _safeTopPlayedSince(
-    JellyfinRepository repo, DateTime since) async {
+  JellyfinRepository repo,
+  DateTime since,
+) async {
   try {
     return await repo.topPlayedSince(since: since);
   } catch (e) {

@@ -36,7 +36,12 @@ class _PlaylistBackupScreenState extends ConsumerState<PlaylistBackupScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Playlist backups')),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.miniPlayerInset),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          AppSpacing.sm,
+          AppSpacing.md,
+          AppSpacing.miniPlayerInset,
+        ),
         children: [
           SettingsGroup(
             label: 'Safety',
@@ -232,8 +237,6 @@ class _PlaylistBackupScreenState extends ConsumerState<PlaylistBackupScreen> {
   }
 }
 
-
-
 class PlaylistBackupDetailScreen extends ConsumerWidget {
   const PlaylistBackupDetailScreen({required this.backup, super.key});
 
@@ -257,7 +260,12 @@ class PlaylistBackupDetailScreen extends ConsumerWidget {
           ),
         ),
         data: (document) => ListView(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.miniPlayerInset),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.sm,
+            AppSpacing.md,
+            AppSpacing.miniPlayerInset,
+          ),
           children: [
             BackupSummary(document: document, backup: backup),
             const SizedBox(height: AppSpacing.lg),
@@ -281,8 +289,6 @@ class PlaylistBackupDetailScreen extends ConsumerWidget {
     );
   }
 }
-
-
 
 Future<String?> _showPathDialog(BuildContext context) {
   final ctrl = TextEditingController();
@@ -317,5 +323,3 @@ String _formatDateTime(DateTime value) {
   return '${local.year}-${two(local.month)}-${two(local.day)} '
       '${two(local.hour)}:${two(local.minute)}';
 }
-
-

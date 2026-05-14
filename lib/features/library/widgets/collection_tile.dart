@@ -12,11 +12,7 @@ import 'package:altsound/data/jellyfin/models/media_item.dart';
 /// avatar leading shape; albums use a rounded rectangle. Tapping navigates to
 /// `/artist/{id}` or `/album/{id}`.
 class CollectionTile extends ConsumerWidget {
-  const CollectionTile({
-    required this.item,
-    required this.isArtist,
-    super.key,
-  });
+  const CollectionTile({required this.item, required this.isArtist, super.key});
 
   final BrowseItem item;
   final bool isArtist;

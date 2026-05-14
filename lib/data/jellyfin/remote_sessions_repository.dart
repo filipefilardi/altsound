@@ -4,8 +4,9 @@ import 'package:altsound/data/jellyfin/auth_repository.dart';
 import 'package:altsound/data/jellyfin/jellyfin_api.dart';
 import 'package:altsound/data/jellyfin/models/remote_session.dart';
 
-final remoteSessionsRepositoryProvider =
-    Provider<RemoteSessionsRepository>((ref) {
+final remoteSessionsRepositoryProvider = Provider<RemoteSessionsRepository>((
+  ref,
+) {
   return RemoteSessionsRepository(ref.watch(jellyfinApiProvider));
 });
 
@@ -31,10 +32,12 @@ class RemoteSessionsRepository {
     final ownDeviceId = _api.deviceId;
     return raw
         .map(RemoteSession.fromJson)
-        .where((s) =>
-            s.supportsRemoteControl &&
-            s.deviceId != ownDeviceId &&
-            s.userId == ownUserId)
+        .where(
+          (s) =>
+              s.supportsRemoteControl &&
+              s.deviceId != ownDeviceId &&
+              s.userId == ownUserId,
+        )
         .toList();
   }
 
@@ -67,8 +70,7 @@ class RemoteSessionsRepository {
     );
   }
 
-  Future<void> playPause(String sessionId) =>
-      _command(sessionId, 'PlayPause');
+  Future<void> playPause(String sessionId) => _command(sessionId, 'PlayPause');
   Future<void> stop(String sessionId) => _command(sessionId, 'Stop');
   Future<void> next(String sessionId) => _command(sessionId, 'NextTrack');
   Future<void> previous(String sessionId) =>
@@ -102,10 +104,7 @@ class RemoteSessionsRepository {
   ]) async {
     await _api.dio.post<void>(
       '/Sessions/$sessionId/Command',
-      data: {
-        'Name': name,
-        if (arguments != null) 'Arguments': arguments,
-      },
+      data: {'Name': name, if (arguments != null) 'Arguments': arguments},
     );
   }
 }

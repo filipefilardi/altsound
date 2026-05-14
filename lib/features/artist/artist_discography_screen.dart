@@ -45,7 +45,12 @@ class ArtistDiscographyScreen extends ConsumerWidget {
           }
           final repo = ref.watch(jellyfinRepositoryProvider);
           return GridView.builder(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.lg),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.md,
+              AppSpacing.md,
+              AppSpacing.lg,
+            ),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               mainAxisSpacing: 12,
@@ -111,4 +116,3 @@ class ArtistDiscographyScreen extends ConsumerWidget {
     );
   }
 }
-

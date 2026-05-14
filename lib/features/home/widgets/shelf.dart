@@ -24,7 +24,12 @@ class Shelf extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.lg, AppSpacing.xs, AppSpacing.md),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.lg,
+            AppSpacing.xs,
+            AppSpacing.md,
+          ),
           child: Row(
             children: [
               Expanded(
@@ -34,10 +39,7 @@ class Shelf extends ConsumerWidget {
                 ),
               ),
               if (onSeeAll != null)
-                TextButton(
-                  onPressed: onSeeAll,
-                  child: const Text('See all'),
-                ),
+                TextButton(onPressed: onSeeAll, child: const Text('See all')),
             ],
           ),
         ),
@@ -70,7 +72,9 @@ class Shelf extends ConsumerWidget {
             data: (list) {
               if (list.isEmpty) {
                 return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                  ),
                   child: Text(
                     'Nothing here yet.',
                     style: Theme.of(context).textTheme.bodyMedium,
@@ -81,7 +85,8 @@ class Shelf extends ConsumerWidget {
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                 itemCount: list.length,
-                separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
+                separatorBuilder: (_, __) =>
+                    const SizedBox(width: AppSpacing.sm),
                 itemBuilder: (_, i) => MediaCard(item: list[i]),
               );
             },

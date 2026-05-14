@@ -8,11 +8,7 @@ import 'package:altsound/core/theme/app_spacing.dart';
 /// hair-line dividers. Used on settings-style screens to group related rows
 /// under an ALL-CAPS label.
 class SettingsGroup extends StatelessWidget {
-  const SettingsGroup({
-    super.key,
-    required this.label,
-    required this.children,
-  });
+  const SettingsGroup({super.key, required this.label, required this.children});
 
   final String label;
   final List<Widget> children;

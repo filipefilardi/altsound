@@ -102,8 +102,9 @@ class AlbumActionBar extends ConsumerWidget {
             ListTile(
               leading: const Icon(Icons.playlist_add_rounded),
               title: const Text('Add album to playlist'),
-              onTap: () =>
-                  Navigator.of(sheetContext).pop(_CollectionAction.addToPlaylist),
+              onTap: () => Navigator.of(
+                sheetContext,
+              ).pop(_CollectionAction.addToPlaylist),
             ),
             ListTile(
               leading: const Icon(Icons.add_to_queue_rounded),
@@ -129,9 +130,7 @@ class AlbumActionBar extends ConsumerWidget {
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              'Added $added song${added == 1 ? '' : 's'} to queue',
-            ),
+            content: Text('Added $added song${added == 1 ? '' : 's'} to queue'),
           ),
         );
     }

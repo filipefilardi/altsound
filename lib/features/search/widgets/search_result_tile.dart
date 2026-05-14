@@ -305,23 +305,25 @@ class _SearchTrackMenuButton extends ConsumerWidget {
                   ListTile(
                     leading: const Icon(Icons.playlist_add_rounded),
                     title: const Text('Add to playlist'),
-                    onTap: () => Navigator.of(sheetCtx)
-                        .pop(_TrackMenuAction.addToPlaylist),
+                    onTap: () => Navigator.of(
+                      sheetCtx,
+                    ).pop(_TrackMenuAction.addToPlaylist),
                   ),
                   const Divider(height: 1, indent: 56),
                   ListTile(
                     leading: const Icon(Icons.queue_music_rounded),
                     title: const Text('Add to queue'),
-                    onTap: () => Navigator.of(sheetCtx)
-                        .pop(_TrackMenuAction.addToQueue),
+                    onTap: () =>
+                        Navigator.of(sheetCtx).pop(_TrackMenuAction.addToQueue),
                   ),
                   if (track.albumId != null && track.albumId!.isNotEmpty) ...[
                     const Divider(height: 1, indent: 56),
                     ListTile(
                       leading: const Icon(Icons.album_rounded),
                       title: const Text('Go to album'),
-                      onTap: () =>
-                          Navigator.of(sheetCtx).pop(_TrackMenuAction.goToAlbum),
+                      onTap: () => Navigator.of(
+                        sheetCtx,
+                      ).pop(_TrackMenuAction.goToAlbum),
                     ),
                   ],
                   if (track.artistId != null && track.artistId!.isNotEmpty) ...[
@@ -329,8 +331,9 @@ class _SearchTrackMenuButton extends ConsumerWidget {
                     ListTile(
                       leading: const Icon(Icons.person_rounded),
                       title: const Text('Go to artist'),
-                      onTap: () =>
-                          Navigator.of(sheetCtx).pop(_TrackMenuAction.goToArtist),
+                      onTap: () => Navigator.of(
+                        sheetCtx,
+                      ).pop(_TrackMenuAction.goToArtist),
                     ),
                   ],
                   const SizedBox(height: AppSpacing.sm),

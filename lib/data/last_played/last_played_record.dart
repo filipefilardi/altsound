@@ -37,30 +37,29 @@ class LastPlayedRecord {
     int? positionMs,
     int? durationMs,
     DateTime? updatedAt,
-  }) =>
-      LastPlayedRecord(
-        trackId: trackId,
-        trackName: trackName,
-        albumId: albumId,
-        albumName: albumName,
-        artistName: artistName,
-        imageUrl: imageUrl,
-        positionMs: positionMs ?? this.positionMs,
-        durationMs: durationMs ?? this.durationMs,
-        updatedAt: updatedAt ?? this.updatedAt,
-      );
+  }) => LastPlayedRecord(
+    trackId: trackId,
+    trackName: trackName,
+    albumId: albumId,
+    albumName: albumName,
+    artistName: artistName,
+    imageUrl: imageUrl,
+    positionMs: positionMs ?? this.positionMs,
+    durationMs: durationMs ?? this.durationMs,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
 
   Map<String, dynamic> toJson() => {
-        'trackId': trackId,
-        'trackName': trackName,
-        'albumId': albumId,
-        'albumName': albumName,
-        'artistName': artistName,
-        'imageUrl': imageUrl,
-        'positionMs': positionMs,
-        'durationMs': durationMs,
-        'updatedAt': updatedAt.toIso8601String(),
-      };
+    'trackId': trackId,
+    'trackName': trackName,
+    'albumId': albumId,
+    'albumName': albumName,
+    'artistName': artistName,
+    'imageUrl': imageUrl,
+    'positionMs': positionMs,
+    'durationMs': durationMs,
+    'updatedAt': updatedAt.toIso8601String(),
+  };
 
   factory LastPlayedRecord.fromJson(Map<String, dynamic> json) =>
       LastPlayedRecord(

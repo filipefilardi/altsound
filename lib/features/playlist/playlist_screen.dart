@@ -1103,7 +1103,12 @@ class _PlaylistView extends ConsumerWidget {
     return RefreshIndicator(
       onRefresh: () async => ref.refresh(playlistProvider(playlist.id).future),
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.lg),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          AppSpacing.md,
+          AppSpacing.md,
+          AppSpacing.lg,
+        ),
         children: [
           PlaylistHeader(playlist: playlist),
           const SizedBox(height: AppSpacing.md),
@@ -1157,5 +1162,3 @@ class _PlaylistView extends ConsumerWidget {
     );
   }
 }
-
-

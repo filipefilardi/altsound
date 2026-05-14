@@ -12,11 +12,11 @@ class DownloadedPlaylist {
   final List<String> trackIds;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'imageTag': imageTag,
-        'trackIds': trackIds,
-      };
+    'id': id,
+    'name': name,
+    'imageTag': imageTag,
+    'trackIds': trackIds,
+  };
 
   factory DownloadedPlaylist.fromJson(Map<String, dynamic> json) =>
       DownloadedPlaylist(

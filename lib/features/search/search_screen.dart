@@ -72,7 +72,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, AppSpacing.md),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              0,
+              AppSpacing.md,
+              AppSpacing.md,
+            ),
             child: TextField(
               controller: _ctrl,
               autofocus: true,
@@ -121,12 +126,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     );
   }
 }
-
-
-
-
-
-
 
 class _IdleHint extends StatelessWidget {
   const _IdleHint();
@@ -245,7 +244,3 @@ List<BrowseItem> _mergeResults(
   }
   return merged;
 }
-
-
-
-

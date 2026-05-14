@@ -17,7 +17,10 @@ class OfflineLibraryView extends ConsumerWidget {
     super.key,
     this.showEmptyState = true,
     this.scrollable = true,
-    this.padding = const EdgeInsets.only(top: AppSpacing.sm, bottom: AppSpacing.miniPlayerInset),
+    this.padding = const EdgeInsets.only(
+      top: AppSpacing.sm,
+      bottom: AppSpacing.miniPlayerInset,
+    ),
   });
 
   final bool showEmptyState;
@@ -75,7 +78,12 @@ class OfflineLibraryView extends ConsumerWidget {
         final item = items[i];
         if (item.isHeader) {
           return Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.sm),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.md,
+              AppSpacing.md,
+              AppSpacing.sm,
+            ),
             child: Text(
               item.header!.toUpperCase(),
               style: Theme.of(context).textTheme.labelLarge,
@@ -202,7 +210,10 @@ class _ContentTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
       leading: ClipRRect(
         borderRadius: BorderRadius.circular(isRound ? 28 : 6),
         child: SizedBox(

@@ -92,7 +92,12 @@ class _QueueSheetState extends ConsumerState<_QueueSheet> {
             _Header(total: queue.length, loopMode: loopMode),
             if (syncPlayActive && queue.length > 1)
               Padding(
-                padding: const EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, AppSpacing.sm),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  0,
+                  AppSpacing.md,
+                  AppSpacing.sm,
+                ),
                 child: Align(
                   alignment: Alignment.centerRight,
                   child: TextButton.icon(
@@ -177,7 +182,12 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     final label = total == 0 ? '' : '$total ${total == 1 ? 'track' : 'tracks'}';
     return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.xs, AppSpacing.md, AppSpacing.md),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.xs,
+        AppSpacing.md,
+        AppSpacing.md,
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
@@ -216,7 +226,10 @@ class _RepeatBadge extends StatelessWidget {
     final label = isOne ? 'Repeat track' : 'Repeat queue';
     final icon = isOne ? Icons.repeat_one_rounded : Icons.repeat_rounded;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
       decoration: BoxDecoration(
         color: AppColors.primary.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(AppRadius.pill),
@@ -269,7 +282,10 @@ class _QueueRow extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
         child: Row(
           children: [
             _RowArt(art: item.artUri),
@@ -337,7 +353,10 @@ class _QueueRow extends StatelessWidget {
               ReorderableDragStartListener(
                 index: index,
                 child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.md),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                    vertical: AppSpacing.md,
+                  ),
                   child: Icon(
                     Icons.drag_indicator_rounded,
                     color: AppColors.textTertiary,

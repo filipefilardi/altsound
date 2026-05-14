@@ -70,7 +70,9 @@ class LyricsScreen extends ConsumerWidget {
                     ),
                     Expanded(
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: AppSpacing.sm,
+                        ),
                         child: LyricsView(trackId: trackId),
                       ),
                     ),

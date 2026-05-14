@@ -69,7 +69,10 @@ class _LoadingLyrics extends StatelessWidget {
       // ListView (not Column) so the placeholder gracefully scrolls when the
       // available height is shorter than the rendered shimmer rows.
       child: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.xl),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.xl,
+        ),
         physics: const NeverScrollableScrollPhysics(),
         itemCount: _widths.length,
         itemBuilder: (_, i) => Padding(
@@ -94,7 +97,12 @@ class _PlainLyrics extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.xl),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.sm,
+        AppSpacing.lg,
+        AppSpacing.xl,
+      ),
       itemCount: lyrics.lines.length,
       itemBuilder: (_, i) => Padding(
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
@@ -102,9 +110,9 @@ class _PlainLyrics extends StatelessWidget {
           lyrics.lines[i].text,
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: AppColors.textPrimary,
-                height: 1.5,
-              ),
+            color: AppColors.textPrimary,
+            height: 1.5,
+          ),
         ),
       ),
     );
@@ -196,9 +204,9 @@ class _SyncedLyricsState extends ConsumerState<_SyncedLyrics> {
       height: 1.35,
     );
     final inactiveStyle = Theme.of(context).textTheme.bodyLarge?.copyWith(
-          color: AppColors.textSecondary.withValues(alpha: 0.55),
-          height: 1.4,
-        );
+      color: AppColors.textSecondary.withValues(alpha: 0.55),
+      height: 1.4,
+    );
 
     return NotificationListener<UserScrollNotification>(
       onNotification: (n) {
@@ -207,7 +215,12 @@ class _SyncedLyricsState extends ConsumerState<_SyncedLyrics> {
       },
       child: ListView.builder(
         controller: _scrollController,
-        padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.xl),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          AppSpacing.sm,
+          AppSpacing.lg,
+          AppSpacing.xl,
+        ),
         itemCount: widget.lyrics.lines.length,
         itemBuilder: (_, i) {
           final line = widget.lyrics.lines[i];
@@ -220,9 +233,7 @@ class _SyncedLyricsState extends ConsumerState<_SyncedLyrics> {
               onTap: line.start == null
                   ? null
                   : () {
-                      ref
-                          .read(playerControllerProvider)
-                          .seek(line.start!);
+                      ref.read(playerControllerProvider).seek(line.start!);
                       if (_userScrollPaused) {
                         setState(() => _userScrollPaused = false);
                       }
@@ -231,7 +242,7 @@ class _SyncedLyricsState extends ConsumerState<_SyncedLyrics> {
                 duration: const Duration(milliseconds: 200),
                 style:
                     (isActive ? activeStyle : inactiveStyle) ??
-                        const TextStyle(),
+                    const TextStyle(),
                 textAlign: TextAlign.center,
                 child: Text(
                   line.text.isEmpty ? '♪' : line.text,

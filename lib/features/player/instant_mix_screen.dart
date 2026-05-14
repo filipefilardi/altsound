@@ -158,7 +158,12 @@ class _InstantMixScreenState extends ConsumerState<InstantMixScreen> {
                   ),
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, AppSpacing.sm),
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.md,
+                        0,
+                        AppSpacing.md,
+                        AppSpacing.sm,
+                      ),
                       child: TrackFilterBar(
                         controller: _filterController,
                         filterQuery: _filterQuery,
@@ -171,7 +176,12 @@ class _InstantMixScreenState extends ConsumerState<InstantMixScreen> {
                   if (visibleTracks.isEmpty)
                     const SliverToBoxAdapter(
                       child: Padding(
-                        padding: EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.lg),
+                        padding: EdgeInsets.fromLTRB(
+                          AppSpacing.md,
+                          AppSpacing.md,
+                          AppSpacing.md,
+                          AppSpacing.lg,
+                        ),
                         child: Text(
                           'No songs match your filter.',
                           style: TextStyle(color: AppColors.textSecondary),
@@ -187,7 +197,9 @@ class _InstantMixScreenState extends ConsumerState<InstantMixScreen> {
                         index: index,
                       ),
                     ),
-                  const SliverToBoxAdapter(child: SizedBox(height: AppSpacing.xl)),
+                  const SliverToBoxAdapter(
+                    child: SizedBox(height: AppSpacing.xl),
+                  ),
                 ],
               ],
             ),
@@ -197,12 +209,6 @@ class _InstantMixScreenState extends ConsumerState<InstantMixScreen> {
     );
   }
 }
-
-
-
-
-
-
 
 List<Track> _visibleMixTracks(List<Track> tracks, String query) {
   if (query.isEmpty) return tracks;
@@ -216,8 +222,3 @@ List<Track> _visibleMixTracks(List<Track> tracks, String query) {
       )
       .toList();
 }
-
-
-
-
-

@@ -51,7 +51,12 @@ class DownloadsScreen extends ConsumerWidget {
               message: 'Tap the download icon on any album to keep it offline.',
             )
           : ListView.builder(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.miniPlayerInset),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.sm,
+                AppSpacing.md,
+                AppSpacing.miniPlayerInset,
+              ),
               itemCount: albumIds.length + 2,
               itemBuilder: (_, i) {
                 if (i == 0) {
@@ -64,7 +69,12 @@ class DownloadsScreen extends ConsumerWidget {
                 }
                 if (i == 1) {
                   return Padding(
-                    padding: const EdgeInsets.fromLTRB(AppSpacing.xs, AppSpacing.md, 0, AppSpacing.sm),
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.xs,
+                      AppSpacing.md,
+                      0,
+                      AppSpacing.sm,
+                    ),
                     child: Text(
                       'READY OFFLINE',
                       style: Theme.of(context).textTheme.labelLarge,
@@ -93,7 +103,3 @@ class DownloadsScreen extends ConsumerWidget {
     );
   }
 }
-
-
-
-

@@ -619,7 +619,10 @@ class JellyfinRepository {
       uniqueIds.add(id);
     }
     for (var i = 0; i < uniqueIds.length; i += chunkSize) {
-      final chunk = uniqueIds.sublist(i, math.min(i + chunkSize, uniqueIds.length));
+      final chunk = uniqueIds.sublist(
+        i,
+        math.min(i + chunkSize, uniqueIds.length),
+      );
       Map<String, dynamic>? data;
       for (var attempt = 0; attempt < 3; attempt++) {
         try {

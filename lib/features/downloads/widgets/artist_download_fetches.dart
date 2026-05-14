@@ -14,7 +14,8 @@ typedef ArtistDownloadResult = ({int enqueued, int failed});
 /// running to completion either way.
 final artistDownloadFetchesProvider =
     NotifierProvider<ArtistDownloadFetchesController, Set<String>>(
-        ArtistDownloadFetchesController.new);
+      ArtistDownloadFetchesController.new,
+    );
 
 class ArtistDownloadFetchesController extends Notifier<Set<String>> {
   @override

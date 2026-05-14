@@ -73,7 +73,12 @@ class _LibraryCollectionScreenState
           return Column(
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, AppSpacing.md),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  0,
+                  AppSpacing.md,
+                  AppSpacing.md,
+                ),
                 child: TextField(
                   controller: _ctrl,
                   onChanged: (value) => setState(() => _term = value.trim()),
@@ -100,7 +105,9 @@ class _LibraryCollectionScreenState
                         message: 'Nothing matched "$_term".',
                       )
                     : ListView.builder(
-                        padding: const EdgeInsets.only(bottom: AppSpacing.miniPlayerInset),
+                        padding: const EdgeInsets.only(
+                          bottom: AppSpacing.miniPlayerInset,
+                        ),
                         itemCount: filtered.length,
                         itemBuilder: (context, index) {
                           final item = filtered[index];
@@ -135,5 +142,3 @@ final _libraryCollectionProvider = FutureProvider.autoDispose
         LibraryCollectionKind.artists => repo.artists(),
       };
     });
-
-

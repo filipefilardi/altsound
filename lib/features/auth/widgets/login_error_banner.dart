@@ -30,7 +30,10 @@ class LoginErrorBanner extends StatelessWidget {
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
-            child: Text(message, style: const TextStyle(color: AppColors.error)),
+            child: Text(
+              message,
+              style: const TextStyle(color: AppColors.error),
+            ),
           ),
         ],
       ),

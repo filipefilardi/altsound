@@ -145,10 +145,11 @@ class PlaybackReportingApi {
       }
     }
 
-    final plays = rankByItemId.entries
-        .map((e) => PlaybackReportingPlay(itemId: e.key, rank: e.value))
-        .toList(growable: false)
-      ..sort((a, b) => b.rank.compareTo(a.rank));
+    final plays =
+        rankByItemId.entries
+            .map((e) => PlaybackReportingPlay(itemId: e.key, rank: e.value))
+            .toList(growable: false)
+          ..sort((a, b) => b.rank.compareTo(a.rank));
 
     if (kDebugMode && safeDays > 1) {
       debugPrint(
@@ -176,15 +177,18 @@ class PlaybackReportingApi {
       );
       _missingCache = false;
       final rows = _extractRows(res.data);
-      final parsed = rows
-          .map(_parseBreakdown)
-          .whereType<PlaybackReportingBreakdown>()
-          .where((r) => r.label.isNotEmpty)
-          .toList(growable: false)
-        ..sort((a, b) {
-          final byCount = b.count.compareTo(a.count);
-          return byCount != 0 ? byCount : b.timeSeconds.compareTo(a.timeSeconds);
-        });
+      final parsed =
+          rows
+              .map(_parseBreakdown)
+              .whereType<PlaybackReportingBreakdown>()
+              .where((r) => r.label.isNotEmpty)
+              .toList(growable: false)
+            ..sort((a, b) {
+              final byCount = b.count.compareTo(a.count);
+              return byCount != 0
+                  ? byCount
+                  : b.timeSeconds.compareTo(a.timeSeconds);
+            });
       if (kDebugMode) {
         debugPrint(
           '[PlaybackReporting] GET $path?days=$safeDays → ${rows.length} rows, ${parsed.length} parsed',

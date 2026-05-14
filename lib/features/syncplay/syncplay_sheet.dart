@@ -113,7 +113,8 @@ class _SyncPlaySheetState extends ConsumerState<_SyncPlaySheet> {
                       await controller.joinGroup(group.id);
                       if (!context.mounted) return;
                       final joined =
-                          ref.read(syncPlayControllerProvider).activeGroup != null;
+                          ref.read(syncPlayControllerProvider).activeGroup !=
+                          null;
                       if (joined) Navigator.of(context).pop();
                     },
             ),
@@ -127,7 +128,8 @@ class _SyncPlaySheetState extends ConsumerState<_SyncPlaySheet> {
                     await controller.createGroup('');
                     if (!context.mounted) return;
                     final joined =
-                        ref.read(syncPlayControllerProvider).activeGroup != null;
+                        ref.read(syncPlayControllerProvider).activeGroup !=
+                        null;
                     if (joined) Navigator.of(context).pop();
                   },
           ),
@@ -153,9 +155,9 @@ class _SyncPlaySheetState extends ConsumerState<_SyncPlaySheet> {
         const SizedBox(height: AppSpacing.xs),
         Text(
           participants,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: AppColors.textSecondary,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
         ),
         const SizedBox(height: AppSpacing.md),
         ListTile(

@@ -25,9 +25,7 @@ class PlaylistDownloadButton extends ConsumerWidget {
             .subscribePlaylist(playlist.id);
       },
       onDelete: () {
-        ref
-            .read(downloadManagerProvider.notifier)
-            .deletePlaylist(playlist.id);
+        ref.read(downloadManagerProvider.notifier).deletePlaylist(playlist.id);
         ref
             .read(downloadPreferencesProvider.notifier)
             .unsubscribePlaylist(playlist.id);

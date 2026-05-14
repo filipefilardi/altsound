@@ -27,7 +27,10 @@ final playbackStateProvider = StreamProvider<PlaybackState>((ref) {
 /// Whether the currently playing item belongs to [contextId] (an album,
 /// playlist, artist, or instant-mix ID) AND playback is active. Lets screens
 /// reflect "this collection is playing" without re-deriving the check.
-final isContextPlayingProvider = Provider.family<bool, String>((ref, contextId) {
+final isContextPlayingProvider = Provider.family<bool, String>((
+  ref,
+  contextId,
+) {
   final playing = ref.watch(playbackStateProvider).value?.playing ?? false;
   if (!playing) return false;
   final current = ref.watch(currentMediaItemProvider).value;

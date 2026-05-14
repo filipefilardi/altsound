@@ -10,9 +10,6 @@ import 'package:altsound/features/settings/widgets/sign_out_tile.dart';
 import 'package:altsound/features/settings/widgets/storage_group.dart';
 import 'package:altsound/features/settings/widgets/version_footer.dart';
 
-
-
-
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
@@ -24,7 +21,12 @@ class SettingsScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.miniPlayerInset),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          AppSpacing.sm,
+          AppSpacing.md,
+          AppSpacing.miniPlayerInset,
+        ),
         children: [
           if (session != null) ...[
             AccountCard(session: session),
@@ -49,26 +51,14 @@ class SettingsScreen extends ConsumerWidget {
 // Account
 // ---------------------------------------------------------------------------
 
-
-
-
-
-
 // ---------------------------------------------------------------------------
 // Groups
 // ---------------------------------------------------------------------------
-
-
-
 
 // ---------------------------------------------------------------------------
 // Sign out / version
 // ---------------------------------------------------------------------------
 
-
-
 // ---------------------------------------------------------------------------
 // Bottom sheets
 // ---------------------------------------------------------------------------
-
-

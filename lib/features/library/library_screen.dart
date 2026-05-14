@@ -43,11 +43,21 @@ class LibraryContent extends ConsumerWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.sm),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.md,
+              AppSpacing.md,
+              AppSpacing.sm,
+            ),
             sliver: const SliverToBoxAdapter(child: LibraryHeader()),
           ),
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.md),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.sm,
+              AppSpacing.md,
+              AppSpacing.md,
+            ),
             sliver: SliverToBoxAdapter(
               child: LibraryCategories(
                 onAlbums: () => context.push('/library/albums'),
@@ -85,7 +95,9 @@ class LibraryContent extends ConsumerWidget {
                   .toList();
 
               return SliverPadding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.miniPlayerInset),
+                padding: const EdgeInsets.only(
+                  bottom: AppSpacing.miniPlayerInset,
+                ),
                 sliver: SliverList.list(
                   children: [
                     SectionTile(
@@ -173,9 +185,3 @@ String _playlistSubtitle(int? count) {
   if (count == 1) return 'Playlist · 1 song';
   return 'Playlist · $count songs';
 }
-
-
-
-
-
-

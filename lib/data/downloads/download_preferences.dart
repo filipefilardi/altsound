@@ -28,36 +28,37 @@ class DownloadPreferences {
     bool? wifiOnly,
     Set<String>? subscribedAlbumIds,
     Set<String>? subscribedPlaylistIds,
-  }) =>
-      DownloadPreferences(
-        autoDownload: autoDownload ?? this.autoDownload,
-        wifiOnly: wifiOnly ?? this.wifiOnly,
-        subscribedAlbumIds: subscribedAlbumIds ?? this.subscribedAlbumIds,
-        subscribedPlaylistIds:
-            subscribedPlaylistIds ?? this.subscribedPlaylistIds,
-      );
+  }) => DownloadPreferences(
+    autoDownload: autoDownload ?? this.autoDownload,
+    wifiOnly: wifiOnly ?? this.wifiOnly,
+    subscribedAlbumIds: subscribedAlbumIds ?? this.subscribedAlbumIds,
+    subscribedPlaylistIds: subscribedPlaylistIds ?? this.subscribedPlaylistIds,
+  );
 
   Map<String, dynamic> toJson() => {
-        'autoDownload': autoDownload,
-        'wifiOnly': wifiOnly,
-        'subscribedAlbumIds': subscribedAlbumIds.toList(),
-        'subscribedPlaylistIds': subscribedPlaylistIds.toList(),
-      };
+    'autoDownload': autoDownload,
+    'wifiOnly': wifiOnly,
+    'subscribedAlbumIds': subscribedAlbumIds.toList(),
+    'subscribedPlaylistIds': subscribedPlaylistIds.toList(),
+  };
 
   factory DownloadPreferences.fromJson(Map<String, dynamic> json) =>
       DownloadPreferences(
         autoDownload: json['autoDownload'] as bool? ?? false,
         wifiOnly: json['wifiOnly'] as bool? ?? false,
         subscribedAlbumIds: Set<String>.from(
-            (json['subscribedAlbumIds'] as List?)?.cast<String>() ?? []),
+          (json['subscribedAlbumIds'] as List?)?.cast<String>() ?? [],
+        ),
         subscribedPlaylistIds: Set<String>.from(
-            (json['subscribedPlaylistIds'] as List?)?.cast<String>() ?? []),
+          (json['subscribedPlaylistIds'] as List?)?.cast<String>() ?? [],
+        ),
       );
 }
 
 final downloadPreferencesProvider =
     NotifierProvider<DownloadPreferencesNotifier, DownloadPreferences>(
-        DownloadPreferencesNotifier.new);
+      DownloadPreferencesNotifier.new,
+    );
 
 class DownloadPreferencesNotifier extends Notifier<DownloadPreferences> {
   @override
@@ -71,7 +72,8 @@ class DownloadPreferencesNotifier extends Notifier<DownloadPreferences> {
     if (raw == null) return;
     try {
       state = DownloadPreferences.fromJson(
-          jsonDecode(raw) as Map<String, dynamic>);
+        jsonDecode(raw) as Map<String, dynamic>,
+      );
     } catch (_) {}
   }
 
@@ -93,26 +95,30 @@ class DownloadPreferencesNotifier extends Notifier<DownloadPreferences> {
 
   Future<void> subscribeAlbum(String albumId) async {
     state = state.copyWith(
-        subscribedAlbumIds: {...state.subscribedAlbumIds, albumId});
+      subscribedAlbumIds: {...state.subscribedAlbumIds, albumId},
+    );
     await _persist();
   }
 
   Future<void> unsubscribeAlbum(String albumId) async {
     state = state.copyWith(
-        subscribedAlbumIds: {...state.subscribedAlbumIds}..remove(albumId));
+      subscribedAlbumIds: {...state.subscribedAlbumIds}..remove(albumId),
+    );
     await _persist();
   }
 
   Future<void> subscribePlaylist(String playlistId) async {
     state = state.copyWith(
-        subscribedPlaylistIds: {...state.subscribedPlaylistIds, playlistId});
+      subscribedPlaylistIds: {...state.subscribedPlaylistIds, playlistId},
+    );
     await _persist();
   }
 
   Future<void> unsubscribePlaylist(String playlistId) async {
     state = state.copyWith(
-        subscribedPlaylistIds: {...state.subscribedPlaylistIds}
-          ..remove(playlistId));
+      subscribedPlaylistIds: {...state.subscribedPlaylistIds}
+        ..remove(playlistId),
+    );
     await _persist();
   }
 

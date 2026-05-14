@@ -167,14 +167,3 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-

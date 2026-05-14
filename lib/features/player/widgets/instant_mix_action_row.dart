@@ -8,7 +8,8 @@ import 'package:altsound/core/widgets/play_pill.dart';
 import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
 import 'package:altsound/data/jellyfin/models/media_item.dart';
 import 'package:altsound/features/player/instant_mix.dart';
-import 'package:altsound/features/player/instant_mix_screen.dart' show instantMixTracksProvider;
+import 'package:altsound/features/player/instant_mix_screen.dart'
+    show instantMixTracksProvider;
 import 'package:altsound/features/player/player_providers.dart';
 import 'package:altsound/features/playlist/playlist_providers.dart';
 
@@ -124,8 +125,9 @@ class InstantMixActionRow extends ConsumerWidget {
             ListTile(
               leading: const Icon(Icons.playlist_add_rounded),
               title: const Text('Create playlist from mix'),
-              onTap: () => Navigator.of(sheetContext)
-                  .pop(_InstantMixAction.createPlaylist),
+              onTap: () => Navigator.of(
+                sheetContext,
+              ).pop(_InstantMixAction.createPlaylist),
             ),
           ],
         ),

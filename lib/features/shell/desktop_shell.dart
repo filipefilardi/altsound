@@ -102,7 +102,9 @@ class _DesktopTopNavBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final location = GoRouter.of(context).routeInformationProvider.value.uri.path;
+    final location = GoRouter.of(
+      context,
+    ).routeInformationProvider.value.uri.path;
     final syncPlayActive =
         ref.watch(syncPlayControllerProvider).activeGroup != null;
     void goIfNeeded(String target) {
@@ -211,7 +213,10 @@ class _TopNavPill extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
+          ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
