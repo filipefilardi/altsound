@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:altsound/core/layout/adaptive_breakpoints.dart';
 import 'package:altsound/core/theme/app_colors.dart';
-import 'package:altsound/core/theme/app_radius.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
-import 'package:altsound/core/widgets/header_action_buttons.dart';
-import 'package:altsound/core/widgets/skeleton.dart';
 import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
 import 'package:altsound/data/jellyfin/models/media_item.dart';
+import 'package:altsound/features/library/widgets/library_categories.dart';
+import 'package:altsound/features/library/widgets/library_header.dart';
+import 'package:altsound/features/library/widgets/library_loading_rows.dart';
+import 'package:altsound/features/library/widgets/playlists_header.dart';
+import 'package:altsound/features/library/widgets/section_tile.dart';
 import 'package:altsound/features/playlist/playlist_providers.dart';
 
 class LibraryScreen extends ConsumerWidget {
@@ -43,25 +44,25 @@ class LibraryContent extends ConsumerWidget {
         slivers: [
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.sm),
-            sliver: const SliverToBoxAdapter(child: _LibraryHeader()),
+            sliver: const SliverToBoxAdapter(child: LibraryHeader()),
           ),
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.md),
             sliver: SliverToBoxAdapter(
-              child: _LibraryCategories(
+              child: LibraryCategories(
                 onAlbums: () => context.push('/library/albums'),
                 onArtists: () => context.push('/library/artists'),
               ),
             ),
           ),
           SliverToBoxAdapter(
-            child: _PlaylistsHeader(
+            child: PlaylistsHeader(
               onCreatePlaylist: () => _createPlaylist(context, ref),
             ),
           ),
           playlistsAsync.when<Widget>(
             loading: () =>
-                const SliverToBoxAdapter(child: _LibraryLoadingRows()),
+                const SliverToBoxAdapter(child: LibraryLoadingRows()),
             error: (e, _) => SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.lg),
@@ -87,7 +88,7 @@ class LibraryContent extends ConsumerWidget {
                 padding: const EdgeInsets.only(bottom: AppSpacing.miniPlayerInset),
                 sliver: SliverList.list(
                   children: [
-                    _SectionTile(
+                    SectionTile(
                       icon: Icons.favorite_rounded,
                       iconColor: AppColors.error,
                       title: 'Liked Songs',
@@ -97,7 +98,7 @@ class LibraryContent extends ConsumerWidget {
                       onTap: () => _openLikedSongs(context, ref),
                     ),
                     ...rest.map(
-                      (playlist) => _SectionTile(
+                      (playlist) => SectionTile(
                         icon: Icons.queue_music_rounded,
                         title: playlist.name,
                         subtitle: _playlistSubtitle(playlist.childCount),
@@ -173,254 +174,8 @@ String _playlistSubtitle(int? count) {
   return 'Playlist · $count songs';
 }
 
-class _LibraryLoadingRows extends StatelessWidget {
-  const _LibraryLoadingRows();
 
-  @override
-  Widget build(BuildContext context) {
-    return Skeleton.group(
-      child: Column(
-        children: [
-          for (int i = 0; i < 6; i++)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
-              child: Row(
-                children: [
-                  Skeleton.box(width: 52, height: 52, radius: 12),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Skeleton.line(width: 160, height: 14),
-                        const SizedBox(height: AppSpacing.sm),
-                        Skeleton.line(width: 100, height: 11),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
 
-class _LibraryHeader extends StatelessWidget {
-  const _LibraryHeader();
 
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Expanded(
-          child: Text(
-            'Your Library',
-            style: Theme.of(context).textTheme.headlineMedium,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        if (!isDesktopLayout(context)) const HeaderActionButtons(),
-      ],
-    );
-  }
-}
 
-class _LibraryCategories extends StatelessWidget {
-  const _LibraryCategories({required this.onAlbums, required this.onArtists});
 
-  final VoidCallback onAlbums;
-  final VoidCallback onArtists;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _LibraryCategoryCard(
-            icon: Icons.album_rounded,
-            label: 'Albums',
-            onTap: onAlbums,
-          ),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: _LibraryCategoryCard(
-            icon: Icons.person_rounded,
-            label: 'Artists',
-            onTap: onArtists,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _LibraryCategoryCard extends StatelessWidget {
-  const _LibraryCategoryCard({
-    required this.icon,
-    required this.label,
-    this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    const iconColor = AppColors.textPrimary;
-
-    return Material(
-      color: AppColors.surface,
-      borderRadius: BorderRadius.circular(AppRadius.sm),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: SizedBox(
-          height: 68,
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.sm),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: iconColor.withValues(alpha: 0.14),
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
-                  ),
-                  child: Icon(icon, color: iconColor, size: 21),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PlaylistsHeader extends StatelessWidget {
-  const _PlaylistsHeader({required this.onCreatePlaylist});
-
-  final VoidCallback onCreatePlaylist;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.sm),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              'PLAYLISTS',
-              style: Theme.of(context).textTheme.labelLarge,
-            ),
-          ),
-          IconButton(
-            onPressed: onCreatePlaylist,
-            icon: const Icon(Icons.add_rounded, size: 20),
-            color: AppColors.primary,
-            visualDensity: VisualDensity.compact,
-            tooltip: 'New playlist',
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SectionTile extends StatelessWidget {
-  const _SectionTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-    this.iconColor = AppColors.textPrimary,
-  });
-
-  final IconData icon;
-  final Color iconColor;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
-      child: Material(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.sm),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.sm),
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: iconColor == AppColors.textPrimary
-                        ? AppColors.surfaceHighlight
-                        : iconColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
-                  ),
-                  child: Icon(icon, color: iconColor, size: 22),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        subtitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
