@@ -1,7 +1,5 @@
 # AltSound
 
-A modern, open-source music player for your [Jellyfin](https://jellyfin.org/) library.
-
 <p align="center">
   <img src="assets/graphics/feature_graphic.png" alt="AltSound" width="720">
 </p>
