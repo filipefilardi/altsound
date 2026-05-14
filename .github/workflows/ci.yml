@@ -38,3 +38,32 @@ jobs:
 
       - name: Test
         run: flutter test --no-pub
+
+  security-scan:
+    name: Security scan (Trivy)
+    runs-on: ubuntu-latest
+    # Trivy scans for known CVEs in dependencies (pubspec.lock, Gradle, etc.)
+    # and for accidentally committed secrets. Fails the build on
+    # CRITICAL/HIGH findings; lower severities surface in the run summary.
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          severity: 'CRITICAL,HIGH'
+          ignore-unfixed: true
+          exit-code: '1'
+          format: 'table'
+
+      - name: Run Trivy secret scan
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          scanners: 'secret'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+          exit-code: '1'
+          format: 'table'
