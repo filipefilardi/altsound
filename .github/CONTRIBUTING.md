@@ -72,11 +72,18 @@ Include the following in your PR:
 
 ## Commit Messages
 
-Use clear, imperative commit messages. Examples:
+We follow [Conventional Commits](https://www.conventionalcommits.org/). The prefix matters — it drives both release-note grouping **and** the next version number:
 
-- `fix: prevent duplicate tracks in queue`
-- `feat: add artist download button`
-- `chore: bump flutter_riverpod to latest`
+| Prefix | Example | Triggers |
+| --- | --- | --- |
+| `feat:` | `feat: add artist download button` | **minor** version bump |
+| `fix:` / `perf:` | `fix: prevent duplicate tracks in queue` | **patch** version bump |
+| `feat!:` / `fix!:` or a `BREAKING CHANGE:` footer | `feat!: drop iOS 13 support` | **major** version bump |
+| `chore:` / `docs:` / `refactor:` / `style:` / `test:` / `ci:` / `build:` | `chore: bump flutter_riverpod to latest` | no release |
+
+Use imperative mood ("add", not "adds" or "added"). Keep the subject under 72 characters.
+
+If your PR title (typically used as the merge commit message) follows this format, the release workflow will pick the right version bump automatically. Maintainers can also override via the workflow's manual "Run workflow" button.
 
 ## Reporting Bugs
 
@@ -99,9 +106,16 @@ Feature requests are welcome. Please describe:
 
 ## Release and CI Notes
 
-This repository includes an Android release workflow under `.github/workflows/android-deploy-google-play.yml` that builds and deploys from `main`.
+Every push to `main` runs `.github/workflows/release.yml`. The workflow:
 
-Contributors do not need to handle release secrets or deployment setup; maintainers manage those credentials.
+1. **Parses Conventional Commits** since the last release to pick a bump (`feat:` → minor, `fix:`/`perf:` → patch, breaking change → major). If no releasable commits are present, the release is skipped.
+2. **Builds** Android (AAB), macOS (unsigned `.app`), and iOS (unsigned `.ipa`) in parallel.
+3. **Publishes** a single GitHub Release with all three artifacts.
+4. **Deploys** the Android AAB to Google Play's *internal* track as a *draft* — a maintainer manually promotes it to production from the Play Console.
+
+Maintainers can override the auto-detected bump via the workflow's manual "Run workflow" button (`bump: patch | minor | major | skip`).
+
+Contributors do not need to handle release secrets or deployment setup — maintainers manage those credentials.
 
 ## Questions
 
