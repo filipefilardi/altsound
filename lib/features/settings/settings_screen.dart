@@ -11,6 +11,7 @@ import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_gradients.dart';
 import 'package:altsound/core/theme/app_radius.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
+import 'package:altsound/core/widgets/settings_group.dart';
 import 'package:altsound/data/downloads/download_manager.dart';
 import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
 import 'package:altsound/data/jellyfin/models/jellyfin_session.dart';
@@ -295,7 +296,7 @@ class _PlaybackGroup extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final prefs = ref.watch(playbackPreferencesProvider);
-    return _SettingsGroup(
+    return SettingsGroup(
       label: 'Playback',
       children: [
         ListTile(
@@ -331,7 +332,7 @@ class _LibraryGroup extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final downloads = ref.watch(downloadManagerProvider);
 
-    return _SettingsGroup(
+    return SettingsGroup(
       label: 'Library',
       children: [
         ListTile(
@@ -372,7 +373,7 @@ class _StorageGroup extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final size = ref.watch(_imageCacheSizeProvider);
-    return _SettingsGroup(
+    return SettingsGroup(
       label: 'Storage',
       children: [
         ListTile(
@@ -501,46 +502,6 @@ Future<void> _showStreamingQualitySheet(BuildContext context) {
       },
     ),
   );
-}
-
-// ---------------------------------------------------------------------------
-// Shared widgets
-// ---------------------------------------------------------------------------
-
-class _SettingsGroup extends StatelessWidget {
-  const _SettingsGroup({required this.label, required this.children});
-
-  final String label;
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    final tiles = <Widget>[];
-    for (var i = 0; i < children.length; i++) {
-      tiles.add(children[i]);
-      if (i < children.length - 1) {
-        tiles.add(const Divider(height: 1, indent: 56));
-      }
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.xs, 0, AppSpacing.xs, AppSpacing.sm),
-          child: Text(
-            label.toUpperCase(),
-            style: Theme.of(context).textTheme.labelLarge,
-          ),
-        ),
-        Material(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-          clipBehavior: Clip.antiAlias,
-          child: Column(children: tiles),
-        ),
-      ],
-    );
-  }
 }
 
 String _formatBytes(int bytes) {

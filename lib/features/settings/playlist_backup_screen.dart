@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
-import 'package:altsound/core/theme/app_radius.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
+import 'package:altsound/core/widgets/settings_group.dart';
 import 'package:altsound/data/playlists/playlist_backup_repository.dart';
 import 'package:altsound/features/auth/auth_controller.dart';
 import 'package:altsound/features/playlist/playlist_providers.dart';
@@ -35,7 +35,7 @@ class _PlaylistBackupScreenState extends ConsumerState<PlaylistBackupScreen> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.miniPlayerInset),
         children: [
-          _SettingsGroup(
+          SettingsGroup(
             label: 'Safety',
             children: [
               SwitchListTile(
@@ -81,7 +81,7 @@ class _PlaylistBackupScreenState extends ConsumerState<PlaylistBackupScreen> {
             ],
           ),
           const SizedBox(height: AppSpacing.lg),
-          _SettingsGroup(
+          SettingsGroup(
             label: 'Portability',
             children: [
               ListTile(
@@ -248,7 +248,7 @@ class _BackupList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _SettingsGroup(
+    return SettingsGroup(
       label: 'Saved backups',
       children: backups.when(
         loading: () => const [
@@ -358,7 +358,7 @@ class PlaylistBackupDetailScreen extends ConsumerWidget {
           children: [
             _BackupSummary(document: document, backup: backup),
             const SizedBox(height: AppSpacing.lg),
-            _SettingsGroup(
+            SettingsGroup(
               label: 'Playlists',
               children: document.playlists.isEmpty
                   ? const [
@@ -388,7 +388,7 @@ class _BackupSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final source = document.source;
-    return _SettingsGroup(
+    return SettingsGroup(
       label: 'Snapshot',
       children: [
         ListTile(
@@ -523,42 +523,6 @@ Future<String?> _showPathDialog(BuildContext context) {
       ],
     ),
   ).whenComplete(ctrl.dispose);
-}
-
-class _SettingsGroup extends StatelessWidget {
-  const _SettingsGroup({required this.label, required this.children});
-
-  final String label;
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    final tiles = <Widget>[];
-    for (var i = 0; i < children.length; i++) {
-      tiles.add(children[i]);
-      if (i < children.length - 1) {
-        tiles.add(const Divider(height: 1, indent: 56));
-      }
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.xs, 0, AppSpacing.xs, AppSpacing.sm),
-          child: Text(
-            label.toUpperCase(),
-            style: Theme.of(context).textTheme.labelLarge,
-          ),
-        ),
-        Material(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-          clipBehavior: Clip.antiAlias,
-          child: Column(children: tiles),
-        ),
-      ],
-    );
-  }
 }
 
 String _formatDateTime(DateTime value) {

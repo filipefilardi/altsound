@@ -6,6 +6,7 @@ import 'package:altsound/core/layout/adaptive_breakpoints.dart';
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_radius.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
+import 'package:altsound/core/widgets/artwork_placeholder.dart';
 import 'package:altsound/core/widgets/header_action_buttons.dart';
 import 'package:altsound/core/widgets/local_or_network_image.dart';
 import 'package:altsound/data/jellyfin/auth_repository.dart';
@@ -175,7 +176,10 @@ class _ResumeCard extends ConsumerWidget {
                     height: 92,
                     child: LocalOrNetworkImage(
                       source: record.imageUrl,
-                      errorBuilder: (_) => const _ResumeArtFallback(),
+                      errorBuilder: (_) => const ArtworkPlaceholder(
+                        iconSize: 32,
+                        backgroundColor: AppColors.surface,
+                      ),
                     ),
                   ),
                   const SizedBox(width: AppSpacing.md),
@@ -230,17 +234,6 @@ class _ResumeCard extends ConsumerWidget {
   }
 }
 
-class _ResumeArtFallback extends StatelessWidget {
-  const _ResumeArtFallback();
-
-  @override
-  Widget build(BuildContext context) {
-    return const ColoredBox(
-      color: AppColors.surface,
-      child: Icon(Icons.album_rounded, color: AppColors.textTertiary, size: 32),
-    );
-  }
-}
 
 /// Personalized "for you" recommendations on Home: a "Because you played"
 /// anchor (the user's #1 song from the last 7 days) plus 4 "Inspired by"
@@ -376,7 +369,11 @@ class _ForYouCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fallback = _ForYouCardArtFallback(icon: fallbackIcon);
+    final fallback = ArtworkPlaceholder(
+      icon: fallbackIcon,
+      iconSize: 48,
+      iconColor: AppColors.primary,
+    );
     return InkWell(
       borderRadius: BorderRadius.circular(AppRadius.md),
       splashColor: AppColors.primary.withValues(alpha: 0.06),
@@ -450,16 +447,3 @@ class _ForYouCard extends StatelessWidget {
   }
 }
 
-class _ForYouCardArtFallback extends StatelessWidget {
-  const _ForYouCardArtFallback({required this.icon});
-
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return ColoredBox(
-      color: AppColors.surfaceElevated,
-      child: Center(child: Icon(icon, color: AppColors.primary, size: 48)),
-    );
-  }
-}

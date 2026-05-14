@@ -10,6 +10,7 @@ import 'package:altsound/core/theme/app_radius.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/core/utils/format.dart';
 import 'package:altsound/core/utils/search_normalization.dart';
+import 'package:altsound/core/widgets/artwork_placeholder.dart';
 import 'package:altsound/core/widgets/empty_state.dart';
 import 'package:altsound/core/widgets/error_state.dart';
 import 'package:altsound/core/widgets/local_or_network_image.dart';
@@ -264,8 +265,16 @@ class _InstantMixHeader extends StatelessWidget {
                     height: artSize,
                     child: LocalOrNetworkImage(
                       source: artworkUrl,
-                      placeholderBuilder: (_) => const _InstantMixArtFallback(),
-                      errorBuilder: (_) => const _InstantMixArtFallback(),
+                      placeholderBuilder: (_) => const ArtworkPlaceholder(
+                        icon: Icons.auto_awesome_rounded,
+                        iconSize: 64,
+                        iconColor: AppColors.primary,
+                      ),
+                      errorBuilder: (_) => const ArtworkPlaceholder(
+                        icon: Icons.auto_awesome_rounded,
+                        iconSize: 64,
+                        iconColor: AppColors.primary,
+                      ),
                     ),
                   ),
                 ),
@@ -296,22 +305,6 @@ class _InstantMixHeader extends StatelessWidget {
             ],
           );
         },
-      ),
-    );
-  }
-}
-
-class _InstantMixArtFallback extends StatelessWidget {
-  const _InstantMixArtFallback();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: AppColors.surfaceElevated,
-      child: const Icon(
-        Icons.auto_awesome_rounded,
-        color: AppColors.primary,
-        size: 64,
       ),
     );
   }

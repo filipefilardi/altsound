@@ -9,6 +9,7 @@ import 'package:altsound/core/theme/app_radius.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/core/utils/format.dart';
 import 'package:altsound/core/utils/search_normalization.dart';
+import 'package:altsound/core/widgets/artwork_placeholder.dart';
 import 'package:altsound/core/widgets/error_state.dart';
 import 'package:altsound/core/widgets/play_pill.dart';
 import 'package:altsound/core/widgets/skeleton.dart';
@@ -1469,7 +1470,7 @@ class _PlaylistArtwork extends ConsumerWidget {
             itemBuilder: (_, index) {
               final track = uniqueAlbumTracks[index % uniqueAlbumTracks.length];
               if (track.imageTag == null || track.imageTag!.isEmpty) {
-                return const _ArtFallback();
+                return const ArtworkPlaceholder(icon: Icons.queue_music_rounded);
               }
               final artId = track.albumImageItemId ?? track.id;
               final imageUrl = repo.imageUrl(
@@ -1482,7 +1483,7 @@ class _PlaylistArtwork extends ConsumerWidget {
                 fit: BoxFit.cover,
                 placeholder: (_, __) =>
                     const ColoredBox(color: AppColors.surfaceElevated),
-                errorWidget: (_, __, ___) => const _ArtFallback(),
+                errorWidget: (_, __, ___) => const ArtworkPlaceholder(icon: Icons.queue_music_rounded),
               );
             },
           ),
@@ -1503,13 +1504,13 @@ class _PlaylistArtwork extends ConsumerWidget {
         width: 120,
         height: 120,
         child: imageUrl == null
-            ? const _ArtFallback()
+            ? const ArtworkPlaceholder(icon: Icons.queue_music_rounded)
             : CachedNetworkImage(
                 imageUrl: imageUrl,
                 fit: BoxFit.cover,
                 placeholder: (_, __) =>
                     const ColoredBox(color: AppColors.surfaceElevated),
-                errorWidget: (_, __, ___) => const _ArtFallback(),
+                errorWidget: (_, __, ___) => const ArtworkPlaceholder(icon: Icons.queue_music_rounded),
               ),
       ),
     );
@@ -1754,22 +1755,6 @@ enum _PlaylistCollectionAction {
   delete,
 }
 
-class _ArtFallback extends StatelessWidget {
-  const _ArtFallback();
-  @override
-  Widget build(BuildContext context) {
-    return const ColoredBox(
-      color: AppColors.surfaceElevated,
-      child: Center(
-        child: Icon(
-          Icons.queue_music_rounded,
-          color: AppColors.textTertiary,
-          size: 40,
-        ),
-      ),
-    );
-  }
-}
 
 class _PlaylistTrackTile extends ConsumerWidget {
   const _PlaylistTrackTile({

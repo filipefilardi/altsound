@@ -9,6 +9,7 @@ import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_radius.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/core/utils/format.dart';
+import 'package:altsound/core/widgets/artwork_placeholder.dart';
 import 'package:altsound/core/widgets/error_state.dart';
 import 'package:altsound/core/widgets/play_pill.dart';
 import 'package:altsound/core/widgets/skeleton.dart';
@@ -278,9 +279,17 @@ class _AlbumViewState extends ConsumerState<_AlbumView> {
                               height: 220,
                               fit: BoxFit.cover,
                               placeholder: (_, __) =>
-                                  const _ArtFallback(size: 220),
+                                  const SizedBox(
+                                    width: 220,
+                                    height: 220,
+                                    child: ArtworkPlaceholder(iconSize: 64),
+                                  ),
                               errorWidget: (_, __, ___) =>
-                                  const _ArtFallback(size: 220),
+                                  const SizedBox(
+                                    width: 220,
+                                    height: 220,
+                                    child: ArtworkPlaceholder(iconSize: 64),
+                                  ),
                             ),
                           ),
                         ),
@@ -730,20 +739,3 @@ class _TrackTile extends ConsumerWidget {
   }
 }
 
-class _ArtFallback extends StatelessWidget {
-  const _ArtFallback({required this.size});
-  final double size;
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      color: AppColors.surfaceElevated,
-      child: const Icon(
-        Icons.album_rounded,
-        size: 64,
-        color: AppColors.textTertiary,
-      ),
-    );
-  }
-}
