@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
@@ -20,7 +21,7 @@ class PlayerMainControls extends ConsumerWidget {
         IconButton(
           iconSize: 32,
           icon: const Icon(
-            Icons.skip_previous_rounded,
+            PhosphorIconsRegular.skipBack,
             color: AppColors.textPrimary,
           ),
           onPressed: controller.previous,
@@ -31,7 +32,7 @@ class PlayerMainControls extends ConsumerWidget {
         IconButton(
           iconSize: 32,
           icon: const Icon(
-            Icons.skip_next_rounded,
+            PhosphorIconsRegular.skipForward,
             color: AppColors.textPrimary,
           ),
           onPressed: controller.next,
@@ -77,7 +78,7 @@ class PlayerPlayPauseButton extends StatelessWidget {
           onTap: onTap,
           child: Center(
             child: Icon(
-              playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
+              playing ? PhosphorIconsRegular.pause : PhosphorIconsRegular.play,
               color: AppColors.onAccent,
               size: 36,
             ),

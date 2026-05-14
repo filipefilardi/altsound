@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -137,14 +138,14 @@ class _DesktopTopNavBar extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               _TopNavPill(
-                icon: Icons.home_rounded,
+                icon: PhosphorIconsRegular.house,
                 label: 'Home',
                 isSelected: selected('/'),
                 onTap: () => goIfNeeded('/'),
               ),
               const SizedBox(width: AppSpacing.sm),
               _TopNavPill(
-                icon: Icons.search_rounded,
+                icon: PhosphorIconsRegular.magnifyingGlass,
                 label: 'Search',
                 isSelected: selected('/search'),
                 onTap: () => goIfNeeded('/search'),
@@ -158,21 +159,21 @@ class _DesktopTopNavBar extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   _TopNavIconButton(
-                    icon: Icons.groups_rounded,
+                    icon: PhosphorIconsRegular.usersThree,
                     tooltip: 'SyncPlay',
                     isSelected: syncPlayActive,
                     onPressed: (anchor) => showSyncPlayPopover(anchor),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   _TopNavIconButton(
-                    icon: Icons.download_rounded,
+                    icon: PhosphorIconsRegular.downloadSimple,
                     tooltip: 'Downloads',
                     isSelected: selected('/downloads'),
                     onPressed: (_) => context.push('/downloads'),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   _TopNavIconButton(
-                    icon: Icons.settings_rounded,
+                    icon: PhosphorIconsRegular.gear,
                     tooltip: 'Settings',
                     isSelected: selected('/settings'),
                     onPressed: (_) => goIfNeeded('/settings'),
@@ -283,7 +284,7 @@ class _DesktopOfflineBanner extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.wifi_off_rounded,
+            PhosphorIconsRegular.wifiSlash,
             size: 13,
             color: AppColors.textSecondary,
           ),

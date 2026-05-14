@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
@@ -68,8 +69,8 @@ class _PopularTracksSectionState extends State<PopularTracksSection> {
                   children: [
                     Icon(
                       _expanded
-                          ? Icons.expand_less_rounded
-                          : Icons.expand_more_rounded,
+                          ? PhosphorIconsRegular.caretUp
+                          : PhosphorIconsRegular.caretDown,
                       size: 18,
                       color: AppColors.primary,
                     ),

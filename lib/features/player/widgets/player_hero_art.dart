@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:audio_service/audio_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
 
@@ -64,7 +65,7 @@ class _ArtFallback extends StatelessWidget {
       color: AppColors.surfaceElevated,
       child: const Center(
         child: Icon(
-          Icons.music_note_rounded,
+          PhosphorIconsRegular.musicNote,
           size: 64,
           color: AppColors.textTertiary,
         ),

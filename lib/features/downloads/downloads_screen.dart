@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_spacing.dart';
@@ -20,7 +21,7 @@ class DownloadsScreen extends ConsumerWidget {
       return Scaffold(
         appBar: AppBar(title: const Text('Downloads')),
         body: const EmptyState(
-          icon: Icons.cloud_off_rounded,
+          icon: PhosphorIconsRegular.cloudSlash,
           title: "Downloads aren't available on web",
           message: 'Open AltSound on iOS or Android to download for offline.',
         ),
@@ -46,7 +47,7 @@ class DownloadsScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Downloads')),
       body: albumIds.isEmpty
           ? const EmptyState(
-              icon: Icons.download_rounded,
+              icon: PhosphorIconsRegular.downloadSimple,
               title: 'No downloads yet',
               message: 'Tap the download icon on any album to keep it offline.',
             )

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -21,13 +22,13 @@ class HeaderActionButtons extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         _HeaderActionButton(
-          icon: Icons.search_rounded,
+          icon: PhosphorIconsRegular.magnifyingGlass,
           tooltip: 'Search',
           onPressed: (_) => context.go('/search'),
         ),
         const SizedBox(width: AppSpacing.sm),
         _HeaderActionButton(
-          icon: Icons.groups_rounded,
+          icon: PhosphorIconsRegular.usersThree,
           tooltip: 'SyncPlay',
           active: syncPlayActive,
           onPressed: (anchor) => showSyncPlayPopover(anchor),
@@ -35,21 +36,21 @@ class HeaderActionButtons extends ConsumerWidget {
         const SizedBox(width: AppSpacing.sm),
         _HeaderActionButton(
           icon: castConnected
-              ? Icons.cast_connected_rounded
-              : Icons.cast_rounded,
+              ? PhosphorIconsRegular.screencast
+              : PhosphorIconsRegular.screencast,
           tooltip: 'Play on…',
           active: castConnected,
           onPressed: (anchor) => showRemoteSessionsPopover(anchor),
         ),
         const SizedBox(width: AppSpacing.sm),
         _HeaderActionButton(
-          icon: Icons.download_rounded,
+          icon: PhosphorIconsRegular.downloadSimple,
           tooltip: 'Downloads',
           onPressed: (_) => context.push('/downloads'),
         ),
         const SizedBox(width: AppSpacing.sm),
         _HeaderActionButton(
-          icon: Icons.settings_rounded,
+          icon: PhosphorIconsRegular.gear,
           tooltip: 'Settings',
           onPressed: (_) => context.push('/settings'),
         ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
@@ -67,7 +68,7 @@ class SearchTrackArtwork extends ConsumerWidget {
     Widget fallback() => Container(
       color: AppColors.surfaceElevated,
       child: const Icon(
-        Icons.music_note_rounded,
+        PhosphorIconsRegular.musicNote,
         color: AppColors.textTertiary,
       ),
     );

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
@@ -279,7 +280,7 @@ class _ManageTrackPlaylistsSheetState
             controller: _searchCtrl,
             decoration: const InputDecoration(
               hintText: 'Search playlists',
-              prefixIcon: Icon(Icons.search_rounded),
+              prefixIcon: Icon(PhosphorIconsRegular.magnifyingGlass),
             ),
           ),
         ),
@@ -291,7 +292,7 @@ class _ManageTrackPlaylistsSheetState
               ),
               const SizedBox(height: AppSpacing.xs),
               _PlaylistToggleRow(
-                icon: Icons.favorite_rounded,
+                icon: PhosphorIconsRegular.heart,
                 iconColor: AppColors.like,
                 title: 'Liked songs',
                 selected:
@@ -309,7 +310,7 @@ class _ManageTrackPlaylistsSheetState
               ),
               ...playlists.map(
                 (playlist) => _PlaylistToggleRow(
-                  icon: Icons.queue_music_rounded,
+                  icon: PhosphorIconsRegular.queue,
                   iconColor: AppColors.primary,
                   title: playlist.name,
                   selected: _playlistIdsContainingTrack.contains(playlist.id),
@@ -498,7 +499,7 @@ class _NewPlaylistRow extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppRadius.sm),
         ),
         child: const Icon(
-          Icons.add_rounded,
+          PhosphorIconsRegular.plus,
           color: AppColors.primary,
           size: 22,
         ),
@@ -552,9 +553,7 @@ class _PlaylistToggleRow extends StatelessWidget {
       trailing: AnimatedSwitcher(
         duration: const Duration(milliseconds: 200),
         child: Icon(
-          selected
-              ? Icons.check_circle_rounded
-              : Icons.radio_button_unchecked_rounded,
+          selected ? PhosphorIconsRegular.checkCircle : PhosphorIconsRegular.circle,
           key: ValueKey(selected),
           color: selected ? AppColors.primary : AppColors.textTertiary,
           size: 22,
@@ -624,7 +623,7 @@ class _PickPlaylistSheetState extends State<_PickPlaylistSheet> {
             controller: _searchCtrl,
             decoration: const InputDecoration(
               hintText: 'Search playlists',
-              prefixIcon: Icon(Icons.search_rounded),
+              prefixIcon: Icon(PhosphorIconsRegular.magnifyingGlass),
             ),
           ),
         ),
@@ -642,7 +641,7 @@ class _PickPlaylistSheetState extends State<_PickPlaylistSheet> {
                     final playlist = playlists[index];
                     return ListTile(
                       leading: const Icon(
-                        Icons.queue_music_rounded,
+                        PhosphorIconsRegular.queue,
                         color: AppColors.primary,
                       ),
                       title: Text(playlist.name),

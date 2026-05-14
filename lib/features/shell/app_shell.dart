@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -91,18 +92,18 @@ class _AppShellState extends ConsumerState<AppShell> {
                 ),
                 destinations: const [
                   NavigationDestination(
-                    icon: Icon(Icons.home_rounded),
-                    selectedIcon: Icon(Icons.home_rounded),
+                    icon: Icon(PhosphorIconsRegular.house),
+                    selectedIcon: Icon(PhosphorIconsRegular.house),
                     label: 'Home',
                   ),
                   NavigationDestination(
-                    icon: Icon(Icons.search_rounded),
-                    selectedIcon: Icon(Icons.search_rounded),
+                    icon: Icon(PhosphorIconsRegular.magnifyingGlass),
+                    selectedIcon: Icon(PhosphorIconsRegular.magnifyingGlass),
                     label: 'Search',
                   ),
                   NavigationDestination(
-                    icon: Icon(Icons.library_music_rounded),
-                    selectedIcon: Icon(Icons.library_music_rounded),
+                    icon: Icon(PhosphorIconsRegular.musicNotes),
+                    selectedIcon: Icon(PhosphorIconsRegular.musicNotes),
                     label: 'Library',
                   ),
                 ],
@@ -128,7 +129,7 @@ class _OfflineBanner extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.wifi_off_rounded,
+            PhosphorIconsRegular.wifiSlash,
             size: 13,
             color: AppColors.textSecondary,
           ),

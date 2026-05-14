@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -71,7 +72,7 @@ class DownloadedAlbumTile extends ConsumerWidget {
                       placeholder: (_, __) =>
                           Container(color: AppColors.surfaceElevated),
                       errorWidget: (_, __, ___) => const Icon(
-                        Icons.album_rounded,
+                        PhosphorIconsRegular.disc,
                         color: AppColors.textTertiary,
                       ),
                     ),
@@ -117,7 +118,7 @@ class DownloadedAlbumTile extends ConsumerWidget {
                 const SizedBox(width: AppSpacing.sm),
                 PopupMenuButton<_DownloadAction>(
                   icon: const Icon(
-                    Icons.more_vert_rounded,
+                    PhosphorIconsRegular.dotsThreeVertical,
                     color: AppColors.textSecondary,
                   ),
                   onSelected: (action) {
@@ -131,7 +132,7 @@ class DownloadedAlbumTile extends ConsumerWidget {
                       value: _DownloadAction.remove,
                       child: ListTile(
                         leading: Icon(
-                          Icons.delete_rounded,
+                          PhosphorIconsRegular.trash,
                           color: AppColors.error,
                         ),
                         title: Text('Remove download'),

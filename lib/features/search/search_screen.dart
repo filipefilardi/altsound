@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_spacing.dart';
@@ -84,11 +85,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               onChanged: _onChanged,
               decoration: InputDecoration(
                 hintText: 'Songs, albums, artists',
-                prefixIcon: const Icon(Icons.search_rounded),
+                prefixIcon: const Icon(PhosphorIconsRegular.magnifyingGlass),
                 suffixIcon: _ctrl.text.isEmpty
                     ? null
                     : IconButton(
-                        icon: const Icon(Icons.close_rounded),
+                        icon: const Icon(PhosphorIconsRegular.x),
                         onPressed: () {
                           _ctrl.clear();
                           _onChanged('');
@@ -108,7 +109,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                       }
                       if (snap.hasError) {
                         return EmptyState(
-                          icon: Icons.error_outline_rounded,
+                          icon: PhosphorIconsRegular.warningCircle,
                           title: 'Search failed',
                           message: '${snap.error}',
                         );
@@ -133,7 +134,7 @@ class _IdleHint extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return EmptyState(
-      icon: Icons.search_rounded,
+      icon: PhosphorIconsRegular.magnifyingGlass,
       title: 'Search your Jellyfin library',
       message: 'Find songs, albums, and artists you already have.',
     );
@@ -147,7 +148,7 @@ class _NoResults extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return EmptyState(
-      icon: Icons.search_off_rounded,
+      icon: PhosphorIconsRegular.magnifyingGlassMinus,
       title: 'No matches in your library',
       message: 'Nothing matched "$term". Try a different spelling.',
     );

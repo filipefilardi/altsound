@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/navigation/app_navigation.dart';
@@ -73,7 +74,7 @@ class PopularTrackTile extends ConsumerWidget {
             const Padding(
               padding: EdgeInsets.only(right: AppSpacing.xs),
               child: Icon(
-                Icons.download_for_offline_rounded,
+                PhosphorIconsRegular.downloadSimple,
                 size: 14,
                 color: AppColors.primary,
               ),

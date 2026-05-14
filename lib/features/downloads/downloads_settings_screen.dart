@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
@@ -30,7 +31,7 @@ class DownloadsSettingsScreen extends ConsumerWidget {
         children: [
           const SectionLabel('Behaviour'),
           SwitchListTile(
-            secondary: const Icon(Icons.sync_rounded),
+            secondary: const Icon(PhosphorIconsRegular.arrowsClockwise),
             title: const Text('Auto-download new songs'),
             subtitle: const Text(
               'When you open a downloaded album or playlist, any new tracks are queued automatically.',
@@ -41,7 +42,7 @@ class DownloadsSettingsScreen extends ConsumerWidget {
           ),
           const SectionLabel('Network'),
           SwitchListTile(
-            secondary: const Icon(Icons.wifi_rounded),
+            secondary: const Icon(PhosphorIconsRegular.wifiHigh),
             title: const Text('WiFi only'),
             subtitle: const Text(
               'Pause downloads when not connected to WiFi.',
@@ -52,7 +53,7 @@ class DownloadsSettingsScreen extends ConsumerWidget {
           ),
           const SectionLabel('Storage'),
           ListTile(
-            leading: const Icon(Icons.bar_chart_rounded),
+            leading: const Icon(PhosphorIconsRegular.chartBar),
             title: const Text('Downloaded tracks'),
             subtitle: Text(
               '${downloads.tracks.length} tracks across $albumCount albums',
@@ -64,7 +65,7 @@ class DownloadsSettingsScreen extends ConsumerWidget {
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.playlist_play_rounded),
+            leading: const Icon(PhosphorIconsRegular.playlist),
             title: const Text('Saved playlists'),
             subtitle: Text(
               '${downloads.playlists.length} playlists',
@@ -73,7 +74,7 @@ class DownloadsSettingsScreen extends ConsumerWidget {
           ),
           if (downloads.queueLength > 0)
             ListTile(
-              leading: const Icon(Icons.schedule_rounded),
+              leading: const Icon(PhosphorIconsRegular.clock),
               title: const Text('Queued downloads'),
               subtitle: Text(
                 '${downloads.queueLength} tracks waiting',
@@ -82,7 +83,7 @@ class DownloadsSettingsScreen extends ConsumerWidget {
             ),
           ListTile(
             leading: const Icon(
-              Icons.delete_forever_rounded,
+              PhosphorIconsRegular.trash,
               color: AppColors.error,
             ),
             title: const Text(

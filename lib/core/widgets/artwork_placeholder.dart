@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
 
 class ArtworkPlaceholder extends StatelessWidget {
   const ArtworkPlaceholder({
     super.key,
-    this.icon = Icons.album_rounded,
+    this.icon = PhosphorIconsRegular.disc,
     this.iconSize = 40,
     this.iconColor = AppColors.textTertiary,
     this.backgroundColor = AppColors.surfaceElevated,

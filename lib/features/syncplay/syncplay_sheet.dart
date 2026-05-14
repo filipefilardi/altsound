@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
@@ -100,7 +101,7 @@ class _SyncPlayPopoverState extends ConsumerState<_SyncPlayPopover> {
       children: [
         for (final group in state.groups)
           GlassPopoverItem(
-            icon: Icons.person_rounded,
+            icon: PhosphorIconsRegular.user,
             label: group.name,
             subtitle: group.participants.isEmpty
                 ? 'No users connected'
@@ -109,7 +110,7 @@ class _SyncPlayPopoverState extends ConsumerState<_SyncPlayPopover> {
             onTap: () => controller.joinGroup(group.id),
           ),
         GlassPopoverItem(
-          icon: Icons.add_rounded,
+          icon: PhosphorIconsRegular.plus,
           label: 'New group',
           subtitle: 'Create a new group',
           enabled: !state.loading,
@@ -151,7 +152,7 @@ class _SyncPlayPopoverState extends ConsumerState<_SyncPlayPopover> {
           ),
         ),
         GlassPopoverItem(
-          icon: Icons.logout_rounded,
+          icon: PhosphorIconsRegular.signOut,
           label: 'Leave group',
           subtitle: 'Disable SyncPlay',
           destructive: true,

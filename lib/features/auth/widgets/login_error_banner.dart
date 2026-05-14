@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_radius.dart';
@@ -24,7 +25,7 @@ class LoginErrorBanner extends StatelessWidget {
       child: Row(
         children: [
           const Icon(
-            Icons.error_outline_rounded,
+            PhosphorIconsRegular.warningCircle,
             color: AppColors.error,
             size: 20,
           ),

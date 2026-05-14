@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/utils/format.dart';
@@ -24,7 +25,7 @@ class BackupSummary extends StatelessWidget {
       label: 'Snapshot',
       children: [
         ListTile(
-          leading: const Icon(Icons.event_available_rounded),
+          leading: const Icon(PhosphorIconsRegular.calendarCheck),
           title: const Text('Created'),
           subtitle: Text(
             _formatDateTime(document.createdAt),
@@ -32,7 +33,7 @@ class BackupSummary extends StatelessWidget {
           ),
         ),
         ListTile(
-          leading: const Icon(Icons.library_music_rounded),
+          leading: const Icon(PhosphorIconsRegular.musicNotes),
           title: const Text('Contents'),
           subtitle: Text(
             '${backup.playlistCount} playlists · ${backup.trackCount} songs · ${formatBytes(backup.sizeBytes)}',
@@ -40,7 +41,7 @@ class BackupSummary extends StatelessWidget {
           ),
         ),
         ListTile(
-          leading: const Icon(Icons.dns_rounded),
+          leading: const Icon(PhosphorIconsRegular.hardDrives),
           title: const Text('Source'),
           subtitle: Text(
             [
@@ -63,7 +64,7 @@ class BackupSummary extends StatelessWidget {
           ),
         ),
         ListTile(
-          leading: const Icon(Icons.folder_rounded),
+          leading: const Icon(PhosphorIconsRegular.folder),
           title: const Text('File'),
           subtitle: Text(
             backup.path,

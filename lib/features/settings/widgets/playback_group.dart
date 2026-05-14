@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
@@ -16,7 +17,7 @@ class PlaybackGroup extends ConsumerWidget {
       label: 'Playback',
       children: [
         ListTile(
-          leading: const Icon(Icons.high_quality_rounded),
+          leading: const Icon(PhosphorIconsRegular.monitorPlay),
           title: const Text('Streaming quality'),
           subtitle: Text(
             prefs.streamingQuality.label,
@@ -25,7 +26,7 @@ class PlaybackGroup extends ConsumerWidget {
           onTap: () => _showStreamingQualitySheet(context),
         ),
         SwitchListTile(
-          secondary: const Icon(Icons.swap_horiz_rounded),
+          secondary: const Icon(PhosphorIconsRegular.arrowsLeftRight),
           title: const Text('Gapless playback'),
           subtitle: const Text(
             'Eagerly preload tracks for seamless transitions. Applies on next launch.',

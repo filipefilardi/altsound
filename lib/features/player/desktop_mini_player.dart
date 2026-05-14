@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:just_audio/just_audio.dart';
@@ -140,7 +141,7 @@ class DesktopMiniPlayer extends ConsumerWidget {
                           children: [
                             IconButton(
                               icon: Icon(
-                                Icons.shuffle_rounded,
+                                PhosphorIconsRegular.shuffle,
                                 size: 20,
                                 color: shuffled
                                     ? AppColors.primary
@@ -155,7 +156,7 @@ class DesktopMiniPlayer extends ConsumerWidget {
                             const SizedBox(width: AppSpacing.sm),
                             IconButton(
                               icon: const Icon(
-                                Icons.skip_previous_rounded,
+                                PhosphorIconsRegular.skipBack,
                                 size: 24,
                               ),
                               onPressed: controller.previous,
@@ -181,8 +182,8 @@ class DesktopMiniPlayer extends ConsumerWidget {
                               child: IconButton(
                                 icon: Icon(
                                   playing
-                                      ? Icons.pause_rounded
-                                      : Icons.play_arrow_rounded,
+                                      ? PhosphorIconsRegular.pause
+                                      : PhosphorIconsRegular.play,
                                   size: 24,
                                 ),
                                 onPressed: controller.togglePlay,
@@ -194,7 +195,7 @@ class DesktopMiniPlayer extends ConsumerWidget {
                             ),
                             IconButton(
                               icon: const Icon(
-                                Icons.skip_next_rounded,
+                                PhosphorIconsRegular.skipForward,
                                 size: 24,
                               ),
                               onPressed: controller.next,
@@ -207,8 +208,8 @@ class DesktopMiniPlayer extends ConsumerWidget {
                             IconButton(
                               icon: Icon(
                                 loopMode == LoopMode.one
-                                    ? Icons.repeat_one_rounded
-                                    : Icons.repeat_rounded,
+                                    ? PhosphorIconsRegular.repeatOnce
+                                    : PhosphorIconsRegular.repeat,
                                 size: 20,
                                 color: loopMode == LoopMode.off
                                     ? AppColors.textSecondary
@@ -297,7 +298,7 @@ class DesktopMiniPlayer extends ConsumerWidget {
                           children: [
                             IconButton(
                               icon: const Icon(
-                                Icons.auto_awesome_rounded,
+                                PhosphorIconsRegular.sparkle,
                                 size: 20,
                               ),
                               onPressed: () => openInstantMixPage(
@@ -315,7 +316,10 @@ class DesktopMiniPlayer extends ConsumerWidget {
                             ),
                             const SizedBox(width: AppSpacing.xs),
                             IconButton(
-                              icon: const Icon(Icons.mic_rounded, size: 20),
+                              icon: const Icon(
+                                PhosphorIconsRegular.microphone,
+                                size: 20,
+                              ),
                               onPressed: () => context.push('/lyrics'),
                               tooltip: 'Lyrics',
                               padding: EdgeInsets.zero,
@@ -327,8 +331,8 @@ class DesktopMiniPlayer extends ConsumerWidget {
                             IconButton(
                               icon: Icon(
                                 muted
-                                    ? Icons.volume_off_rounded
-                                    : Icons.volume_up_rounded,
+                                    ? PhosphorIconsRegular.speakerSlash
+                                    : PhosphorIconsRegular.speakerHigh,
                                 size: 20,
                               ),
                               onPressed: controller.toggleMute,
@@ -367,7 +371,7 @@ class DesktopMiniPlayer extends ConsumerWidget {
                             const SizedBox(width: AppSpacing.xs),
                             IconButton(
                               icon: const Icon(
-                                Icons.queue_music_rounded,
+                                PhosphorIconsRegular.queue,
                                 size: 20,
                               ),
                               onPressed: () =>
@@ -382,8 +386,8 @@ class DesktopMiniPlayer extends ConsumerWidget {
                             IconButton(
                               icon: Icon(
                                 saved
-                                    ? Icons.playlist_add_check_rounded
-                                    : Icons.playlist_add_rounded,
+                                    ? PhosphorIconsRegular.listChecks
+                                    : PhosphorIconsRegular.listPlus,
                                 size: 20,
                                 color: saved
                                     ? AppColors.primary

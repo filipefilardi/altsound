@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -60,7 +61,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
       return Scaffold(
         appBar: AppBar(
           leading: IconButton(
-            icon: const Icon(Icons.keyboard_arrow_down_rounded),
+            icon: const Icon(PhosphorIconsRegular.caretDown),
             onPressed: () => context.pop(),
           ),
         ),

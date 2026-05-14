@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -95,14 +96,14 @@ class PlayerTopBar extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 30),
+                  icon: const Icon(PhosphorIconsRegular.caretDown, size: 30),
                   onPressed: () => context.pop(),
                 ),
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.queue_music_rounded, size: 24),
+                      icon: const Icon(PhosphorIconsRegular.queue, size: 24),
                       onPressed: onQueue,
                       tooltip: 'Up next',
                     ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
@@ -64,7 +65,9 @@ class InstantMixActionRow extends ConsumerWidget {
                     );
                   }
                 : null,
-            icon: isMixPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+            icon: isMixPlaying
+                ? PhosphorIconsRegular.pause
+                : PhosphorIconsRegular.play,
             tooltip: isMixPlaying ? 'Pause' : 'Play',
           ),
           const SizedBox(width: AppSpacing.md),
@@ -72,7 +75,7 @@ class InstantMixActionRow extends ConsumerWidget {
           IconButton(
             tooltip: 'Shuffle',
             icon: Icon(
-              Icons.shuffle_rounded,
+              PhosphorIconsRegular.shuffle,
               color: shuffleEnabled ? AppColors.primary : AppColors.textPrimary,
             ),
             onPressed: () => ref.read(playerControllerProvider).toggleShuffle(),
@@ -88,7 +91,7 @@ class InstantMixActionRow extends ConsumerWidget {
                       color: AppColors.primary,
                     ),
                   )
-                : const Icon(Icons.refresh_rounded),
+                : const Icon(PhosphorIconsRegular.arrowsClockwise),
             onPressed: isRegenerating
                 ? null
                 : () => ref.invalidate(instantMixTracksProvider(request)),
@@ -96,7 +99,7 @@ class InstantMixActionRow extends ConsumerWidget {
           Builder(
             builder: (anchorCtx) => IconButton(
               tooltip: 'More actions',
-              icon: const Icon(Icons.more_vert_rounded),
+              icon: const Icon(PhosphorIconsRegular.dotsThreeVertical),
               onPressed: () =>
                   _showMoreActions(anchorCtx, context, ref, hasTracks),
             ),
@@ -119,13 +122,13 @@ class InstantMixActionRow extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           GlassPopoverItem(
-            icon: Icons.add_to_queue_rounded,
+            icon: PhosphorIconsRegular.listPlus,
             label: 'Add to queue',
             enabled: hasTracks,
             onTap: () => _addMixToQueue(context, ref, tracks),
           ),
           GlassPopoverItem(
-            icon: Icons.playlist_add_rounded,
+            icon: PhosphorIconsRegular.listPlus,
             label: 'Create playlist from mix',
             enabled: hasTracks,
             onTap: () => _createPlaylistFromMix(

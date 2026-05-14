@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -141,8 +142,8 @@ class MiniPlayer extends ConsumerWidget {
                             ),
                             _RoundIcon(
                               icon: saved
-                                  ? Icons.playlist_add_check_rounded
-                                  : Icons.playlist_add_rounded,
+                                  ? PhosphorIconsRegular.listChecks
+                                  : PhosphorIconsRegular.listPlus,
                               iconColor: saved ? AppColors.primary : null,
                               onTap: () => unawaited(
                                 _onMiniPlayerPlaylistTap(
@@ -155,8 +156,8 @@ class MiniPlayer extends ConsumerWidget {
                             ),
                             _RoundIcon(
                               icon: playing
-                                  ? Icons.pause_rounded
-                                  : Icons.play_arrow_rounded,
+                                  ? PhosphorIconsRegular.pause
+                                  : PhosphorIconsRegular.play,
                               onTap: controller.togglePlay,
                               emphasized: true,
                             ),

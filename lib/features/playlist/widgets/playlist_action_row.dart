@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
@@ -74,15 +75,15 @@ class PlaylistActionRow extends ConsumerWidget {
                       }
                     : null,
                 icon: isPlaylistPlaying
-                    ? Icons.pause_rounded
-                    : Icons.play_arrow_rounded,
+                    ? PhosphorIconsRegular.pause
+                    : PhosphorIconsRegular.play,
                 tooltip: isPlaylistPlaying ? 'Pause' : 'Play',
               ),
               const SizedBox(width: AppSpacing.md),
               IconButton(
                 tooltip: 'Shuffle',
                 icon: Icon(
-                  Icons.shuffle_rounded,
+                  PhosphorIconsRegular.shuffle,
                   color: shuffleEnabled
                       ? AppColors.primary
                       : AppColors.textPrimary,
@@ -91,7 +92,7 @@ class PlaylistActionRow extends ConsumerWidget {
               ),
               IconButton(
                 tooltip: 'Instant Mix',
-                icon: const Icon(Icons.auto_awesome_rounded),
+                icon: const Icon(PhosphorIconsRegular.sparkle),
                 onPressed: enabled
                     ? () => openInstantMixPage(
                         context,
@@ -105,7 +106,7 @@ class PlaylistActionRow extends ConsumerWidget {
               Builder(
                 builder: (sortCtx) => IconButton(
                   tooltip: 'Sort',
-                  icon: const Icon(Icons.sort_rounded),
+                  icon: const Icon(PhosphorIconsRegular.sortAscending),
                   onPressed: enabled && onSort != null
                       ? () => onSort!(sortCtx)
                       : null,
@@ -115,9 +116,14 @@ class PlaylistActionRow extends ConsumerWidget {
               Builder(
                 builder: (anchorCtx) => IconButton(
                   tooltip: 'More actions',
-                  icon: const Icon(Icons.more_vert_rounded),
+                  icon: const Icon(PhosphorIconsRegular.dotsThreeVertical),
                   onPressed: canOpenMore
-                      ? () => _showMoreActions(anchorCtx, context, ref, controller)
+                      ? () => _showMoreActions(
+                          anchorCtx,
+                          context,
+                          ref,
+                          controller,
+                        )
                       : null,
                 ),
               ),
@@ -145,19 +151,19 @@ class PlaylistActionRow extends ConsumerWidget {
           if (hasTracks) ...[
             if (onEdit != null)
               GlassPopoverItem(
-                icon: Icons.edit_note_rounded,
+                icon: PhosphorIconsRegular.notePencil,
                 label: 'Edit playlist',
                 onTap: () => onEdit!.call(),
               ),
             if (duplicateCount > 0 && onRemoveDuplicates != null)
               GlassPopoverItem(
-                icon: Icons.content_copy_rounded,
+                icon: PhosphorIconsRegular.copy,
                 label:
                     'Remove $duplicateCount duplicate${duplicateCount == 1 ? '' : 's'}',
                 onTap: () => onRemoveDuplicates!.call(),
               ),
             GlassPopoverItem(
-              icon: Icons.playlist_add_rounded,
+              icon: PhosphorIconsRegular.listPlus,
               label: 'Add to playlist',
               onTap: () => openAddTracksToPlaylistFlow(
                 context,
@@ -166,7 +172,7 @@ class PlaylistActionRow extends ConsumerWidget {
               ),
             ),
             GlassPopoverItem(
-              icon: Icons.add_to_queue_rounded,
+              icon: PhosphorIconsRegular.listPlus,
               label: 'Add to queue',
               onTap: () async {
                 final added = await controller.addTracksToQueue(visibleTracks);
@@ -181,17 +187,16 @@ class PlaylistActionRow extends ConsumerWidget {
               },
             ),
           ],
-          if (showDivider)
-            const Divider(height: 1, color: Color(0x33FFFFFF)),
+          if (showDivider) const Divider(height: 1, color: Color(0x33FFFFFF)),
           if (onRename != null)
             GlassPopoverItem(
-              icon: Icons.edit_rounded,
+              icon: PhosphorIconsRegular.pencilSimple,
               label: 'Rename playlist',
               onTap: () => onRename!.call(),
             ),
           if (onDelete != null)
             GlassPopoverItem(
-              icon: Icons.delete_rounded,
+              icon: PhosphorIconsRegular.trash,
               label: 'Delete playlist',
               destructive: true,
               onTap: () => onDelete!.call(),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -19,7 +20,7 @@ class TrackMoreMenuButton extends ConsumerWidget {
     return Builder(
       builder: (anchorCtx) => IconButton(
         icon: const Icon(
-          Icons.more_vert_rounded,
+          PhosphorIconsRegular.dotsThreeVertical,
           color: AppColors.textSecondary,
         ),
         onPressed: () => showGlassPopover<void>(
@@ -29,13 +30,13 @@ class TrackMoreMenuButton extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               GlassPopoverItem(
-                icon: Icons.playlist_add_rounded,
+                icon: PhosphorIconsRegular.listPlus,
                 label: 'Add to playlist',
                 onTap: () =>
                     openAddTrackToPlaylistFlow(context, ref, trackId: track.id),
               ),
               GlassPopoverItem(
-                icon: Icons.queue_music_rounded,
+                icon: PhosphorIconsRegular.queue,
                 label: 'Play next',
                 onTap: () async {
                   await ref.read(playerControllerProvider).playNext(track);
@@ -47,7 +48,7 @@ class TrackMoreMenuButton extends ConsumerWidget {
                 },
               ),
               GlassPopoverItem(
-                icon: Icons.auto_awesome_rounded,
+                icon: PhosphorIconsRegular.sparkle,
                 label: 'Instant Mix',
                 onTap: () => openInstantMixPage(
                   context,
@@ -58,7 +59,7 @@ class TrackMoreMenuButton extends ConsumerWidget {
                 ),
               ),
               GlassPopoverItem(
-                icon: Icons.add_to_queue_rounded,
+                icon: PhosphorIconsRegular.listPlus,
                 label: 'Add to queue',
                 onTap: () async {
                   await ref.read(playerControllerProvider).addToQueue(track);
@@ -71,13 +72,13 @@ class TrackMoreMenuButton extends ConsumerWidget {
               ),
               if (track.albumId != null && track.albumId!.isNotEmpty)
                 GlassPopoverItem(
-                  icon: Icons.album_rounded,
+                  icon: PhosphorIconsRegular.disc,
                   label: 'Go to album',
                   onTap: () => context.push('/album/${track.albumId}'),
                 ),
               if (track.artistId != null && track.artistId!.isNotEmpty)
                 GlassPopoverItem(
-                  icon: Icons.person_rounded,
+                  icon: PhosphorIconsRegular.user,
                   label: 'Go to artist',
                   onTap: () => context.push('/artist/${track.artistId}'),
                 ),

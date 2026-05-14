@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
@@ -80,7 +81,10 @@ class ArtistDownloadButton extends ConsumerWidget {
         width: 40,
         height: 40,
         child: Center(
-          child: Icon(Icons.downloading_rounded, color: AppColors.primary),
+          child: Icon(
+            PhosphorIconsRegular.downloadSimple,
+            color: AppColors.primary,
+          ),
         ),
       );
     }
@@ -89,7 +93,7 @@ class ArtistDownloadButton extends ConsumerWidget {
       return IconButton(
         tooltip: 'Waiting for WiFi — tap to change settings',
         icon: const Icon(
-          Icons.wifi_off_rounded,
+          PhosphorIconsRegular.wifiSlash,
           color: AppColors.textSecondary,
         ),
         onPressed: () => showWifiRequiredDialog(context),
@@ -98,7 +102,10 @@ class ArtistDownloadButton extends ConsumerWidget {
 
     return IconButton(
       tooltip: 'Download all songs',
-      icon: const Icon(Icons.download_rounded, color: AppColors.textPrimary),
+      icon: const Icon(
+        PhosphorIconsRegular.downloadSimple,
+        color: AppColors.textPrimary,
+      ),
       onPressed: () => _onPressed(context, ref),
     );
   }

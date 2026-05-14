@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_radius.dart';
@@ -74,12 +75,12 @@ class InstantMixHeader extends StatelessWidget {
                     child: LocalOrNetworkImage(
                       source: artworkUrl,
                       placeholderBuilder: (_) => const ArtworkPlaceholder(
-                        icon: Icons.auto_awesome_rounded,
+                        icon: PhosphorIconsRegular.sparkle,
                         iconSize: 64,
                         iconColor: AppColors.primary,
                       ),
                       errorBuilder: (_) => const ArtworkPlaceholder(
-                        icon: Icons.auto_awesome_rounded,
+                        icon: PhosphorIconsRegular.sparkle,
                         iconSize: 64,
                         iconColor: AppColors.primary,
                       ),

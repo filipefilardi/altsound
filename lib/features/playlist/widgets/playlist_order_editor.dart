@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
@@ -96,7 +97,7 @@ class _PlaylistOrderEditorState extends State<PlaylistOrderEditor> {
                     child: const Padding(
                       padding: EdgeInsets.all(AppSpacing.md),
                       child: Icon(
-                        Icons.drag_indicator_rounded,
+                        PhosphorIconsRegular.dotsSixVertical,
                         color: AppColors.textTertiary,
                       ),
                     ),

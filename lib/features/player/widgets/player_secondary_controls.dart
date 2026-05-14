@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 
@@ -51,7 +52,7 @@ class PlayerSecondaryControls extends ConsumerWidget {
               ? null
               : () => controller.toggleShuffle(),
           icon: Icon(
-            Icons.shuffle_rounded,
+            PhosphorIconsRegular.shuffle,
             color: shuffled ? AppColors.primary : AppColors.textSecondary,
             size: 22,
           ),
@@ -63,8 +64,8 @@ class PlayerSecondaryControls extends ConsumerWidget {
               : () => controller.cycleRepeatMode(),
           icon: Icon(
             loop == LoopMode.one
-                ? Icons.repeat_one_rounded
-                : Icons.repeat_rounded,
+                ? PhosphorIconsRegular.repeatOnce
+                : PhosphorIconsRegular.repeat,
             color: loop == LoopMode.off
                 ? AppColors.textSecondary
                 : AppColors.primary,
@@ -81,7 +82,7 @@ class PlayerSecondaryControls extends ConsumerWidget {
             title: mediaItem.title,
           ),
           icon: const Icon(
-            Icons.auto_awesome_rounded,
+            PhosphorIconsRegular.sparkle,
             color: AppColors.textSecondary,
             size: 22,
           ),
@@ -94,9 +95,7 @@ class PlayerSecondaryControls extends ConsumerWidget {
                   _onPlaylistTap(context, ref, trackId: mediaItem.id),
                 ),
           icon: Icon(
-            saved
-                ? Icons.playlist_add_check_rounded
-                : Icons.playlist_add_rounded,
+            saved ? PhosphorIconsRegular.listChecks : PhosphorIconsRegular.listPlus,
             color: saved ? AppColors.primary : AppColors.textSecondary,
             size: 24,
           ),
