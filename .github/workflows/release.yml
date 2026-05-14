@@ -180,7 +180,12 @@ jobs:
         run: flutter pub get
 
       - name: Build macOS (release, unsigned)
-        run: flutter build macos --release --no-codesign --build-name=${{ needs.version.outputs.name }} --build-number=${{ needs.version.outputs.build }}
+        env:
+          CODE_SIGNING_ALLOWED: NO
+          CODE_SIGNING_REQUIRED: NO
+          CODE_SIGN_IDENTITY: ""
+          EXPANDED_CODE_SIGN_IDENTITY: ""
+        run: flutter build macos --release --build-name=${{ needs.version.outputs.name }} --build-number=${{ needs.version.outputs.build }}
 
       - name: Zip .app bundle
         run: |
