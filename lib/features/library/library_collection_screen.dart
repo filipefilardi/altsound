@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/core/utils/search_normalization.dart';
 import 'package:altsound/core/widgets/empty_state.dart';
 import 'package:altsound/core/widgets/header_action_buttons.dart';
-import 'package:altsound/core/widgets/local_or_network_image.dart';
-import 'package:altsound/core/widgets/skeleton.dart';
 import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
 import 'package:altsound/data/jellyfin/models/media_item.dart';
+import 'package:altsound/features/library/widgets/collection_loading_rows.dart';
+import 'package:altsound/features/library/widgets/collection_tile.dart';
 
 enum LibraryCollectionKind { albums, artists }
 
@@ -54,7 +52,7 @@ class _LibraryCollectionScreenState
         ],
       ),
       body: items.when(
-        loading: () => const _CollectionLoadingRows(),
+        loading: () => const CollectionLoadingRows(),
         error: (e, _) => EmptyState(
           icon: Icons.error_outline_rounded,
           title: 'Could not load $title',
@@ -106,7 +104,7 @@ class _LibraryCollectionScreenState
                         itemCount: filtered.length,
                         itemBuilder: (context, index) {
                           final item = filtered[index];
-                          return _CollectionTile(
+                          return CollectionTile(
                             item: item,
                             isArtist:
                                 widget.kind == LibraryCollectionKind.artists,
@@ -138,88 +136,4 @@ final _libraryCollectionProvider = FutureProvider.autoDispose
       };
     });
 
-class _CollectionLoadingRows extends StatelessWidget {
-  const _CollectionLoadingRows();
 
-  @override
-  Widget build(BuildContext context) {
-    return Skeleton.group(
-      child: ListView.builder(
-        padding: const EdgeInsets.only(top: AppSpacing.sm, bottom: AppSpacing.miniPlayerInset),
-        itemCount: 10,
-        itemBuilder: (context, index) => Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
-          child: Row(
-            children: [
-              Skeleton.box(width: 52, height: 52, radius: 8),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Skeleton.line(width: 180, height: 14),
-                    const SizedBox(height: AppSpacing.sm),
-                    Skeleton.line(width: 120, height: 11),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CollectionTile extends ConsumerWidget {
-  const _CollectionTile({required this.item, required this.isArtist});
-
-  final BrowseItem item;
-  final bool isArtist;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final repo = ref.watch(jellyfinRepositoryProvider);
-    final imageUrl = item.imageTag == null
-        ? null
-        : repo.imageUrl(item.id, imageTag: item.imageTag, size: 200);
-
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
-      leading: ClipRRect(
-        borderRadius: BorderRadius.circular(isArtist ? 28 : 6),
-        child: SizedBox(
-          width: 52,
-          height: 52,
-          child: LocalOrNetworkImage(
-            source: imageUrl,
-            placeholderBuilder: (_) =>
-                const ColoredBox(color: AppColors.surfaceElevated),
-            errorBuilder: (_) => ColoredBox(
-              color: AppColors.surfaceElevated,
-              child: Icon(
-                isArtist ? Icons.person_rounded : Icons.album_rounded,
-                color: AppColors.textTertiary,
-                size: 24,
-              ),
-            ),
-          ),
-        ),
-      ),
-      title: Text(
-        item.name,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(fontWeight: FontWeight.w600),
-      ),
-      subtitle: Text(
-        item.subtitle ?? (isArtist ? 'Artist' : 'Album'),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
-      ),
-      onTap: () =>
-          context.push(isArtist ? '/artist/${item.id}' : '/album/${item.id}'),
-    );
-  }
-}

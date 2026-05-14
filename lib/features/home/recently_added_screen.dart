@@ -8,9 +8,9 @@ import 'package:altsound/core/theme/app_radius.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/core/widgets/artwork_placeholder.dart';
 import 'package:altsound/core/widgets/error_state.dart';
-import 'package:altsound/core/widgets/skeleton.dart';
 import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
 import 'package:altsound/features/home/home_controller.dart';
+import 'package:altsound/features/home/widgets/grid_loading.dart';
 import 'package:altsound/features/player/widgets/mini_player_slot.dart';
 
 class RecentlyAddedScreen extends ConsumerWidget {
@@ -27,7 +27,7 @@ class RecentlyAddedScreen extends ConsumerWidget {
         reserveSpaceWhenEmpty: true,
       ),
       body: async.when(
-        loading: () => const _GridLoading(),
+        loading: () => const GridLoading(),
         error: (e, _) => ErrorStateView(
           title: "Couldn't load recently added",
           message: e.toString(),
@@ -113,38 +113,3 @@ class RecentlyAddedScreen extends ConsumerWidget {
   }
 }
 
-class _GridLoading extends StatelessWidget {
-  const _GridLoading();
-
-  @override
-  Widget build(BuildContext context) {
-    return Skeleton.group(
-      child: GridView.builder(
-        padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.lg),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-          childAspectRatio: 0.72,
-        ),
-        itemCount: 12,
-        itemBuilder: (_, __) => Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AspectRatio(
-              aspectRatio: 1,
-              child: Skeleton.box(
-                width: double.infinity,
-                height: double.infinity,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Skeleton.line(height: 12),
-            const SizedBox(height: AppSpacing.sm),
-            Skeleton.line(width: 80, height: 10),
-          ],
-        ),
-      ),
-    );
-  }
-}

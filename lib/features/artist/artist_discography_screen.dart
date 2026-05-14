@@ -8,9 +8,9 @@ import 'package:altsound/core/theme/app_radius.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/core/widgets/artwork_placeholder.dart';
 import 'package:altsound/core/widgets/error_state.dart';
-import 'package:altsound/core/widgets/skeleton.dart';
 import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
 import 'package:altsound/features/artist/artist_screen.dart';
+import 'package:altsound/features/artist/widgets/discography_loading.dart';
 import 'package:altsound/features/player/widgets/mini_player_slot.dart';
 
 class ArtistDiscographyScreen extends ConsumerWidget {
@@ -28,7 +28,7 @@ class ArtistDiscographyScreen extends ConsumerWidget {
         reserveSpaceWhenEmpty: true,
       ),
       body: async.when(
-        loading: () => const _DiscographyLoading(),
+        loading: () => const DiscographyLoading(),
         error: (e, _) => ErrorStateView(
           title: "Couldn't load this discography",
           message: e.toString(),
@@ -112,38 +112,3 @@ class ArtistDiscographyScreen extends ConsumerWidget {
   }
 }
 
-class _DiscographyLoading extends StatelessWidget {
-  const _DiscographyLoading();
-
-  @override
-  Widget build(BuildContext context) {
-    return Skeleton.group(
-      child: GridView.builder(
-        padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, AppSpacing.lg),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-          childAspectRatio: 0.7,
-        ),
-        itemCount: 8,
-        itemBuilder: (_, __) => Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AspectRatio(
-              aspectRatio: 1,
-              child: Skeleton.box(
-                width: double.infinity,
-                height: double.infinity,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Skeleton.line(height: 12),
-            const SizedBox(height: AppSpacing.sm),
-            Skeleton.line(width: 80, height: 10),
-          ],
-        ),
-      ),
-    );
-  }
-}

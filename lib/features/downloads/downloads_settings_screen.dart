@@ -6,6 +6,7 @@ import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/core/utils/format.dart';
 import 'package:altsound/data/downloads/download_manager.dart';
 import 'package:altsound/data/downloads/download_preferences.dart';
+import 'package:altsound/features/downloads/widgets/section_label.dart';
 
 class DownloadsSettingsScreen extends ConsumerWidget {
   const DownloadsSettingsScreen({super.key});
@@ -27,7 +28,7 @@ class DownloadsSettingsScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.only(bottom: AppSpacing.miniPlayerInset),
         children: [
-          const _SectionLabel('Behaviour'),
+          const SectionLabel('Behaviour'),
           SwitchListTile(
             secondary: const Icon(Icons.sync_rounded),
             title: const Text('Auto-download new songs'),
@@ -38,7 +39,7 @@ class DownloadsSettingsScreen extends ConsumerWidget {
             value: prefs.autoDownload,
             onChanged: notifier.setAutoDownload,
           ),
-          const _SectionLabel('Network'),
+          const SectionLabel('Network'),
           SwitchListTile(
             secondary: const Icon(Icons.wifi_rounded),
             title: const Text('WiFi only'),
@@ -49,7 +50,7 @@ class DownloadsSettingsScreen extends ConsumerWidget {
             value: prefs.wifiOnly,
             onChanged: notifier.setWifiOnly,
           ),
-          const _SectionLabel('Storage'),
+          const SectionLabel('Storage'),
           ListTile(
             leading: const Icon(Icons.bar_chart_rounded),
             title: const Text('Downloaded tracks'),
@@ -139,19 +140,4 @@ Future<void> _confirmRemoveAll(
   }
 }
 
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.lg, AppSpacing.md, AppSpacing.sm),
-      child: Text(
-        text.toUpperCase(),
-        style: Theme.of(context).textTheme.labelLarge,
-      ),
-    );
-  }
-}
 
