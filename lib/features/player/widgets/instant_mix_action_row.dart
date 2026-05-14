@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/core/utils/format.dart';
+import 'package:altsound/core/widgets/glass_popover.dart';
 import 'package:altsound/core/widgets/play_pill.dart';
 import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
 import 'package:altsound/data/jellyfin/models/media_item.dart';
@@ -12,8 +13,6 @@ import 'package:altsound/features/player/instant_mix_screen.dart'
     show instantMixTracksProvider;
 import 'package:altsound/features/player/player_providers.dart';
 import 'package:altsound/features/playlist/playlist_providers.dart';
-
-enum _InstantMixAction { addToQueue, createPlaylist }
 
 /// Horizontal action row for the Instant Mix detail screen:
 /// Play, total-duration label, Shuffle, Regenerate (with spinner), and More
@@ -94,10 +93,13 @@ class InstantMixActionRow extends ConsumerWidget {
                 ? null
                 : () => ref.invalidate(instantMixTracksProvider(request)),
           ),
-          IconButton(
-            tooltip: 'More actions',
-            icon: const Icon(Icons.more_vert_rounded),
-            onPressed: () => _showMoreActions(context, ref, hasTracks),
+          Builder(
+            builder: (anchorCtx) => IconButton(
+              tooltip: 'More actions',
+              icon: const Icon(Icons.more_vert_rounded),
+              onPressed: () =>
+                  _showMoreActions(anchorCtx, context, ref, hasTracks),
+            ),
           ),
         ],
       ),
@@ -105,50 +107,38 @@ class InstantMixActionRow extends ConsumerWidget {
   }
 
   Future<void> _showMoreActions(
+    BuildContext anchorCtx,
     BuildContext context,
     WidgetRef ref,
     bool hasTracks,
-  ) async {
-    final action = await showModalBottomSheet<_InstantMixAction>(
-      context: context,
-      showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.add_to_queue_rounded),
-              title: const Text('Add to queue'),
-              onTap: () =>
-                  Navigator.of(sheetContext).pop(_InstantMixAction.addToQueue),
+  ) {
+    return showGlassPopover<void>(
+      context: anchorCtx,
+      builder: (_) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          GlassPopoverItem(
+            icon: Icons.add_to_queue_rounded,
+            label: 'Add to queue',
+            enabled: hasTracks,
+            onTap: () => _addMixToQueue(context, ref, tracks),
+          ),
+          GlassPopoverItem(
+            icon: Icons.playlist_add_rounded,
+            label: 'Create playlist from mix',
+            enabled: hasTracks,
+            onTap: () => _createPlaylistFromMix(
+              context,
+              ref,
+              seedTitle: seedTitle,
+              tracks: tracks,
             ),
-            ListTile(
-              leading: const Icon(Icons.playlist_add_rounded),
-              title: const Text('Create playlist from mix'),
-              onTap: () => Navigator.of(
-                sheetContext,
-              ).pop(_InstantMixAction.createPlaylist),
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 4),
+        ],
       ),
     );
-    if (action == null || !context.mounted) return;
-    switch (action) {
-      case _InstantMixAction.addToQueue:
-        if (hasTracks) {
-          await _addMixToQueue(context, ref, tracks);
-        }
-      case _InstantMixAction.createPlaylist:
-        if (hasTracks) {
-          await _createPlaylistFromMix(
-            context,
-            ref,
-            seedTitle: seedTitle,
-            tracks: tracks,
-          );
-        }
-    }
   }
 }
 

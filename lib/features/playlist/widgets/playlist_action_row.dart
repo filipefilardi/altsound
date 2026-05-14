@@ -3,21 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
+import 'package:altsound/core/widgets/glass_popover.dart';
 import 'package:altsound/core/widgets/play_pill.dart';
 import 'package:altsound/data/jellyfin/models/media_item.dart';
 import 'package:altsound/features/downloads/widgets/playlist_download_button.dart';
 import 'package:altsound/features/player/instant_mix.dart';
 import 'package:altsound/features/player/player_providers.dart';
 import 'package:altsound/features/player/widgets/add_track_to_playlist_sheet.dart';
-
-enum _PlaylistCollectionAction {
-  edit,
-  removeDuplicates,
-  addToPlaylist,
-  addToQueue,
-  rename,
-  delete,
-}
 
 /// Horizontal action row at the top of the playlist detail screen.
 /// Owns playback controls (play/shuffle), Instant Mix, sort, download, and
@@ -40,7 +32,7 @@ class PlaylistActionRow extends ConsumerWidget {
   final PlaylistDetail playlist;
   final List<Track> visibleTracks;
   final bool selectionActive;
-  final VoidCallback? onSort;
+  final ValueChanged<BuildContext>? onSort;
   final VoidCallback? onEdit;
   final int duplicateCount;
   final VoidCallback? onRemoveDuplicates;
@@ -110,18 +102,24 @@ class PlaylistActionRow extends ConsumerWidget {
                       )
                     : null,
               ),
-              IconButton(
-                tooltip: 'Sort',
-                icon: const Icon(Icons.sort_rounded),
-                onPressed: enabled ? onSort : null,
+              Builder(
+                builder: (sortCtx) => IconButton(
+                  tooltip: 'Sort',
+                  icon: const Icon(Icons.sort_rounded),
+                  onPressed: enabled && onSort != null
+                      ? () => onSort!(sortCtx)
+                      : null,
+                ),
               ),
               PlaylistDownloadButton(playlist: playlist),
-              IconButton(
-                tooltip: 'More actions',
-                icon: const Icon(Icons.more_vert_rounded),
-                onPressed: canOpenMore
-                    ? () => _showMoreActions(context, ref, controller)
-                    : null,
+              Builder(
+                builder: (anchorCtx) => IconButton(
+                  tooltip: 'More actions',
+                  icon: const Icon(Icons.more_vert_rounded),
+                  onPressed: canOpenMore
+                      ? () => _showMoreActions(anchorCtx, context, ref, controller)
+                      : null,
+                ),
               ),
             ],
           ),
@@ -131,102 +129,76 @@ class PlaylistActionRow extends ConsumerWidget {
   }
 
   Future<void> _showMoreActions(
+    BuildContext anchorCtx,
     BuildContext context,
     WidgetRef ref,
     PlayerController controller,
-  ) async {
+  ) {
     final hasTracks = visibleTracks.isNotEmpty;
-    final action = await showModalBottomSheet<_PlaylistCollectionAction>(
-      context: context,
-      showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (hasTracks) ...[
-              if (onEdit != null)
-                ListTile(
-                  leading: const Icon(Icons.edit_note_rounded),
-                  title: const Text('Edit playlist'),
-                  onTap: () => Navigator.of(
-                    sheetContext,
-                  ).pop(_PlaylistCollectionAction.edit),
-                ),
-              if (duplicateCount > 0 && onRemoveDuplicates != null)
-                ListTile(
-                  leading: const Icon(Icons.content_copy_rounded),
-                  title: Text(
+    final showDivider = hasTracks && (onRename != null || onDelete != null);
+    return showGlassPopover<void>(
+      context: anchorCtx,
+      builder: (_) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (hasTracks) ...[
+            if (onEdit != null)
+              GlassPopoverItem(
+                icon: Icons.edit_note_rounded,
+                label: 'Edit playlist',
+                onTap: () => onEdit!.call(),
+              ),
+            if (duplicateCount > 0 && onRemoveDuplicates != null)
+              GlassPopoverItem(
+                icon: Icons.content_copy_rounded,
+                label:
                     'Remove $duplicateCount duplicate${duplicateCount == 1 ? '' : 's'}',
+                onTap: () => onRemoveDuplicates!.call(),
+              ),
+            GlassPopoverItem(
+              icon: Icons.playlist_add_rounded,
+              label: 'Add to playlist',
+              onTap: () => openAddTracksToPlaylistFlow(
+                context,
+                ref,
+                trackIds: visibleTracks.map((t) => t.id).toList(),
+              ),
+            ),
+            GlassPopoverItem(
+              icon: Icons.add_to_queue_rounded,
+              label: 'Add to queue',
+              onTap: () async {
+                final added = await controller.addTracksToQueue(visibleTracks);
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Added $added song${added == 1 ? '' : 's'} to queue',
+                    ),
                   ),
-                  onTap: () => Navigator.of(
-                    sheetContext,
-                  ).pop(_PlaylistCollectionAction.removeDuplicates),
-                ),
-              ListTile(
-                leading: const Icon(Icons.playlist_add_rounded),
-                title: const Text('Add to playlist'),
-                onTap: () => Navigator.of(
-                  sheetContext,
-                ).pop(_PlaylistCollectionAction.addToPlaylist),
-              ),
-              ListTile(
-                leading: const Icon(Icons.add_to_queue_rounded),
-                title: const Text('Add to queue'),
-                onTap: () => Navigator.of(
-                  sheetContext,
-                ).pop(_PlaylistCollectionAction.addToQueue),
-              ),
-            ],
-            if (onRename != null || onDelete != null) ...[
-              if (hasTracks) const Divider(height: 1),
-            ],
-            if (onRename != null)
-              ListTile(
-                leading: const Icon(Icons.edit_rounded),
-                title: const Text('Rename playlist'),
-                onTap: () => Navigator.of(
-                  sheetContext,
-                ).pop(_PlaylistCollectionAction.rename),
-              ),
-            if (onDelete != null)
-              ListTile(
-                leading: const Icon(
-                  Icons.delete_rounded,
-                  color: AppColors.error,
-                ),
-                title: const Text('Delete playlist'),
-                onTap: () => Navigator.of(
-                  sheetContext,
-                ).pop(_PlaylistCollectionAction.delete),
-              ),
+                );
+              },
+            ),
           ],
-        ),
+          if (showDivider)
+            const Divider(height: 1, color: Color(0x33FFFFFF)),
+          if (onRename != null)
+            GlassPopoverItem(
+              icon: Icons.edit_rounded,
+              label: 'Rename playlist',
+              onTap: () => onRename!.call(),
+            ),
+          if (onDelete != null)
+            GlassPopoverItem(
+              icon: Icons.delete_rounded,
+              label: 'Delete playlist',
+              destructive: true,
+              onTap: () => onDelete!.call(),
+            ),
+          const SizedBox(height: 4),
+        ],
       ),
     );
-    if (action == null || !context.mounted) return;
-    switch (action) {
-      case _PlaylistCollectionAction.addToPlaylist:
-        await openAddTracksToPlaylistFlow(
-          context,
-          ref,
-          trackIds: visibleTracks.map((t) => t.id).toList(),
-        );
-      case _PlaylistCollectionAction.addToQueue:
-        final added = await controller.addTracksToQueue(visibleTracks);
-        if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Added $added song${added == 1 ? '' : 's'} to queue'),
-          ),
-        );
-      case _PlaylistCollectionAction.delete:
-        onDelete?.call();
-      case _PlaylistCollectionAction.rename:
-        onRename?.call();
-      case _PlaylistCollectionAction.edit:
-        onEdit?.call();
-      case _PlaylistCollectionAction.removeDuplicates:
-        onRemoveDuplicates?.call();
-    }
   }
 }

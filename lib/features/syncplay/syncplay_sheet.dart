@@ -3,26 +3,28 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
+import 'package:altsound/core/widgets/glass_popover.dart';
 import 'package:altsound/features/remote/remote_player_controller.dart';
 import 'package:altsound/features/syncplay/syncplay_controller.dart';
 
-Future<void> showSyncPlaySheet(BuildContext context) {
-  return showModalBottomSheet(
+/// Shows the SyncPlay menu as a floating glass popover anchored to [context]
+/// (typically the SyncPlay icon in the header).
+Future<void> showSyncPlayPopover(BuildContext context) {
+  return showGlassPopover<void>(
     context: context,
-    showDragHandle: true,
-    isScrollControlled: true,
-    builder: (_) => const _SyncPlaySheet(),
+    width: 300,
+    builder: (_) => const _SyncPlayPopover(),
   );
 }
 
-class _SyncPlaySheet extends ConsumerStatefulWidget {
-  const _SyncPlaySheet();
+class _SyncPlayPopover extends ConsumerStatefulWidget {
+  const _SyncPlayPopover();
 
   @override
-  ConsumerState<_SyncPlaySheet> createState() => _SyncPlaySheetState();
+  ConsumerState<_SyncPlayPopover> createState() => _SyncPlayPopoverState();
 }
 
-class _SyncPlaySheetState extends ConsumerState<_SyncPlaySheet> {
+class _SyncPlayPopoverState extends ConsumerState<_SyncPlayPopover> {
   @override
   void initState() {
     super.initState();
@@ -37,138 +39,123 @@ class _SyncPlaySheetState extends ConsumerState<_SyncPlaySheet> {
     final controller = ref.read(syncPlayControllerProvider.notifier);
     final remoteActive = ref.watch(activeRemoteSessionIdProvider) != null;
 
-    return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          20,
-          0,
-          20,
-          MediaQuery.viewInsetsOf(context).bottom + 20,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (remoteActive)
-              _buildRemoteActive(context)
-            else if (state.activeGroup != null)
-              _buildActiveGroup(context, state, controller)
-            else
-              _buildJoinGroup(context, state, controller),
-            if (state.error != null) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                state.error!,
-                style: const TextStyle(color: AppColors.error, fontSize: 13),
-              ),
-            ],
-          ],
-        ),
+    final Widget body;
+    if (remoteActive) {
+      body = _buildRemoteActive();
+    } else if (state.activeGroup != null) {
+      body = _buildActiveGroup(state, controller);
+    } else {
+      body = _buildJoinGroup(state, controller);
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const GlassPopoverHeader(label: 'SYNCPLAY'),
+        Flexible(child: SingleChildScrollView(child: body)),
+        if (state.error != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.xs,
+              AppSpacing.md,
+              AppSpacing.sm,
+            ),
+            child: Text(
+              state.error!,
+              style: const TextStyle(color: AppColors.error, fontSize: 12),
+            ),
+          ),
+        const SizedBox(height: AppSpacing.xs),
+      ],
+    );
+  }
+
+  Widget _buildRemoteActive() {
+    return const Padding(
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.xs,
+        AppSpacing.md,
+        AppSpacing.md,
+      ),
+      child: Text(
+        'Switch back to this device to use SyncPlay.',
+        style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
       ),
     );
   }
 
-  Widget _buildRemoteActive(BuildContext context) {
+  Widget _buildJoinGroup(SyncPlayState state, SyncPlayController controller) {
+    if (state.loading && state.groups.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(AppSpacing.lg),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
     return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('SyncPlay', style: Theme.of(context).textTheme.titleLarge),
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
-          child: Text('Switch back to this device to use SyncPlay.'),
+        for (final group in state.groups)
+          GlassPopoverItem(
+            icon: Icons.person_rounded,
+            label: group.name,
+            subtitle: group.participants.isEmpty
+                ? 'No users connected'
+                : group.participants.join(', '),
+            enabled: !state.loading,
+            onTap: () => controller.joinGroup(group.id),
+          ),
+        GlassPopoverItem(
+          icon: Icons.add_rounded,
+          label: 'New group',
+          subtitle: 'Create a new group',
+          enabled: !state.loading,
+          onTap: () => controller.createGroup(''),
         ),
       ],
     );
   }
 
-  Widget _buildJoinGroup(
-    BuildContext context,
-    SyncPlayState state,
-    SyncPlayController controller,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text('Join a group', style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: AppSpacing.sm),
-        if (state.loading && state.groups.isEmpty)
-          const Padding(
-            padding: EdgeInsets.all(AppSpacing.xl),
-            child: Center(child: CircularProgressIndicator()),
-          )
-        else ...[
-          for (final group in state.groups)
-            ListTile(
-              leading: const Icon(Icons.person_rounded),
-              title: Text(group.name),
-              subtitle: Text(
-                group.participants.isEmpty
-                    ? 'No users connected'
-                    : group.participants.join(', '),
-              ),
-              onTap: state.loading
-                  ? null
-                  : () async {
-                      await controller.joinGroup(group.id);
-                      if (!context.mounted) return;
-                      final joined =
-                          ref.read(syncPlayControllerProvider).activeGroup !=
-                          null;
-                      if (joined) Navigator.of(context).pop();
-                    },
-            ),
-          ListTile(
-            leading: const Icon(Icons.add_rounded),
-            title: const Text('New group'),
-            subtitle: const Text('Create a new group'),
-            onTap: state.loading
-                ? null
-                : () async {
-                    await controller.createGroup('');
-                    if (!context.mounted) return;
-                    final joined =
-                        ref.read(syncPlayControllerProvider).activeGroup !=
-                        null;
-                    if (joined) Navigator.of(context).pop();
-                  },
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildActiveGroup(
-    BuildContext context,
-    SyncPlayState state,
-    SyncPlayController controller,
-  ) {
+  Widget _buildActiveGroup(SyncPlayState state, SyncPlayController controller) {
     final group = state.activeGroup!;
     final participants = group.participants.isEmpty
         ? 'No users connected'
         : group.participants.join(', ');
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(group.name, style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: AppSpacing.xs),
-        Text(
-          participants,
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            0,
+            AppSpacing.md,
+            AppSpacing.sm,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(group.name, style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 2),
+              Text(
+                participants,
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: AppSpacing.md),
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: const Icon(Icons.logout_rounded),
-          title: const Text('Leave group'),
-          subtitle: const Text('Disable SyncPlay'),
-          onTap: () async {
-            Navigator.of(context).pop();
-            await controller.leaveGroup();
-          },
+        GlassPopoverItem(
+          icon: Icons.logout_rounded,
+          label: 'Leave group',
+          subtitle: 'Disable SyncPlay',
+          destructive: true,
+          onTap: controller.leaveGroup,
         ),
       ],
     );

@@ -6,6 +6,7 @@ import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/core/utils/search_normalization.dart';
 import 'package:altsound/core/widgets/error_state.dart';
+import 'package:altsound/core/widgets/glass_popover.dart';
 import 'package:altsound/data/downloads/download_manager.dart';
 import 'package:altsound/data/downloads/download_preferences.dart';
 import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
@@ -19,18 +20,9 @@ import 'package:altsound/features/playlist/widgets/playlist_action_row.dart';
 import 'package:altsound/features/playlist/widgets/playlist_header.dart';
 import 'package:altsound/features/playlist/widgets/playlist_loading.dart';
 import 'package:altsound/features/playlist/widgets/playlist_order_editor.dart';
-import 'package:altsound/features/playlist/widgets/playlist_sort_tile.dart';
 import 'package:altsound/features/playlist/widgets/playlist_track_tile.dart';
 import 'package:altsound/features/playlist/widgets/rename_playlist_dialog.dart';
 import 'package:altsound/features/playlist/widgets/selection_toolbar_button.dart';
-
-enum _SelectionBulkAction {
-  addToLiked,
-  addToPlaylist,
-  moveToTop,
-  moveToBottom,
-  removeFromPlaylist,
-}
 
 enum _PlaylistSort { custom, title, artist, album, dateAdded }
 
@@ -107,102 +99,78 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
     });
   }
 
-  Future<void> _showSelectionActionsMenu(
-    BuildContext context, {
+  Future<void> _showSelectionActionsPopover(
+    BuildContext anchorCtx, {
     required String playlistId,
-  }) async {
-    if (_selectedTrackIds.isEmpty) return;
+  }) {
+    if (_selectedTrackIds.isEmpty) return Future.value();
     final count = _selectedTrackIds.length;
-    final action = await showModalBottomSheet<_SelectionBulkAction>(
-      context: context,
-      showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(
-                Icons.favorite_rounded,
-                color: AppColors.like,
-              ),
-              title: const Text('Add to liked songs'),
-              onTap: () => Navigator.of(
-                sheetContext,
-              ).pop(_SelectionBulkAction.addToLiked),
+    final ids = Set<String>.from(_selectedTrackIds);
+    final outer = context;
+    return showGlassPopover<void>(
+      context: anchorCtx,
+      width: 280,
+      builder: (_) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          GlassPopoverItem(
+            icon: Icons.favorite_rounded,
+            label: 'Add to liked songs',
+            onTap: () => _bulkAddToLikedSongs(
+              outer,
+              ids,
+              onDone: _clearSelection,
             ),
-            ListTile(
-              leading: const Icon(
-                Icons.playlist_add_rounded,
-                color: AppColors.primary,
-              ),
-              title: const Text('Add to another playlist'),
-              onTap: () => Navigator.of(
-                sheetContext,
-              ).pop(_SelectionBulkAction.addToPlaylist),
+          ),
+          GlassPopoverItem(
+            icon: Icons.playlist_add_rounded,
+            label: 'Add to another playlist',
+            onTap: () => _showBulkAddToPlaylistDialog(
+              outer,
+              currentPlaylistId: playlistId,
+              trackIds: ids,
+              onDone: _clearSelection,
             ),
-            ListTile(
-              leading: const Icon(Icons.vertical_align_top_rounded),
-              title: const Text('Move to top'),
-              onTap: () => Navigator.of(
-                sheetContext,
-              ).pop(_SelectionBulkAction.moveToTop),
+          ),
+          GlassPopoverItem(
+            icon: Icons.vertical_align_top_rounded,
+            label: 'Move to top',
+            onTap: () => _moveSelectedTracks(
+              outer,
+              playlistId: playlistId,
+              trackIds: ids,
+              moveToTop: true,
+              onDone: _clearSelection,
             ),
-            ListTile(
-              leading: const Icon(Icons.vertical_align_bottom_rounded),
-              title: const Text('Move to bottom'),
-              onTap: () => Navigator.of(
-                sheetContext,
-              ).pop(_SelectionBulkAction.moveToBottom),
+          ),
+          GlassPopoverItem(
+            icon: Icons.vertical_align_bottom_rounded,
+            label: 'Move to bottom',
+            onTap: () => _moveSelectedTracks(
+              outer,
+              playlistId: playlistId,
+              trackIds: ids,
+              moveToTop: false,
+              onDone: _clearSelection,
             ),
-            ListTile(
-              leading: const Icon(Icons.remove_circle_rounded),
-              title: const Text('Remove from this playlist'),
-              onTap: () => Navigator.of(
-                sheetContext,
-              ).pop(_SelectionBulkAction.removeFromPlaylist),
+          ),
+          GlassPopoverItem(
+            icon: Icons.remove_circle_rounded,
+            label: 'Remove from this playlist',
+            destructive: true,
+            onTap: () => _confirmBulkRemove(
+              outer,
+              playlistId: playlistId,
+              count: count,
+              trackIds: ids,
+              onDone: _clearSelection,
             ),
-            const SizedBox(height: AppSpacing.sm),
-          ],
-        ),
+          ),
+          const SizedBox(height: 4),
+        ],
       ),
     );
-    if (!context.mounted || action == null) return;
-    final ids = Set<String>.from(_selectedTrackIds);
-    switch (action) {
-      case _SelectionBulkAction.addToLiked:
-        await _bulkAddToLikedSongs(context, ids, onDone: _clearSelection);
-      case _SelectionBulkAction.addToPlaylist:
-        await _showBulkAddToPlaylistDialog(
-          context,
-          currentPlaylistId: playlistId,
-          trackIds: ids,
-          onDone: _clearSelection,
-        );
-      case _SelectionBulkAction.moveToTop:
-        await _moveSelectedTracks(
-          context,
-          playlistId: playlistId,
-          trackIds: ids,
-          moveToTop: true,
-          onDone: _clearSelection,
-        );
-      case _SelectionBulkAction.moveToBottom:
-        await _moveSelectedTracks(
-          context,
-          playlistId: playlistId,
-          trackIds: ids,
-          moveToTop: false,
-          onDone: _clearSelection,
-        );
-      case _SelectionBulkAction.removeFromPlaylist:
-        await _confirmBulkRemove(
-          context,
-          playlistId: playlistId,
-          count: count,
-          trackIds: ids,
-          onDone: _clearSelection,
-        );
-    }
   }
 
   @override
@@ -282,15 +250,17 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                 ),
                 title: Text('${_selectedTrackIds.length} selected'),
                 actions: [
-                  SelectionToolbarButton(
-                    tooltip: 'More',
-                    icon: Icons.more_horiz_rounded,
-                    onPressed: _selectedTrackIds.isEmpty
-                        ? null
-                        : () => _showSelectionActionsMenu(
-                            context,
-                            playlistId: playlistId,
-                          ),
+                  Builder(
+                    builder: (anchorCtx) => SelectionToolbarButton(
+                      tooltip: 'More',
+                      icon: Icons.more_horiz_rounded,
+                      onPressed: _selectedTrackIds.isEmpty
+                          ? null
+                          : () => _showSelectionActionsPopover(
+                              anchorCtx,
+                              playlistId: playlistId,
+                            ),
+                    ),
                   ),
                 ],
               )
@@ -347,7 +317,8 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
             inSelection: _inSelection,
             onLongPress: _onLongPressStartSelection,
             onToggleSelected: _toggleTrackSelected,
-            onSort: () => _showSortPlaylistSheet(context, ref, playlist),
+            onSort: (anchorCtx) =>
+                _showSortPlaylistPopover(anchorCtx, playlist),
             onEdit: () => _editPlaylistOrder(context, ref, playlist),
             duplicateCount: _duplicatePlaylistEntries(playlist.tracks).length,
             onRemoveDuplicates: () =>
@@ -402,85 +373,79 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
         .toList();
   }
 
-  Future<void> _showSortPlaylistSheet(
-    BuildContext context,
-    WidgetRef ref,
+  Future<void> _showSortPlaylistPopover(
+    BuildContext anchorCtx,
     PlaylistDetail playlist,
-  ) async {
-    if (playlist.tracks.isEmpty) return;
-    final sort = await showModalBottomSheet<_PlaylistSort>(
-      context: context,
-      showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            PlaylistSortTile(
-              icon: Icons.format_list_numbered_rounded,
-              title: 'Custom order',
-              subtitle: 'Playlist order',
-              selected: _activeSort == _PlaylistSort.custom,
-              directional: false,
-              onTap: () => Navigator.of(sheetContext).pop(_PlaylistSort.custom),
-            ),
-            const Divider(height: 1),
-            PlaylistSortTile(
-              icon: Icons.title_rounded,
-              title: 'Title',
-              selected: _activeSort == _PlaylistSort.title,
-              descending: _activeSort == _PlaylistSort.title && _sortDescending,
-              subtitle: _sortSubtitle(
-                _PlaylistSort.title,
-                selected: _activeSort == _PlaylistSort.title,
-                descending: _sortDescending,
-              ),
-              onTap: () => Navigator.of(sheetContext).pop(_PlaylistSort.title),
-            ),
-            PlaylistSortTile(
-              icon: Icons.person_rounded,
-              title: 'Artist',
-              selected: _activeSort == _PlaylistSort.artist,
-              descending:
-                  _activeSort == _PlaylistSort.artist && _sortDescending,
-              subtitle: _sortSubtitle(
-                _PlaylistSort.artist,
-                selected: _activeSort == _PlaylistSort.artist,
-                descending: _sortDescending,
-              ),
-              onTap: () => Navigator.of(sheetContext).pop(_PlaylistSort.artist),
-            ),
-            PlaylistSortTile(
-              icon: Icons.album_rounded,
-              title: 'Album',
-              selected: _activeSort == _PlaylistSort.album,
-              descending: _activeSort == _PlaylistSort.album && _sortDescending,
-              subtitle: _sortSubtitle(
-                _PlaylistSort.album,
-                selected: _activeSort == _PlaylistSort.album,
-                descending: _sortDescending,
-              ),
-              onTap: () => Navigator.of(sheetContext).pop(_PlaylistSort.album),
-            ),
-            PlaylistSortTile(
-              icon: Icons.calendar_today_rounded,
-              title: 'Date added',
-              selected: _activeSort == _PlaylistSort.dateAdded,
-              descending:
-                  _activeSort == _PlaylistSort.dateAdded && _sortDescending,
-              subtitle: _sortSubtitle(
-                _PlaylistSort.dateAdded,
-                selected: _activeSort == _PlaylistSort.dateAdded,
-                descending: _sortDescending,
-              ),
-              onTap: () =>
-                  Navigator.of(sheetContext).pop(_PlaylistSort.dateAdded),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-          ],
-        ),
+  ) {
+    if (playlist.tracks.isEmpty) return Future.value();
+    return showGlassPopover<void>(
+      context: anchorCtx,
+      width: 280,
+      builder: (_) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const GlassPopoverHeader(label: 'SORT BY'),
+          _sortItem(
+            icon: Icons.format_list_numbered_rounded,
+            label: 'Custom order',
+            sort: _PlaylistSort.custom,
+            directional: false,
+          ),
+          _sortItem(
+            icon: Icons.title_rounded,
+            label: 'Title',
+            sort: _PlaylistSort.title,
+          ),
+          _sortItem(
+            icon: Icons.person_rounded,
+            label: 'Artist',
+            sort: _PlaylistSort.artist,
+          ),
+          _sortItem(
+            icon: Icons.album_rounded,
+            label: 'Album',
+            sort: _PlaylistSort.album,
+          ),
+          _sortItem(
+            icon: Icons.calendar_today_rounded,
+            label: 'Date added',
+            sort: _PlaylistSort.dateAdded,
+          ),
+          const SizedBox(height: 4),
+        ],
       ),
     );
-    if (sort == null || !context.mounted) return;
+  }
+
+  Widget _sortItem({
+    required IconData icon,
+    required String label,
+    required _PlaylistSort sort,
+    bool directional = true,
+  }) {
+    final selected = _activeSort == sort;
+    final descending = selected && _sortDescending;
+    return GlassPopoverItem(
+      icon: icon,
+      label: label,
+      trailing: selected
+          ? Icon(
+              directional
+                  ? (descending
+                        ? Icons.keyboard_arrow_down_rounded
+                        : Icons.keyboard_arrow_up_rounded)
+                  : Icons.check_rounded,
+              size: 18,
+              color: AppColors.primary,
+            )
+          : null,
+      onTap: () => _applySort(sort),
+    );
+  }
+
+  void _applySort(_PlaylistSort sort) {
+    if (!mounted) return;
     setState(() {
       if (sort == _PlaylistSort.custom) {
         _activeSort = _PlaylistSort.custom;
@@ -1024,25 +989,6 @@ List<Track> _sortedPlaylistTracks(
   return sorted;
 }
 
-String _sortSubtitle(
-  _PlaylistSort sort, {
-  required bool selected,
-  required bool descending,
-}) {
-  switch (sort) {
-    case _PlaylistSort.custom:
-      return 'Playlist order';
-    case _PlaylistSort.title:
-    case _PlaylistSort.artist:
-    case _PlaylistSort.album:
-      if (!selected) return 'A-Z';
-      return descending ? 'Z-A' : 'A-Z';
-    case _PlaylistSort.dateAdded:
-      if (!selected) return 'Oldest first';
-      return descending ? 'Newest first' : 'Oldest first';
-  }
-}
-
 int _compareStrings(String a, String b) {
   return a.trim().toLowerCase().compareTo(b.trim().toLowerCase());
 }
@@ -1093,7 +1039,7 @@ class _PlaylistView extends ConsumerWidget {
   final void Function(String trackId) onToggleSelected;
   final int duplicateCount;
   final VoidCallback? onRemoveDuplicates;
-  final VoidCallback? onSort;
+  final ValueChanged<BuildContext>? onSort;
   final VoidCallback? onEdit;
   final VoidCallback? onRename;
   final VoidCallback? onDelete;

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/widgets/glass_popover.dart';
 import 'package:altsound/data/jellyfin/models/media_item.dart';
 import 'package:altsound/features/player/instant_mix.dart';
 import 'package:altsound/features/player/player_providers.dart';
@@ -15,116 +16,76 @@ class TrackMoreMenuButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return IconButton(
-      icon: const Icon(Icons.more_vert_rounded, color: AppColors.textSecondary),
-      onPressed: () async {
-        final action = await _showActionsBottomSheet(context);
-        if (action == null || !context.mounted) return;
-        await _onAction(context, ref, action);
-      },
-    );
-  }
-
-  Future<_TrackAction?> _showActionsBottomSheet(BuildContext context) {
-    return showModalBottomSheet<_TrackAction>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (sheetContext) => FractionallySizedBox(
-        heightFactor: 0.9,
-        child: SafeArea(
-          child: ListView(
+    return Builder(
+      builder: (anchorCtx) => IconButton(
+        icon: const Icon(
+          Icons.more_vert_rounded,
+          color: AppColors.textSecondary,
+        ),
+        onPressed: () => showGlassPopover<void>(
+          context: anchorCtx,
+          builder: (_) => Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              ListTile(
-                leading: const Icon(Icons.playlist_add_rounded),
-                title: const Text('Add to playlist'),
+              GlassPopoverItem(
+                icon: Icons.playlist_add_rounded,
+                label: 'Add to playlist',
                 onTap: () =>
-                    Navigator.of(sheetContext).pop(_TrackAction.addToPlaylist),
+                    openAddTrackToPlaylistFlow(context, ref, trackId: track.id),
               ),
-              ListTile(
-                leading: const Icon(Icons.queue_music_rounded),
-                title: const Text('Play next'),
-                onTap: () =>
-                    Navigator.of(sheetContext).pop(_TrackAction.playNext),
+              GlassPopoverItem(
+                icon: Icons.queue_music_rounded,
+                label: 'Play next',
+                onTap: () async {
+                  await ref.read(playerControllerProvider).playNext(track);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Playing next')),
+                    );
+                  }
+                },
               ),
-              ListTile(
-                leading: const Icon(Icons.auto_awesome_rounded),
-                title: const Text('Instant Mix'),
-                onTap: () =>
-                    Navigator.of(sheetContext).pop(_TrackAction.instantMix),
+              GlassPopoverItem(
+                icon: Icons.auto_awesome_rounded,
+                label: 'Instant Mix',
+                onTap: () => openInstantMixPage(
+                  context,
+                  ref,
+                  itemId: track.id,
+                  kind: InstantMixSeedKind.track,
+                  title: track.name,
+                ),
               ),
-              ListTile(
-                leading: const Icon(Icons.add_to_queue_rounded),
-                title: const Text('Add to queue'),
-                onTap: () =>
-                    Navigator.of(sheetContext).pop(_TrackAction.addToQueue),
+              GlassPopoverItem(
+                icon: Icons.add_to_queue_rounded,
+                label: 'Add to queue',
+                onTap: () async {
+                  await ref.read(playerControllerProvider).addToQueue(track);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Added to queue')),
+                    );
+                  }
+                },
               ),
-              ListTile(
-                leading: const Icon(Icons.album_rounded),
-                title: const Text('Go to album'),
-                onTap: () =>
-                    Navigator.of(sheetContext).pop(_TrackAction.goToAlbum),
-              ),
-              ListTile(
-                leading: const Icon(Icons.person_rounded),
-                title: const Text('Go to artist'),
-                onTap: () =>
-                    Navigator.of(sheetContext).pop(_TrackAction.goToArtist),
-              ),
+              if (track.albumId != null && track.albumId!.isNotEmpty)
+                GlassPopoverItem(
+                  icon: Icons.album_rounded,
+                  label: 'Go to album',
+                  onTap: () => context.push('/album/${track.albumId}'),
+                ),
+              if (track.artistId != null && track.artistId!.isNotEmpty)
+                GlassPopoverItem(
+                  icon: Icons.person_rounded,
+                  label: 'Go to artist',
+                  onTap: () => context.push('/artist/${track.artistId}'),
+                ),
+              const SizedBox(height: 4),
             ],
           ),
         ),
       ),
     );
   }
-
-  Future<void> _onAction(
-    BuildContext context,
-    WidgetRef ref,
-    _TrackAction action,
-  ) async {
-    switch (action) {
-      case _TrackAction.playNext:
-        await ref.read(playerControllerProvider).playNext(track);
-        if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Playing next')));
-        }
-      case _TrackAction.addToQueue:
-        await ref.read(playerControllerProvider).addToQueue(track);
-        if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Added to queue')));
-        }
-      case _TrackAction.instantMix:
-        openInstantMixPage(
-          context,
-          ref,
-          itemId: track.id,
-          kind: InstantMixSeedKind.track,
-          title: track.name,
-        );
-      case _TrackAction.goToAlbum:
-        if (track.albumId != null && track.albumId!.isNotEmpty) {
-          context.push('/album/${track.albumId}');
-        }
-      case _TrackAction.goToArtist:
-        if (track.artistId != null && track.artistId!.isNotEmpty) {
-          context.push('/artist/${track.artistId}');
-        }
-      case _TrackAction.addToPlaylist:
-        await openAddTrackToPlaylistFlow(context, ref, trackId: track.id);
-    }
-  }
-}
-
-enum _TrackAction {
-  addToPlaylist,
-  playNext,
-  instantMix,
-  addToQueue,
-  goToAlbum,
-  goToArtist,
 }

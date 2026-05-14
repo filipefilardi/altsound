@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
-import 'package:altsound/core/theme/app_radius.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
+import 'package:altsound/core/widgets/glass_popover.dart';
 import 'package:altsound/core/widgets/local_or_network_image.dart';
 import 'package:altsound/data/downloads/download_manager.dart';
 import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
@@ -172,8 +172,6 @@ class SearchResultTile extends ConsumerWidget {
   }
 }
 
-enum _TrackMenuAction { addToPlaylist, addToQueue, goToAlbum, goToArtist }
-
 class _SearchTrackMenuButton extends ConsumerWidget {
   const _SearchTrackMenuButton({required this.trackId});
 
@@ -181,184 +179,64 @@ class _SearchTrackMenuButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return IconButton(
-      icon: const Icon(Icons.more_vert_rounded, color: AppColors.textSecondary),
-      onPressed: () async {
-        final repo = ref.read(jellyfinRepositoryProvider);
-        final downloaded = ref.read(downloadManagerProvider).tracks[trackId];
-        if (downloaded == null && ref.read(isOfflineProvider)) {
-          _showOfflineUnavailable(
-            context,
-            'Download this song to manage it offline.',
-          );
-          return;
-        }
-        final track = downloaded?.toTrack() ?? await repo.track(trackId);
-        if (!context.mounted) return;
-        final localArtwork = downloaded?.artworkPath;
-        final imageUrl =
-            localArtwork ??
-            (track.imageTag == null || track.imageTag!.isEmpty
-                ? null
-                : repo.imageUrl(
-                    track.imageItemId,
-                    imageTag: track.imageTag,
-                    size: 200,
-                  ));
-        final action = await showModalBottomSheet<_TrackMenuAction>(
-          context: context,
-          showDragHandle: true,
-          builder: (sheetCtx) => SafeArea(
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // ── Track header ──
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.md,
-                      AppSpacing.xs,
-                      AppSpacing.md,
-                      AppSpacing.md,
-                    ),
-                    child: Row(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(AppRadius.sm),
-                          child: SizedBox(
-                            width: 48,
-                            height: 48,
-                            child: imageUrl == null
-                                ? Container(
-                                    color: AppColors.surfaceHighlight,
-                                    child: const Icon(
-                                      Icons.music_note_rounded,
-                                      color: AppColors.textTertiary,
-                                      size: 20,
-                                    ),
-                                  )
-                                : LocalOrNetworkImage(
-                                    source: imageUrl,
-                                    fit: BoxFit.cover,
-                                    placeholderBuilder: (_) => Container(
-                                      color: AppColors.surfaceHighlight,
-                                    ),
-                                    errorBuilder: (_) => Container(
-                                      color: AppColors.surfaceHighlight,
-                                      child: const Icon(
-                                        Icons.music_note_rounded,
-                                        color: AppColors.textTertiary,
-                                        size: 20,
-                                      ),
-                                    ),
-                                  ),
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                track.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textPrimary,
-                                  fontSize: 15,
-                                ),
-                              ),
-                              if (track.albumName != null) ...[
-                                const SizedBox(height: AppSpacing.xs),
-                                Text(
-                                  '${track.artistName} · ${track.albumName}',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ] else ...[
-                                const SizedBox(height: AppSpacing.xs),
-                                Text(
-                                  track.artistName,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Divider(height: 1),
-                  // ── Actions ──
-                  ListTile(
-                    leading: const Icon(Icons.playlist_add_rounded),
-                    title: const Text('Add to playlist'),
-                    onTap: () => Navigator.of(
-                      sheetCtx,
-                    ).pop(_TrackMenuAction.addToPlaylist),
-                  ),
-                  const Divider(height: 1, indent: 56),
-                  ListTile(
-                    leading: const Icon(Icons.queue_music_rounded),
-                    title: const Text('Add to queue'),
-                    onTap: () =>
-                        Navigator.of(sheetCtx).pop(_TrackMenuAction.addToQueue),
-                  ),
-                  if (track.albumId != null && track.albumId!.isNotEmpty) ...[
-                    const Divider(height: 1, indent: 56),
-                    ListTile(
-                      leading: const Icon(Icons.album_rounded),
-                      title: const Text('Go to album'),
-                      onTap: () => Navigator.of(
-                        sheetCtx,
-                      ).pop(_TrackMenuAction.goToAlbum),
-                    ),
-                  ],
-                  if (track.artistId != null && track.artistId!.isNotEmpty) ...[
-                    const Divider(height: 1, indent: 56),
-                    ListTile(
-                      leading: const Icon(Icons.person_rounded),
-                      title: const Text('Go to artist'),
-                      onTap: () => Navigator.of(
-                        sheetCtx,
-                      ).pop(_TrackMenuAction.goToArtist),
-                    ),
-                  ],
-                  const SizedBox(height: AppSpacing.sm),
-                ],
-              ),
-            ),
-          ),
-        );
-        if (action == null || !context.mounted) return;
-        switch (action) {
-          case _TrackMenuAction.addToPlaylist:
-            await openAddTrackToPlaylistFlow(
+    return Builder(
+      builder: (anchorCtx) => IconButton(
+        icon: const Icon(
+          Icons.more_vert_rounded,
+          color: AppColors.textSecondary,
+        ),
+        onPressed: () async {
+          final repo = ref.read(jellyfinRepositoryProvider);
+          final downloaded = ref.read(downloadManagerProvider).tracks[trackId];
+          if (downloaded == null && ref.read(isOfflineProvider)) {
+            _showOfflineUnavailable(
               context,
-              ref,
-              trackId: track.id,
-              includeLikedSongsShortcut: true,
+              'Download this song to manage it offline.',
             );
-          case _TrackMenuAction.addToQueue:
-            await ref.read(playerControllerProvider).addToQueue(track);
-          case _TrackMenuAction.goToAlbum:
-            context.push('/album/${track.albumId}');
-          case _TrackMenuAction.goToArtist:
-            context.push('/artist/${track.artistId}');
-        }
-      },
+            return;
+          }
+          final track = downloaded?.toTrack() ?? await repo.track(trackId);
+          if (!anchorCtx.mounted) return;
+          await showGlassPopover<void>(
+            context: anchorCtx,
+            builder: (_) => Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                GlassPopoverItem(
+                  icon: Icons.playlist_add_rounded,
+                  label: 'Add to playlist',
+                  onTap: () => openAddTrackToPlaylistFlow(
+                    context,
+                    ref,
+                    trackId: track.id,
+                    includeLikedSongsShortcut: true,
+                  ),
+                ),
+                GlassPopoverItem(
+                  icon: Icons.queue_music_rounded,
+                  label: 'Add to queue',
+                  onTap: () =>
+                      ref.read(playerControllerProvider).addToQueue(track),
+                ),
+                if (track.albumId != null && track.albumId!.isNotEmpty)
+                  GlassPopoverItem(
+                    icon: Icons.album_rounded,
+                    label: 'Go to album',
+                    onTap: () => context.push('/album/${track.albumId}'),
+                  ),
+                if (track.artistId != null && track.artistId!.isNotEmpty)
+                  GlassPopoverItem(
+                    icon: Icons.person_rounded,
+                    label: 'Go to artist',
+                    onTap: () => context.push('/artist/${track.artistId}'),
+                  ),
+                const SizedBox(height: 4),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 }

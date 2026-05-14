@@ -23,14 +23,14 @@ class HeaderActionButtons extends ConsumerWidget {
         _HeaderActionButton(
           icon: Icons.search_rounded,
           tooltip: 'Search',
-          onPressed: () => context.go('/search'),
+          onPressed: (_) => context.go('/search'),
         ),
         const SizedBox(width: AppSpacing.sm),
         _HeaderActionButton(
           icon: Icons.groups_rounded,
           tooltip: 'SyncPlay',
           active: syncPlayActive,
-          onPressed: () => showSyncPlaySheet(context),
+          onPressed: (anchor) => showSyncPlayPopover(anchor),
         ),
         const SizedBox(width: AppSpacing.sm),
         _HeaderActionButton(
@@ -39,19 +39,19 @@ class HeaderActionButtons extends ConsumerWidget {
               : Icons.cast_rounded,
           tooltip: 'Play on…',
           active: castConnected,
-          onPressed: () => showRemoteSessionsSheet(context),
+          onPressed: (anchor) => showRemoteSessionsPopover(anchor),
         ),
         const SizedBox(width: AppSpacing.sm),
         _HeaderActionButton(
           icon: Icons.download_rounded,
           tooltip: 'Downloads',
-          onPressed: () => context.push('/downloads'),
+          onPressed: (_) => context.push('/downloads'),
         ),
         const SizedBox(width: AppSpacing.sm),
         _HeaderActionButton(
           icon: Icons.settings_rounded,
           tooltip: 'Settings',
-          onPressed: () => context.push('/settings'),
+          onPressed: (_) => context.push('/settings'),
         ),
       ],
     );
@@ -68,13 +68,13 @@ class _HeaderActionButton extends StatelessWidget {
 
   final IconData icon;
   final String tooltip;
-  final VoidCallback onPressed;
+  final ValueChanged<BuildContext> onPressed;
   final bool active;
 
   @override
   Widget build(BuildContext context) {
     return IconButton.filledTonal(
-      onPressed: onPressed,
+      onPressed: () => onPressed(context),
       icon: Icon(icon, size: 20),
       style: IconButton.styleFrom(
         backgroundColor: active

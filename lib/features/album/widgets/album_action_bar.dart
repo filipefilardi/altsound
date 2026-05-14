@@ -4,14 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/core/utils/format.dart';
+import 'package:altsound/core/widgets/glass_popover.dart';
 import 'package:altsound/core/widgets/play_pill.dart';
 import 'package:altsound/data/jellyfin/models/media_item.dart';
 import 'package:altsound/features/downloads/widgets/album_download_button.dart';
 import 'package:altsound/features/player/instant_mix.dart';
 import 'package:altsound/features/player/player_providers.dart';
 import 'package:altsound/features/player/widgets/add_track_to_playlist_sheet.dart';
-
-enum _CollectionAction { addToPlaylist, addToQueue }
 
 /// Pinned action bar at the top of the album scroll view: play/shuffle,
 /// Instant Mix, download, More menu, and the total duration.
@@ -74,12 +73,14 @@ class AlbumActionBar extends ConsumerWidget {
                   ),
           ),
           AlbumDownloadButton(album: album),
-          IconButton(
-            tooltip: 'More actions',
-            icon: const Icon(Icons.more_vert_rounded),
-            onPressed: album.tracks.isEmpty
-                ? null
-                : () => _showMoreActions(context, ref),
+          Builder(
+            builder: (anchorCtx) => IconButton(
+              tooltip: 'More actions',
+              icon: const Icon(Icons.more_vert_rounded),
+              onPressed: album.tracks.isEmpty
+                  ? null
+                  : () => _showMoreActions(anchorCtx, context, ref),
+            ),
           ),
           const Spacer(),
           Text(
@@ -91,49 +92,47 @@ class AlbumActionBar extends ConsumerWidget {
     );
   }
 
-  Future<void> _showMoreActions(BuildContext context, WidgetRef ref) async {
-    final action = await showModalBottomSheet<_CollectionAction>(
-      context: context,
-      showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.playlist_add_rounded),
-              title: const Text('Add album to playlist'),
-              onTap: () => Navigator.of(
-                sheetContext,
-              ).pop(_CollectionAction.addToPlaylist),
+  Future<void> _showMoreActions(
+    BuildContext anchorCtx,
+    BuildContext context,
+    WidgetRef ref,
+  ) {
+    return showGlassPopover<void>(
+      context: anchorCtx,
+      builder: (_) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          GlassPopoverItem(
+            icon: Icons.playlist_add_rounded,
+            label: 'Add album to playlist',
+            onTap: () => openAddTracksToPlaylistFlow(
+              context,
+              ref,
+              trackIds: album.tracks.map((t) => t.id).toList(),
             ),
-            ListTile(
-              leading: const Icon(Icons.add_to_queue_rounded),
-              title: const Text('Add to queue'),
-              onTap: () =>
-                  Navigator.of(sheetContext).pop(_CollectionAction.addToQueue),
-            ),
-          ],
-        ),
+          ),
+          GlassPopoverItem(
+            icon: Icons.add_to_queue_rounded,
+            label: 'Add to queue',
+            onTap: () async {
+              final added = await ref
+                  .read(playerControllerProvider)
+                  .addTracksToQueue(album.tracks);
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Added $added song${added == 1 ? '' : 's'} to queue',
+                  ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 4),
+        ],
       ),
     );
-    if (action == null || !context.mounted) return;
-    final controller = ref.read(playerControllerProvider);
-    switch (action) {
-      case _CollectionAction.addToPlaylist:
-        await openAddTracksToPlaylistFlow(
-          context,
-          ref,
-          trackIds: album.tracks.map((t) => t.id).toList(),
-        );
-      case _CollectionAction.addToQueue:
-        final added = await controller.addTracksToQueue(album.tracks);
-        if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Added $added song${added == 1 ? '' : 's'} to queue'),
-          ),
-        );
-    }
   }
 }
 

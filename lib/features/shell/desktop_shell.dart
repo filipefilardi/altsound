@@ -161,21 +161,21 @@ class _DesktopTopNavBar extends ConsumerWidget {
                     icon: Icons.groups_rounded,
                     tooltip: 'SyncPlay',
                     isSelected: syncPlayActive,
-                    onPressed: () => showSyncPlaySheet(context),
+                    onPressed: (anchor) => showSyncPlayPopover(anchor),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   _TopNavIconButton(
                     icon: Icons.download_rounded,
                     tooltip: 'Downloads',
                     isSelected: selected('/downloads'),
-                    onPressed: () => context.push('/downloads'),
+                    onPressed: (_) => context.push('/downloads'),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   _TopNavIconButton(
                     icon: Icons.settings_rounded,
                     tooltip: 'Settings',
                     isSelected: selected('/settings'),
-                    onPressed: () => goIfNeeded('/settings'),
+                    onPressed: (_) => goIfNeeded('/settings'),
                   ),
                 ],
               ),
@@ -249,12 +249,12 @@ class _TopNavIconButton extends StatelessWidget {
   final IconData icon;
   final String tooltip;
   final bool isSelected;
-  final VoidCallback onPressed;
+  final ValueChanged<BuildContext> onPressed;
 
   @override
   Widget build(BuildContext context) {
     return IconButton.filledTonal(
-      onPressed: onPressed,
+      onPressed: () => onPressed(context),
       tooltip: tooltip,
       icon: Icon(icon, size: 20),
       style: IconButton.styleFrom(
