@@ -2,8 +2,7 @@ import java.util.Properties
 
 plugins {
     id("com.android.application")
-    id("kotlin-android")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
+    // Flutter's Gradle plugin configures Kotlin for this module.
     id("dev.flutter.flutter-gradle-plugin")
 }
 
