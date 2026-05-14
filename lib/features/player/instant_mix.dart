@@ -22,6 +22,12 @@ enum InstantMixSeedKind {
   }
 }
 
+/// Stable [MediaItem.extras] `contextId` for a given Instant Mix seed.
+/// Used to detect "current playback belongs to this mix" and to label the
+/// queue context. Mirrors the `instant-mix:` prefix consumed by
+/// [InstantMixExtender].
+String instantMixContextId(String seedItemId) => 'instant-mix:$seedItemId';
+
 void openInstantMixPage(
   BuildContext context,
   WidgetRef ref, {
