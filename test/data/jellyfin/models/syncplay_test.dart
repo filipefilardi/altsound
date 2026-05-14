@@ -4,14 +4,8 @@ import 'package:altsound/data/jellyfin/models/syncplay.dart';
 void main() {
   group('ticks <-> Duration', () {
     test('1ms == 10_000 ticks in both directions', () {
-      expect(
-        durationFromJellyfinTicks(10000),
-        const Duration(milliseconds: 1),
-      );
-      expect(
-        durationToJellyfinTicks(const Duration(milliseconds: 1)),
-        10000,
-      );
+      expect(durationFromJellyfinTicks(10000), const Duration(milliseconds: 1));
+      expect(durationToJellyfinTicks(const Duration(milliseconds: 1)), 10000);
     });
 
     test('null ticks decode to zero', () {

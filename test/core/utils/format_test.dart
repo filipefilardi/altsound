@@ -5,10 +5,7 @@ void main() {
   group('formatDuration', () {
     test('uses m:ss when under an hour', () {
       expect(formatDuration(const Duration(seconds: 5)), '0:05');
-      expect(
-        formatDuration(const Duration(minutes: 3, seconds: 7)),
-        '3:07',
-      );
+      expect(formatDuration(const Duration(minutes: 3, seconds: 7)), '3:07');
       expect(formatDuration(Duration.zero), '0:00');
     });
 

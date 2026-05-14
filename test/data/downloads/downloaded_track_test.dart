@@ -37,16 +37,19 @@ void main() {
     expect(decoded.downloadedAt, sample.downloadedAt);
   });
 
-  test('toTrack copies metadata and drops fields without local equivalents', () {
-    final track = sample.toTrack();
-    expect(track.id, sample.id);
-    expect(track.name, sample.name);
-    expect(track.albumId, sample.albumId);
-    expect(track.duration, Duration(milliseconds: sample.durationMs));
-    expect(track.albumImageItemId, sample.imageItemId);
-    // No artistId / playlistItemId / dateAdded stored for offline tracks.
-    expect(track.artistId, isNull);
-    expect(track.playlistItemId, isNull);
-    expect(track.dateAdded, isNull);
-  });
+  test(
+    'toTrack copies metadata and drops fields without local equivalents',
+    () {
+      final track = sample.toTrack();
+      expect(track.id, sample.id);
+      expect(track.name, sample.name);
+      expect(track.albumId, sample.albumId);
+      expect(track.duration, Duration(milliseconds: sample.durationMs));
+      expect(track.albumImageItemId, sample.imageItemId);
+      // No artistId / playlistItemId / dateAdded stored for offline tracks.
+      expect(track.artistId, isNull);
+      expect(track.playlistItemId, isNull);
+      expect(track.dateAdded, isNull);
+    },
+  );
 }
