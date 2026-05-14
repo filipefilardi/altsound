@@ -1543,13 +1543,9 @@ class _ActionRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.read(playerControllerProvider);
-    final playbackState = ref.watch(playbackStateProvider).value;
-    final currentMediaItem = ref.watch(currentMediaItemProvider).value;
     final shuffleEnabled =
         ref.watch(playerShuffleEnabledProvider).value ?? false;
-    final isPlaylistPlaying =
-        playbackState?.playing == true &&
-        (currentMediaItem?.extras?['contextId'] as String?) == playlist.id;
+    final isPlaylistPlaying = ref.watch(isContextPlayingProvider(playlist.id));
     final hasTracks = visibleTracks.isNotEmpty;
     final enabled = hasTracks && !selectionActive;
     final canOpenMore =

@@ -325,14 +325,10 @@ class _InstantMixActionRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final playbackState = ref.watch(playbackStateProvider).value;
-    final currentMediaItem = ref.watch(currentMediaItemProvider).value;
     final shuffleEnabled =
         ref.watch(playerShuffleEnabledProvider).value ?? false;
     final contextId = _instantMixContextId(seedItemId);
-    final isMixPlaying =
-        playbackState?.playing == true &&
-        (currentMediaItem?.extras?['contextId'] as String?) == contextId;
+    final isMixPlaying = ref.watch(isContextPlayingProvider(contextId));
     final hasTracks = tracks.isNotEmpty;
     final request = (itemId: seedItemId, kind: seedKind);
     final mixAsync = ref.watch(instantMixTracksProvider(request));

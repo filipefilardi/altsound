@@ -101,6 +101,7 @@ class TrackListTile extends StatelessWidget {
     required this.isDownloaded,
     required this.onTap,
     required this.trailing,
+    this.indexLabel,
     this.onLongPress,
     this.inSelection = false,
     this.isSelected = false,
@@ -124,6 +125,10 @@ class TrackListTile extends StatelessWidget {
   final VoidCallback? onAlbumTap;
   final bool showAlbumInTrailing;
   final Widget trailing;
+
+  /// Optional override for the leading index label. Defaults to `index + 1`.
+  /// Pass `track.trackNumber` (album view) when present.
+  final String? indexLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -154,7 +159,7 @@ class TrackListTile extends StatelessWidget {
             )
           : PlayingTrackLeading(
               jellyfinTrackId: track.id,
-              indexLabel: '${index + 1}',
+              indexLabel: indexLabel ?? '${index + 1}',
             ),
       title: Text(
         track.name,

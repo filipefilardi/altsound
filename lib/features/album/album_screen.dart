@@ -25,6 +25,7 @@ import 'package:altsound/features/player/player_providers.dart';
 import 'package:altsound/features/player/widgets/add_track_to_playlist_sheet.dart';
 import 'package:altsound/features/player/widgets/mini_player_slot.dart';
 import 'package:altsound/features/player/widgets/playing_track_leading.dart';
+import 'package:altsound/features/player/widgets/track_listing_widgets.dart';
 import 'package:altsound/features/player/widgets/track_more_menu_button.dart';
 
 class AlbumScreen extends ConsumerWidget {
@@ -354,15 +355,21 @@ class _AlbumViewState extends ConsumerState<_AlbumView> {
             itemCount: album.tracks.length,
             itemBuilder: (_, i) {
               final track = album.tracks[i];
-              return _TrackTile(
+              final current = ref.watch(currentMediaItemProvider).value;
+              final isCurrent =
+                  current != null && current.extras?['jellyfinId'] == track.id;
+              final isDownloaded = ref
+                  .watch(downloadManagerProvider)
+                  .isDownloaded(track.id);
+              return TrackListTile(
                 track: track,
                 index: i,
+                indexLabel: '${track.trackNumber ?? i + 1}',
+                isCurrent: isCurrent,
+                isDownloaded: isDownloaded,
                 onTap: () {
-                  final current = ref.read(currentMediaItemProvider).value;
                   final isCurrentInContext =
-                      current != null &&
-                      current.extras?['jellyfinId'] == track.id &&
-                      current.extras?['contextId'] == album.id;
+                      isCurrent && current.extras?['contextId'] == album.id;
                   if (isCurrentInContext) {
                     context.pushNowPlayingIfNeeded();
                     return;
@@ -376,6 +383,16 @@ class _AlbumViewState extends ConsumerState<_AlbumView> {
                         selectedTrack: true,
                       );
                 },
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    PlayingTrackDuration(
+                      jellyfinTrackId: track.id,
+                      trackDuration: track.duration,
+                    ),
+                    TrackMoreMenuButton(track: track),
+                  ],
+                ),
               );
             },
           ),
@@ -546,13 +563,9 @@ class _ActionBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final playbackState = ref.watch(playbackStateProvider).value;
-    final currentMediaItem = ref.watch(currentMediaItemProvider).value;
     final shuffleEnabled =
         ref.watch(playerShuffleEnabledProvider).value ?? false;
-    final isAlbumPlaying =
-        playbackState?.playing == true &&
-        (currentMediaItem?.extras?['contextId'] as String?) == album.id;
+    final isAlbumPlaying = ref.watch(isContextPlayingProvider(album.id));
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
@@ -671,71 +684,4 @@ class _ActionBar extends ConsumerWidget {
 }
 
 enum _CollectionAction { addToPlaylist, addToQueue }
-
-class _TrackTile extends ConsumerWidget {
-  const _TrackTile({
-    required this.track,
-    required this.index,
-    required this.onTap,
-  });
-
-  final Track track;
-  final int index;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final current = ref.watch(currentMediaItemProvider).value;
-    final isCurrent =
-        current != null && current.extras?['jellyfinId'] == track.id;
-    final isDownloaded = ref
-        .watch(downloadManagerProvider)
-        .isDownloaded(track.id);
-
-    return ListTile(
-      onTap: onTap,
-      dense: true,
-      visualDensity: VisualDensity.compact,
-      leading: PlayingTrackLeading(
-        jellyfinTrackId: track.id,
-        indexLabel: '${track.trackNumber ?? index + 1}',
-      ),
-      title: Text(
-        track.name,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          color: isCurrent ? AppColors.primary : AppColors.textPrimary,
-          fontSize: 14,
-          fontWeight: isCurrent ? FontWeight.w600 : FontWeight.w500,
-        ),
-      ),
-      subtitle: Text(
-        track.artistName,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
-      ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (isDownloaded)
-            const Padding(
-              padding: EdgeInsets.only(right: AppSpacing.xs),
-              child: Icon(
-                Icons.download_for_offline_rounded,
-                size: 14,
-                color: AppColors.primary,
-              ),
-            ),
-          PlayingTrackDuration(
-            jellyfinTrackId: track.id,
-            trackDuration: track.duration,
-          ),
-          TrackMoreMenuButton(track: track),
-        ],
-      ),
-    );
-  }
-}
 
