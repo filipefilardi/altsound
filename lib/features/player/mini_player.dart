@@ -55,11 +55,9 @@ class MiniPlayer extends ConsumerWidget {
             decoration: BoxDecoration(
               borderRadius: borderRadius,
               color: AppColors.surfaceElevated.withValues(alpha: 0.62),
-              border: Border(
-                top: BorderSide(
-                  color: AppColors.textPrimary.withValues(alpha: 0.14),
-                  width: 1,
-                ),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.14),
+                width: 0.5,
               ),
               boxShadow: [
                 BoxShadow(
