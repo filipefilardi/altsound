@@ -9,6 +9,9 @@ import 'package:altsound/core/widgets/settings_group.dart';
 import 'package:altsound/data/playlists/playlist_backup_repository.dart';
 import 'package:altsound/features/auth/auth_controller.dart';
 import 'package:altsound/features/playlist/playlist_providers.dart';
+import 'package:altsound/features/settings/widgets/backup_list.dart';
+import 'package:altsound/features/settings/widgets/backup_playlist_tile.dart';
+import 'package:altsound/features/settings/widgets/backup_summary.dart';
 
 class PlaylistBackupScreen extends ConsumerStatefulWidget {
   const PlaylistBackupScreen({super.key});
@@ -109,7 +112,7 @@ class _PlaylistBackupScreenState extends ConsumerState<PlaylistBackupScreen> {
             ],
           ),
           const SizedBox(height: AppSpacing.lg),
-          _BackupList(
+          BackupList(
             backups: backups,
             busy: _busy,
             onOpen: _openBackup,
@@ -229,107 +232,7 @@ class _PlaylistBackupScreenState extends ConsumerState<PlaylistBackupScreen> {
   }
 }
 
-class _BackupList extends StatelessWidget {
-  const _BackupList({
-    required this.backups,
-    required this.busy,
-    required this.onOpen,
-    required this.onRestore,
-    required this.onExport,
-    required this.onCopyPath,
-  });
 
-  final AsyncValue<List<PlaylistBackupFile>> backups;
-  final bool busy;
-  final void Function(PlaylistBackupFile backup) onOpen;
-  final Future<void> Function(File file) onRestore;
-  final Future<void> Function(File file) onExport;
-  final Future<void> Function(String path) onCopyPath;
-
-  @override
-  Widget build(BuildContext context) {
-    return SettingsGroup(
-      label: 'Saved backups',
-      children: backups.when(
-        loading: () => const [
-          ListTile(
-            leading: SizedBox(
-              width: 22,
-              height: 22,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-            title: Text('Loading backups'),
-          ),
-        ],
-        error: (e, _) => [
-          ListTile(
-            leading: const Icon(Icons.error_rounded, color: AppColors.error),
-            title: const Text('Could not load backups'),
-            subtitle: Text(
-              e.toString(),
-              style: const TextStyle(color: AppColors.textSecondary),
-            ),
-          ),
-        ],
-        data: (items) {
-          if (items.isEmpty) {
-            return const [
-              ListTile(
-                leading: Icon(Icons.inventory_2_rounded),
-                title: Text('No backups yet'),
-                subtitle: Text(
-                  'Use Back up now, or keep automatic backups enabled.',
-                  style: TextStyle(color: AppColors.textSecondary),
-                ),
-              ),
-            ];
-          }
-          return [
-            for (final backup in items)
-              ListTile(
-                leading: const Icon(Icons.queue_music_rounded),
-                title: Text(_formatDateTime(backup.createdAt)),
-                subtitle: Text(
-                  '${backup.playlistCount} playlists · ${backup.trackCount} songs · ${_formatBytes(backup.sizeBytes)}',
-                  style: const TextStyle(color: AppColors.textSecondary),
-                ),
-                onTap: () => onOpen(backup),
-                trailing: PopupMenuButton<_BackupAction>(
-                  enabled: !busy,
-                  onSelected: (action) {
-                    switch (action) {
-                      case _BackupAction.restore:
-                        onRestore(backup.file);
-                      case _BackupAction.export:
-                        onExport(backup.file);
-                      case _BackupAction.copyPath:
-                        onCopyPath(backup.path);
-                    }
-                  },
-                  itemBuilder: (_) => const [
-                    PopupMenuItem(
-                      value: _BackupAction.restore,
-                      child: Text('Restore'),
-                    ),
-                    PopupMenuItem(
-                      value: _BackupAction.export,
-                      child: Text('Export bundle'),
-                    ),
-                    PopupMenuItem(
-                      value: _BackupAction.copyPath,
-                      child: Text('Copy path'),
-                    ),
-                  ],
-                ),
-              ),
-          ];
-        },
-      ),
-    );
-  }
-}
-
-enum _BackupAction { restore, export, copyPath }
 
 class PlaylistBackupDetailScreen extends ConsumerWidget {
   const PlaylistBackupDetailScreen({required this.backup, super.key});
@@ -356,7 +259,7 @@ class PlaylistBackupDetailScreen extends ConsumerWidget {
         data: (document) => ListView(
           padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.miniPlayerInset),
           children: [
-            _BackupSummary(document: document, backup: backup),
+            BackupSummary(document: document, backup: backup),
             const SizedBox(height: AppSpacing.lg),
             SettingsGroup(
               label: 'Playlists',
@@ -369,7 +272,7 @@ class PlaylistBackupDetailScreen extends ConsumerWidget {
                     ]
                   : [
                       for (final playlist in document.playlists)
-                        _BackupPlaylistTile(playlist: playlist),
+                        BackupPlaylistTile(playlist: playlist),
                     ],
             ),
           ],
@@ -379,124 +282,7 @@ class PlaylistBackupDetailScreen extends ConsumerWidget {
   }
 }
 
-class _BackupSummary extends StatelessWidget {
-  const _BackupSummary({required this.document, required this.backup});
 
-  final PlaylistBackupDocument document;
-  final PlaylistBackupFile backup;
-
-  @override
-  Widget build(BuildContext context) {
-    final source = document.source;
-    return SettingsGroup(
-      label: 'Snapshot',
-      children: [
-        ListTile(
-          leading: const Icon(Icons.event_available_rounded),
-          title: const Text('Created'),
-          subtitle: Text(
-            _formatDateTime(document.createdAt),
-            style: const TextStyle(color: AppColors.textSecondary),
-          ),
-        ),
-        ListTile(
-          leading: const Icon(Icons.library_music_rounded),
-          title: const Text('Contents'),
-          subtitle: Text(
-            '${backup.playlistCount} playlists · ${backup.trackCount} songs · ${_formatBytes(backup.sizeBytes)}',
-            style: const TextStyle(color: AppColors.textSecondary),
-          ),
-        ),
-        ListTile(
-          leading: const Icon(Icons.dns_rounded),
-          title: const Text('Source'),
-          subtitle: Text(
-            [
-                  if (source.username != null && source.username!.isNotEmpty)
-                    source.username!,
-                  if (source.serverUrl != null && source.serverUrl!.isNotEmpty)
-                    source.serverUrl!,
-                ].isEmpty
-                ? source.app
-                : [
-                    if (source.username != null && source.username!.isNotEmpty)
-                      source.username!,
-                    if (source.serverUrl != null &&
-                        source.serverUrl!.isNotEmpty)
-                      source.serverUrl!,
-                  ].join(' · '),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: AppColors.textSecondary),
-          ),
-        ),
-        ListTile(
-          leading: const Icon(Icons.folder_rounded),
-          title: const Text('File'),
-          subtitle: Text(
-            backup.path,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: AppColors.textSecondary),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _BackupPlaylistTile extends StatelessWidget {
-  const _BackupPlaylistTile({required this.playlist});
-
-  final PlaylistBackupPlaylist playlist;
-
-  @override
-  Widget build(BuildContext context) {
-    return ExpansionTile(
-      leading: const Icon(Icons.queue_music_rounded),
-      title: Text(playlist.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: Text(
-        '${playlist.tracks.length} songs · ${_formatDuration(Duration(milliseconds: playlist.durationMs))}',
-        style: const TextStyle(color: AppColors.textSecondary),
-      ),
-      children: [
-        if (playlist.tracks.isEmpty)
-          const ListTile(
-            title: Text('No songs saved'),
-            contentPadding: EdgeInsets.only(left: 72, right: AppSpacing.md),
-          )
-        else
-          for (final track in playlist.tracks)
-            ListTile(
-              dense: true,
-              contentPadding: const EdgeInsets.only(left: 72, right: AppSpacing.md),
-              title: Text(
-                '${track.position}. ${track.title}',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              subtitle: Text(
-                [
-                  if (track.artistText.isNotEmpty) track.artistText,
-                  if (track.album != null && track.album!.isNotEmpty)
-                    track.album!,
-                ].join(' · '),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: AppColors.textSecondary),
-              ),
-              trailing: track.jellyfinTrackId == null
-                  ? const Icon(
-                      Icons.link_off_rounded,
-                      color: AppColors.textTertiary,
-                      size: 18,
-                    )
-                  : null,
-            ),
-      ],
-    );
-  }
-}
 
 Future<String?> _showPathDialog(BuildContext context) {
   final ctrl = TextEditingController();
@@ -532,18 +318,4 @@ String _formatDateTime(DateTime value) {
       '${two(local.hour)}:${two(local.minute)}';
 }
 
-String _formatBytes(int bytes) {
-  if (bytes < 1024) return '${bytes}B';
-  if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(0)}KB';
-  if (bytes < 1024 * 1024 * 1024) {
-    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)}MB';
-  }
-  return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(2)}GB';
-}
 
-String _formatDuration(Duration duration) {
-  final hours = duration.inHours;
-  final minutes = duration.inMinutes.remainder(60);
-  if (hours > 0) return '${hours}h ${minutes}m';
-  return '${minutes}m';
-}
