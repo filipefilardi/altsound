@@ -13,8 +13,8 @@ Bring your music collection back into a focused listening app. AltSound connects
 <p align="center">
   <img src="assets/graphics/home.png" alt="Home" width="200">
   <img src="assets/graphics/player.png" alt="Player" width="200">
+  <img src="assets/graphics/lyrics.png" alt="Lyrics" width="200">
   <img src="assets/graphics/playlist.png" alt="Playlist" width="200">
-  <img src="assets/graphics/settings.png" alt="Settings" width="200">
 </p>
 
 ## Install
