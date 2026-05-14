@@ -147,7 +147,7 @@ class _DownloadsSummary extends StatelessWidget {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  '$trackCount tracks · ${_formatBytes(totalSize)}'
+                  '$trackCount tracks · ${formatBytes(totalSize)}'
                   '${queueLength > 0 ? ' · $queueLength queued' : ''}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -252,7 +252,7 @@ class _DownloadedAlbumTile extends ConsumerWidget {
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       Text(
-                        '$trackCount tracks · ${formatLongDuration(totalDuration)} · ${_formatBytes(totalSize)}',
+                        '$trackCount tracks · ${formatLongDuration(totalDuration)} · ${formatBytes(totalSize)}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -326,11 +326,3 @@ class _DownloadedAlbumTile extends ConsumerWidget {
 
 enum _DownloadAction { remove }
 
-String _formatBytes(int bytes) {
-  if (bytes < 1024) return '${bytes}B';
-  if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(0)}KB';
-  if (bytes < 1024 * 1024 * 1024) {
-    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)}MB';
-  }
-  return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(2)}GB';
-}

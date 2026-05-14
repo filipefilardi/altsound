@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
+import 'package:altsound/core/utils/format.dart';
 import 'package:altsound/data/downloads/download_manager.dart';
 import 'package:altsound/data/downloads/download_preferences.dart';
 
@@ -57,7 +58,7 @@ class DownloadsSettingsScreen extends ConsumerWidget {
               style: const TextStyle(color: AppColors.textSecondary),
             ),
             trailing: Text(
-              _formatBytes(downloads.totalSizeBytes),
+              formatBytes(downloads.totalSizeBytes),
               style: const TextStyle(color: AppColors.textSecondary),
             ),
           ),
@@ -154,11 +155,3 @@ class _SectionLabel extends StatelessWidget {
   }
 }
 
-String _formatBytes(int bytes) {
-  if (bytes < 1024) return '${bytes}B';
-  if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(0)}KB';
-  if (bytes < 1024 * 1024 * 1024) {
-    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)}MB';
-  }
-  return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(2)}GB';
-}

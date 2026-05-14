@@ -14,3 +14,13 @@ String formatLongDuration(Duration d) {
   if (h > 0) return '${h}h ${m}min';
   return '${m}min';
 }
+
+/// Human-readable byte size — e.g. `42KB`, `1.3MB`, `8.45GB`.
+String formatBytes(int bytes) {
+  if (bytes < 1024) return '${bytes}B';
+  if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(0)}KB';
+  if (bytes < 1024 * 1024 * 1024) {
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)}MB';
+  }
+  return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(2)}GB';
+}
