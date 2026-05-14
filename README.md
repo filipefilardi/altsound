@@ -60,7 +60,7 @@ Both install through your Jellyfin server's Dashboard → Plugins.
 
 ## Contributing
 
-AltSound is open source under [Apache License 2.0](LICENSE). Pull requests are welcome — see [CONTRIBUTING.md](.github/CONTRIBUTING.md) to get a development environment running. All contributors are expected to follow the [Code of Conduct](.github/CODE_OF_CONDUCT.md).
+Pull requests and issues are welcome — see [CONTRIBUTING.md](.github/CONTRIBUTING.md) to get a development environment running. All contributors are expected to follow the [Code of Conduct](.github/CODE_OF_CONDUCT.md).
 
 ## License
 
