@@ -4,9 +4,11 @@ import 'package:go_router/go_router.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
-import 'package:altsound/features/player/now_playing_screen.dart';
 import 'package:altsound/features/player/player_providers.dart';
 import 'package:altsound/features/player/widgets/lyrics_view.dart';
+import 'package:altsound/features/player/widgets/player_main_controls.dart';
+import 'package:altsound/features/player/widgets/player_scrubber.dart';
+import 'package:altsound/features/player/widgets/player_surface.dart';
 import 'package:altsound/features/remote/remote_player_controller.dart';
 
 /// Full-screen lyrics view rendered on top of [NowPlayingScreen].
