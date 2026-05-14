@@ -44,6 +44,11 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# AI agents
+.cursor/
+.claude/
+.codex/
+
 # Secrets
 **/key.properties
 **/*.jks
