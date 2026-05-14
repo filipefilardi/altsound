@@ -1,9 +1,15 @@
+import 'dart:io';
+import 'dart:ui' as ui;
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
+import 'package:altsound/features/player/player_providers.dart';
 
 /// Wraps the now-playing content with a swipe-down-to-dismiss gesture. The
 /// child translates with the drag, fades out as it moves further, and either
@@ -103,14 +109,77 @@ class PlayerDragHandle extends StatelessWidget {
   }
 }
 
-/// Solid surface-colored backdrop filling the now-playing screen.
-class PlayerBackdrop extends StatelessWidget {
+/// Immersive backdrop: dark base with a heavily blurred, low-opacity smear of
+/// the current album art layered on top. The blur (sigma 90) reduces the cover
+/// to a soft mesh-gradient of its dominant colors.
+class PlayerBackdrop extends ConsumerWidget {
   const PlayerBackdrop({super.key});
 
   @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final mediaItem = ref.watch(effectiveMediaItemProvider);
+    final artUri = mediaItem?.artUri;
+
+    return Positioned.fill(
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          const ColoredBox(color: AppColors.background),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 450),
+            child: artUri == null
+                ? const SizedBox.shrink(key: ValueKey('player-backdrop-empty'))
+                : _BlurredArt(
+                    key: ValueKey('player-backdrop-${artUri.toString()}'),
+                    artUri: artUri,
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BlurredArt extends StatelessWidget {
+  const _BlurredArt({required this.artUri, super.key});
+
+  final Uri artUri;
+
+  @override
   Widget build(BuildContext context) {
-    return const Positioned.fill(
-      child: DecoratedBox(decoration: BoxDecoration(color: AppColors.surface)),
+    // Overscan the image so the blur's soft edge falls outside the visible
+    // area, avoiding a dark vignette at the screen edges.
+    return Opacity(
+      opacity: 0.25,
+      child: ClipRect(
+        child: Transform.scale(
+          scale: 1.3,
+          child: ImageFiltered(
+            imageFilter: ui.ImageFilter.blur(
+              sigmaX: 90,
+              sigmaY: 90,
+              tileMode: TileMode.decal,
+            ),
+            child: SizedBox.expand(child: _artImage()),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _artImage() {
+    if (artUri.scheme == 'file') {
+      return Image(
+        image: FileImage(File(artUri.toFilePath())),
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+      );
+    }
+    return CachedNetworkImage(
+      imageUrl: artUri.toString(),
+      fit: BoxFit.cover,
+      placeholder: (_, __) => const SizedBox.shrink(),
+      errorWidget: (_, __, ___) => const SizedBox.shrink(),
     );
   }
 }
