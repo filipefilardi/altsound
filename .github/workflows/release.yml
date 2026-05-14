@@ -167,9 +167,15 @@ jobs:
     name: Build macOS (unsigned .app)
     needs: version
     if: needs.version.outputs.should-release == 'true'
-    runs-on: macos-latest
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v6
+
+      # connectivity_plus 7.1.x references macOS 26 SDK symbols (e.g.
+      # NWPath.isUltraConstrained) and requires Xcode 26+ to compile.
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
 
       - uses: subosito/flutter-action@v2
         with:
