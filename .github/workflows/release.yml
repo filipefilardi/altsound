@@ -180,7 +180,7 @@ jobs:
         run: flutter pub get
 
       - name: Build macOS (release, unsigned)
-        run: flutter build macos --release --build-name=${{ needs.version.outputs.name }} --build-number=${{ needs.version.outputs.build }}
+        run: flutter build macos --release --no-codesign --build-name=${{ needs.version.outputs.name }} --build-number=${{ needs.version.outputs.build }}
 
       - name: Zip .app bundle
         run: |
@@ -198,47 +198,10 @@ jobs:
           path: build/macos/Build/Products/Release/altsound-macos-${{ needs.version.outputs.name }}.zip
           if-no-files-found: error
 
-  build-ios:
-    name: Build iOS (unsigned IPA)
-    needs: version
-    if: needs.version.outputs.should-release == 'true'
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          cache: true
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Build iOS (release, unsigned)
-        run: flutter build ios --release --no-codesign --build-name=${{ needs.version.outputs.name }} --build-number=${{ needs.version.outputs.build }}
-
-      - name: Package unsigned IPA
-        run: |
-          APP=$(ls -d build/ios/iphoneos/*.app | head -1)
-          if [ -z "$APP" ]; then
-            echo "::error::No .app bundle found"
-            exit 1
-          fi
-          mkdir -p Payload
-          cp -R "$APP" Payload/
-          mkdir -p build/ios/ipa
-          zip -r "build/ios/ipa/altsound-ios-${{ needs.version.outputs.name }}-unsigned.ipa" Payload
-
-      - uses: actions/upload-artifact@v7
-        with:
-          name: ios-ipa
-          path: build/ios/ipa/altsound-ios-${{ needs.version.outputs.name }}-unsigned.ipa
-          if-no-files-found: error
-
   # ─── Publish (single GitHub Release with all artifacts) ─────────────────
   publish:
     name: Publish GitHub Release
-    needs: [version, build-android, build-macos, build-ios]
+    needs: [version, build-android, build-macos]
     if: needs.version.outputs.should-release == 'true'
     runs-on: ubuntu-latest
     steps:
@@ -255,7 +218,6 @@ jobs:
           files: |
             artifacts/android-aab/app-release.aab
             artifacts/macos-app/*.zip
-            artifacts/ios-ipa/*.ipa
 
   # ─── Deploy ─────────────────────────────────────────────────────────────
   # Android → Google Play (internal track, draft). Promote to production
@@ -283,8 +245,3 @@ jobs:
   # only). To add Homebrew / Mac App Store distribution, replace this comment
   # with a job mirroring `deploy-android`: download the macos-app artifact,
   # call your publisher of choice, gate on `needs: [version, publish]`.
-
-  # iOS deploy slot — currently empty (unsigned IPA for sideloading only).
-  # To add App Store Connect distribution (requires paid Apple Developer
-  # account): build a signed IPA in `build-ios`, then add a deploy job here
-  # that calls `apple-actions/upload-testflight-build` or similar.
