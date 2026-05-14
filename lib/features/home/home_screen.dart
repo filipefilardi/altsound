@@ -114,7 +114,6 @@ class HomeContent extends ConsumerWidget {
           const SliverToBoxAdapter(child: ForYouSection()),
           SliverList.list(
             children: [
-              const SizedBox(height: AppSpacing.sm),
               Shelf(
                 title: 'Recently added',
                 items: ref.watch(recentlyAddedProvider),

@@ -26,9 +26,9 @@ class Shelf extends ConsumerWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.md,
-            AppSpacing.lg,
+            AppSpacing.sm,
             AppSpacing.xs,
-            AppSpacing.md,
+            AppSpacing.sm,
           ),
           child: Row(
             children: [

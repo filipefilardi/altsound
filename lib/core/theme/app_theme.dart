@@ -11,12 +11,12 @@ class AppTheme {
   static ThemeData dark() {
     final base = ThemeData.dark(useMaterial3: true);
 
-    final body = GoogleFonts.manropeTextTheme(base.textTheme).apply(
+    final body = GoogleFonts.interTextTheme(base.textTheme).apply(
       bodyColor: AppColors.textPrimary,
       displayColor: AppColors.textPrimary,
     );
 
-    final display = GoogleFonts.spaceGroteskTextTheme();
+    final display = GoogleFonts.interTextTheme();
 
     final textTheme = body.copyWith(
       displayLarge: display.displayLarge?.copyWith(
