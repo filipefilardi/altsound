@@ -123,7 +123,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           ),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.miniPlayerInset),
+              padding: const EdgeInsets.only(
+                bottom: AppSpacing.miniPlayerInset,
+              ),
               child: _term.isEmpty
                   ? const _IdleHint()
                   : FutureBuilder<List<BrowseItem>>(

@@ -79,7 +79,9 @@ class PlaylistActionRow extends ConsumerWidget {
               tooltip: 'Shuffle',
               icon: Icon(
                 PhosphorIconsRegular.shuffle,
-                color: shuffleEnabled ? AppColors.primary : AppColors.textPrimary,
+                color: shuffleEnabled
+                    ? AppColors.primary
+                    : AppColors.textPrimary,
               ),
               onPressed: enabled ? () => controller.toggleShuffle() : null,
             ),
@@ -89,12 +91,8 @@ class PlaylistActionRow extends ConsumerWidget {
                 tooltip: 'More actions',
                 icon: const Icon(PhosphorIconsRegular.dotsThreeVertical),
                 onPressed: canOpenMore
-                    ? () => _showMoreActions(
-                        anchorCtx,
-                        context,
-                        ref,
-                        controller,
-                      )
+                    ? () =>
+                          _showMoreActions(anchorCtx, context, ref, controller)
                     : null,
               ),
             ),
