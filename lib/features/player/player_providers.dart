@@ -5,6 +5,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:altsound/data/downloads/download_manager.dart';
 import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
 import 'package:altsound/data/jellyfin/models/media_item.dart' as jf;
+import 'package:altsound/data/local/playback_preferences.dart';
 import 'package:altsound/features/remote/remote_player_controller.dart';
 import 'package:altsound/features/syncplay/syncplay_controller.dart';
 import 'package:altsound/features/player/playback_handler.dart';
@@ -150,6 +151,42 @@ class PlayerController {
   final JellyfinRepository repo;
   final DownloadManager downloads;
 
+  bool _queueMatchesCurrentStreamingQuality(MediaItem? item) {
+    final queuedQuality = item?.extras?['streamingQuality'] as String?;
+    final currentQuality =
+        ref.read(playbackPreferencesProvider).streamingQuality.name;
+    return queuedQuality == currentQuality;
+  }
+
+  Future<void> _reloadCurrentQueueForStreamingQuality() async {
+    final currentQueue = handler.queue.value;
+    if (currentQueue.isEmpty) return;
+    final quality = ref.read(playbackPreferencesProvider).streamingQuality;
+    final maxBitrate = quality == StreamingQuality.original
+        ? null
+        : quality.bitrate;
+    final currentIndex = handler.player.currentIndex ?? 0;
+    final position = handler.player.position;
+    final rebuilt = currentQueue.map((item) {
+      final jellyfinId = item.extras?['jellyfinId'] as String?;
+      final isOffline = item.extras?['isOffline'] == true;
+      if (jellyfinId == null || isOffline) {
+        return item;
+      }
+      final extras = Map<String, dynamic>.from(item.extras ?? const {});
+      extras['streamingQuality'] = quality.name;
+      extras['streamUrl'] = repo.streamUrl(jellyfinId, maxBitrate: maxBitrate);
+      return item.copyWith(extras: extras);
+    }).toList(growable: false);
+    await handler.loadQueue(
+      rebuilt,
+      initialIndex: currentIndex.clamp(0, rebuilt.length - 1),
+      initialPosition: position,
+      randomizeStart: false,
+      respectShuffle: false,
+    );
+  }
+
   String? get _remoteId => ref.read(activeRemoteSessionIdProvider);
   bool get isRemote => _remoteId != null;
   bool get isSyncPlay =>
@@ -194,7 +231,12 @@ class PlayerController {
         startIndex == 0 &&
         contextId != null) {
       final current = handler.mediaItem.value;
+      final sameQuality = _queueMatchesCurrentStreamingQuality(current);
       if ((current?.extras?['contextId'] as String?) == contextId) {
+        if (!sameQuality) forceReload = true;
+      }
+      if (!forceReload &&
+          (current?.extras?['contextId'] as String?) == contextId) {
         if (!handler.playbackState.value.playing) await handler.play();
         return;
       }
@@ -205,7 +247,8 @@ class PlayerController {
       final current = handler.mediaItem.value;
       final sameContext =
           (current?.extras?['contextId'] as String?) == contextId;
-      if (sameContext) {
+      final sameQuality = _queueMatchesCurrentStreamingQuality(current);
+      if (sameContext && sameQuality) {
         final target = tracks[startIndex];
         final q = handler.queue.value;
         final idxInQueue = q.indexWhere(
@@ -237,6 +280,10 @@ class PlayerController {
     if (playing) {
       await handler.pause();
     } else {
+      final current = handler.mediaItem.value;
+      if (!_queueMatchesCurrentStreamingQuality(current)) {
+        await _reloadCurrentQueueForStreamingQuality();
+      }
       await handler.play();
     }
   }

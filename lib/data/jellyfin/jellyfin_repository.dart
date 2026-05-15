@@ -1189,15 +1189,18 @@ class JellyfinRepository {
   /// the source file untouched (no transcoding).
   String streamUrl(String trackId, {int? maxBitrate = 320000}) {
     final s = _session;
+    final transcoding = maxBitrate != null && maxBitrate > 0;
     final params = <String, String>{
       'UserId': s.userId,
       'api_key': s.accessToken,
       'DeviceId': 'altsound-${s.userId}',
-      if (maxBitrate != null && maxBitrate > 0)
-        'MaxStreamingBitrate': maxBitrate.toString(),
+      if (transcoding) 'MaxStreamingBitrate': maxBitrate.toString(),
+      if (transcoding) 'TranscodingProtocol': 'http',
+      if (transcoding) 'TranscodingContainer': 'mp3',
+      if (transcoding) 'AudioCodec': 'mp3',
       // Keep stream progressive (non-HLS) so ExoPlayer/just_audio can parse it
       // through AudioSource.uri without playlist-specific handling.
-      'Static': 'true',
+      if (!transcoding) 'Static': 'true',
     };
     final query = params.entries
         .map(
@@ -1205,6 +1208,7 @@ class JellyfinRepository {
               '${Uri.encodeQueryComponent(e.key)}=${Uri.encodeQueryComponent(e.value)}',
         )
         .join('&');
-    return '${s.serverUrl}/Audio/$trackId/stream?$query';
+    final endpoint = transcoding ? 'universal' : 'stream';
+    return '${s.serverUrl}/Audio/$trackId/$endpoint?$query';
   }
 }
