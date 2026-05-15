@@ -106,7 +106,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: AppSpacing.lg),
+                              const SizedBox(height: AppSpacing.sm),
                               Text(
                                 mediaItem.title,
                                 maxLines: 2,

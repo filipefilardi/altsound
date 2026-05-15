@@ -45,8 +45,8 @@ class AlbumActionBar extends ConsumerWidget {
                     controller.playTracks(album.tracks, contextId: album.id);
                   },
             icon: isAlbumPlaying
-                ? PhosphorIconsRegular.pause
-                : PhosphorIconsRegular.play,
+                ? PhosphorIconsFill.pause
+                : PhosphorIconsFill.play,
             tooltip: isAlbumPlaying ? 'Pause' : 'Play',
           ),
           const SizedBox(width: AppSpacing.md),

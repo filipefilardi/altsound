@@ -66,8 +66,8 @@ class InstantMixActionRow extends ConsumerWidget {
                   }
                 : null,
             icon: isMixPlaying
-                ? PhosphorIconsRegular.pause
-                : PhosphorIconsRegular.play,
+                ? PhosphorIconsFill.pause
+                : PhosphorIconsFill.play,
             tooltip: isMixPlaying ? 'Pause' : 'Play',
           ),
           const SizedBox(width: AppSpacing.md),

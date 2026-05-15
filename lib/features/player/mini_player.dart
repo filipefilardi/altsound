@@ -156,8 +156,8 @@ class MiniPlayer extends ConsumerWidget {
                             ),
                             _RoundIcon(
                               icon: playing
-                                  ? PhosphorIconsRegular.pause
-                                  : PhosphorIconsRegular.play,
+                                  ? PhosphorIconsFill.pause
+                                  : PhosphorIconsFill.play,
                               onTap: controller.togglePlay,
                               emphasized: true,
                             ),

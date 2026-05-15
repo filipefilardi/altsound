@@ -43,8 +43,8 @@ class ArtistActionRow extends ConsumerWidget {
                 }
               : null,
           icon: isArtistPlaying
-              ? PhosphorIconsRegular.pause
-              : PhosphorIconsRegular.play,
+              ? PhosphorIconsFill.pause
+              : PhosphorIconsFill.play,
           tooltip: isArtistPlaying ? 'Pause' : 'Play',
         ),
         const SizedBox(width: AppSpacing.md),

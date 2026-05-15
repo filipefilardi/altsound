@@ -156,7 +156,7 @@ class DesktopMiniPlayer extends ConsumerWidget {
                             const SizedBox(width: AppSpacing.sm),
                             IconButton(
                               icon: const Icon(
-                                PhosphorIconsRegular.skipBack,
+                                PhosphorIconsFill.skipBack,
                                 size: 24,
                               ),
                               onPressed: controller.previous,
@@ -182,8 +182,8 @@ class DesktopMiniPlayer extends ConsumerWidget {
                               child: IconButton(
                                 icon: Icon(
                                   playing
-                                      ? PhosphorIconsRegular.pause
-                                      : PhosphorIconsRegular.play,
+                                      ? PhosphorIconsFill.pause
+                                      : PhosphorIconsFill.play,
                                   size: 24,
                                 ),
                                 onPressed: controller.togglePlay,
@@ -195,7 +195,7 @@ class DesktopMiniPlayer extends ConsumerWidget {
                             ),
                             IconButton(
                               icon: const Icon(
-                                PhosphorIconsRegular.skipForward,
+                                PhosphorIconsFill.skipForward,
                                 size: 24,
                               ),
                               onPressed: controller.next,

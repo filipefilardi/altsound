@@ -75,8 +75,8 @@ class PlaylistActionRow extends ConsumerWidget {
                       }
                     : null,
                 icon: isPlaylistPlaying
-                    ? PhosphorIconsRegular.pause
-                    : PhosphorIconsRegular.play,
+                    ? PhosphorIconsFill.pause
+                    : PhosphorIconsFill.play,
                 tooltip: isPlaylistPlaying ? 'Pause' : 'Play',
               ),
               const SizedBox(width: AppSpacing.md),

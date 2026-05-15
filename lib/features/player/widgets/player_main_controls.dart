@@ -21,7 +21,7 @@ class PlayerMainControls extends ConsumerWidget {
         IconButton(
           iconSize: 32,
           icon: const Icon(
-            PhosphorIconsRegular.skipBack,
+            PhosphorIconsFill.skipBack,
             color: AppColors.textPrimary,
           ),
           onPressed: controller.previous,
@@ -32,7 +32,7 @@ class PlayerMainControls extends ConsumerWidget {
         IconButton(
           iconSize: 32,
           icon: const Icon(
-            PhosphorIconsRegular.skipForward,
+            PhosphorIconsFill.skipForward,
             color: AppColors.textPrimary,
           ),
           onPressed: controller.next,
@@ -78,7 +78,7 @@ class PlayerPlayPauseButton extends StatelessWidget {
           onTap: onTap,
           child: Center(
             child: Icon(
-              playing ? PhosphorIconsRegular.pause : PhosphorIconsRegular.play,
+              playing ? PhosphorIconsFill.pause : PhosphorIconsFill.play,
               color: AppColors.onAccent,
               size: 36,
             ),
