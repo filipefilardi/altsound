@@ -7,11 +7,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/core/utils/search_normalization.dart';
 import 'package:altsound/core/widgets/empty_state.dart';
+import 'package:altsound/core/widgets/header_action_buttons.dart';
 import 'package:altsound/data/downloads/download_manager.dart';
 import 'package:altsound/data/downloads/downloaded_track.dart';
 import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
 import 'package:altsound/data/jellyfin/models/media_item.dart';
 import 'package:altsound/data/local/connectivity_provider.dart';
+import 'package:altsound/core/layout/adaptive_breakpoints.dart';
 import 'package:altsound/features/search/widgets/grouped_search_results.dart';
 import 'package:altsound/features/search/widgets/search_results_skeleton.dart';
 
@@ -69,9 +71,30 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Search')),
       body: Column(
         children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.md,
+              AppSpacing.md,
+              AppSpacing.sm,
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Text(
+                    'Search',
+                    style: Theme.of(context).textTheme.headlineMedium,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (!isDesktopLayout(context)) const HeaderActionButtons(),
+              ],
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.md,
@@ -84,7 +107,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               autofocus: true,
               onChanged: _onChanged,
               decoration: InputDecoration(
-                hintText: 'Songs, albums, artists',
+                hintText: 'Search songs, albums, artists, playlists',
                 prefixIcon: const Icon(PhosphorIconsRegular.magnifyingGlass),
                 suffixIcon: _ctrl.text.isEmpty
                     ? null
@@ -99,28 +122,31 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             ),
           ),
           Expanded(
-            child: _term.isEmpty
-                ? const _IdleHint()
-                : FutureBuilder<List<BrowseItem>>(
-                    future: _future,
-                    builder: (context, snap) {
-                      if (snap.connectionState == ConnectionState.waiting) {
-                        return const SearchResultsSkeleton();
-                      }
-                      if (snap.hasError) {
-                        return EmptyState(
-                          icon: PhosphorIconsRegular.warningCircle,
-                          title: 'Search failed',
-                          message: '${snap.error}',
-                        );
-                      }
-                      final results = snap.data ?? const [];
-                      if (results.isEmpty) {
-                        return _NoResults(term: _term);
-                      }
-                      return GroupedSearchResults(results: results);
-                    },
-                  ),
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.miniPlayerInset),
+              child: _term.isEmpty
+                  ? const _IdleHint()
+                  : FutureBuilder<List<BrowseItem>>(
+                      future: _future,
+                      builder: (context, snap) {
+                        if (snap.connectionState == ConnectionState.waiting) {
+                          return const SearchResultsSkeleton();
+                        }
+                        if (snap.hasError) {
+                          return EmptyState(
+                            icon: PhosphorIconsRegular.warningCircle,
+                            title: 'Search failed',
+                            message: '${snap.error}',
+                          );
+                        }
+                        final results = snap.data ?? const [];
+                        if (results.isEmpty) {
+                          return _NoResults(term: _term);
+                        }
+                        return GroupedSearchResults(results: results);
+                      },
+                    ),
+            ),
           ),
         ],
       ),

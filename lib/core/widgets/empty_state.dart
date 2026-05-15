@@ -35,47 +35,51 @@ class EmptyState extends StatelessWidget {
 
           return Padding(
             padding: EdgeInsets.all(padding),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (showIcon) ...[
-                  Container(
-                    width: compact ? 52 : 64,
-                    height: compact ? 52 : 64,
-                    decoration: const BoxDecoration(
-                      color: AppColors.surfaceElevated,
-                      shape: BoxShape.circle,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 360),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  if (showIcon) ...[
+                    Container(
+                      width: compact ? 52 : 64,
+                      height: compact ? 52 : 64,
+                      decoration: const BoxDecoration(
+                        color: AppColors.surfaceElevated,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        icon,
+                        color: AppColors.textSecondary,
+                        size: compact ? 24 : 28,
+                      ),
                     ),
-                    child: Icon(
-                      icon,
-                      color: AppColors.textSecondary,
-                      size: compact ? 24 : 28,
-                    ),
-                  ),
-                  SizedBox(height: compact ? 14 : 20),
-                ],
-                Text(
-                  title,
-                  textAlign: TextAlign.center,
-                  maxLines: tight ? 1 : 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                if (message != null && !tight) ...[
-                  const SizedBox(height: AppSpacing.sm),
+                    SizedBox(height: compact ? 14 : 20),
+                  ],
                   Text(
-                    message!,
+                    title,
                     textAlign: TextAlign.center,
-                    maxLines: compact ? 2 : 4,
+                    maxLines: tight ? 1 : 2,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodyMedium,
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
+                  if (message != null && !tight) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      message!,
+                      textAlign: TextAlign.center,
+                      maxLines: compact ? 2 : 4,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ],
+                  if (action != null && !tight) ...[
+                    SizedBox(height: compact ? 14 : 20),
+                    action!,
+                  ],
                 ],
-                if (action != null && !tight) ...[
-                  SizedBox(height: compact ? 14 : 20),
-                  action!,
-                ],
-              ],
+              ),
             ),
           );
         },
