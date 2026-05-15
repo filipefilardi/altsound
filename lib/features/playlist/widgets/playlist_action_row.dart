@@ -3,7 +3,6 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
-import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/core/widgets/glass_popover.dart';
 import 'package:altsound/core/widgets/play_pill.dart';
 import 'package:altsound/data/jellyfin/models/media_item.dart';
@@ -13,9 +12,8 @@ import 'package:altsound/features/player/player_providers.dart';
 import 'package:altsound/features/player/widgets/add_track_to_playlist_sheet.dart';
 
 /// Horizontal action row at the top of the playlist detail screen.
-/// Owns playback controls (play/shuffle), Instant Mix, sort, download, and
-/// the More menu (edit/dedupe/add to playlist/add to queue/rename/delete).
-/// Wraps in [SingleChildScrollView] so the buttons can overflow horizontally.
+/// Owns playback controls (play/shuffle/download), plus a More menu with
+/// lower-frequency actions like sort and instant mix.
 class PlaylistActionRow extends ConsumerWidget {
   const PlaylistActionRow({
     required this.playlist,
@@ -56,79 +54,51 @@ class PlaylistActionRow extends ConsumerWidget {
       opacity: selectionActive ? 0.45 : 1,
       child: IgnorePointer(
         ignoring: selectionActive,
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              PlayPill(
-                onTap: enabled
-                    ? () {
-                        if (isPlaylistPlaying) {
-                          controller.togglePlay();
-                          return;
-                        }
-                        controller.playTracks(
-                          visibleTracks,
-                          contextId: playlist.id,
-                        );
+        child: Row(
+          children: [
+            PlayPill(
+              onTap: enabled
+                  ? () {
+                      if (isPlaylistPlaying) {
+                        controller.togglePlay();
+                        return;
                       }
-                    : null,
-                icon: isPlaylistPlaying
-                    ? PhosphorIconsFill.pause
-                    : PhosphorIconsFill.play,
-                tooltip: isPlaylistPlaying ? 'Pause' : 'Play',
+                      controller.playTracks(
+                        visibleTracks,
+                        contextId: playlist.id,
+                      );
+                    }
+                  : null,
+              icon: isPlaylistPlaying
+                  ? PhosphorIconsFill.pause
+                  : PhosphorIconsFill.play,
+              tooltip: isPlaylistPlaying ? 'Pause' : 'Play',
+            ),
+            const Spacer(),
+            IconButton(
+              tooltip: 'Shuffle',
+              icon: Icon(
+                PhosphorIconsRegular.shuffle,
+                color: shuffleEnabled ? AppColors.primary : AppColors.textPrimary,
               ),
-              const SizedBox(width: AppSpacing.md),
-              IconButton(
-                tooltip: 'Shuffle',
-                icon: Icon(
-                  PhosphorIconsRegular.shuffle,
-                  color: shuffleEnabled
-                      ? AppColors.primary
-                      : AppColors.textPrimary,
-                ),
-                onPressed: enabled ? () => controller.toggleShuffle() : null,
-              ),
-              IconButton(
-                tooltip: 'Instant Mix',
-                icon: const Icon(PhosphorIconsRegular.sparkle),
-                onPressed: enabled
-                    ? () => openInstantMixPage(
+              onPressed: enabled ? () => controller.toggleShuffle() : null,
+            ),
+            PlaylistDownloadButton(playlist: playlist),
+            Builder(
+              builder: (anchorCtx) => IconButton(
+                tooltip: 'More actions',
+                icon: const Icon(PhosphorIconsRegular.dotsThreeVertical),
+                onPressed: canOpenMore
+                    ? () => _showMoreActions(
+                        anchorCtx,
                         context,
                         ref,
-                        itemId: playlist.id,
-                        kind: InstantMixSeedKind.playlist,
-                        title: playlist.name,
+                        controller,
                       )
                     : null,
               ),
-              Builder(
-                builder: (sortCtx) => IconButton(
-                  tooltip: 'Sort',
-                  icon: const Icon(PhosphorIconsRegular.sortAscending),
-                  onPressed: enabled && onSort != null
-                      ? () => onSort!(sortCtx)
-                      : null,
-                ),
-              ),
-              PlaylistDownloadButton(playlist: playlist),
-              Builder(
-                builder: (anchorCtx) => IconButton(
-                  tooltip: 'More actions',
-                  icon: const Icon(PhosphorIconsRegular.dotsThreeVertical),
-                  onPressed: canOpenMore
-                      ? () => _showMoreActions(
-                          anchorCtx,
-                          context,
-                          ref,
-                          controller,
-                        )
-                      : null,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -149,6 +119,23 @@ class PlaylistActionRow extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (hasTracks) ...[
+            if (onSort != null)
+              GlassPopoverItem(
+                icon: PhosphorIconsRegular.sortAscending,
+                label: 'Sort',
+                onTap: () => onSort!.call(anchorCtx),
+              ),
+            GlassPopoverItem(
+              icon: PhosphorIconsRegular.sparkle,
+              label: 'Instant Mix',
+              onTap: () => openInstantMixPage(
+                context,
+                ref,
+                itemId: playlist.id,
+                kind: InstantMixSeedKind.playlist,
+                title: playlist.name,
+              ),
+            ),
             if (onEdit != null)
               GlassPopoverItem(
                 icon: PhosphorIconsRegular.notePencil,
