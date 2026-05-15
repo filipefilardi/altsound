@@ -1141,7 +1141,7 @@ class _PlaylistStickyHeaderDelegate extends SliverPersistentHeaderDelegate {
   final VoidCallback? onDelete;
 
   static const double _collapsedHeight = 64;
-  static const double _expandedHeight = 216;
+  static const double _expandedHeight = 228;
 
   @override
   double get minExtent => _collapsedHeight;
@@ -1155,6 +1155,7 @@ class _PlaylistStickyHeaderDelegate extends SliverPersistentHeaderDelegate {
     bool overlapsContent,
   ) {
     final t = ((shrinkOffset) / (maxExtent - minExtent)).clamp(0.0, 1.0);
+    final showCompact = t > 0.55;
     return ColoredBox(
       color: AppColors.background,
       child: Stack(
@@ -1163,7 +1164,7 @@ class _PlaylistStickyHeaderDelegate extends SliverPersistentHeaderDelegate {
           Opacity(
             opacity: 1 - t,
             child: IgnorePointer(
-              ignoring: t > 0.6,
+              ignoring: showCompact,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.md,
@@ -1197,19 +1198,22 @@ class _PlaylistStickyHeaderDelegate extends SliverPersistentHeaderDelegate {
           ),
           Align(
             alignment: Alignment.bottomCenter,
-            child: Opacity(
-              opacity: t,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  0,
-                  AppSpacing.md,
-                  AppSpacing.xs,
-                ),
-                child: _CompactPlaylistStickyBar(
-                  playlist: playlist,
-                  visibleTracks: visibleTracks,
-                  selectionActive: selectionActive,
+            child: IgnorePointer(
+              ignoring: !showCompact,
+              child: Opacity(
+                opacity: t,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.md,
+                    0,
+                    AppSpacing.md,
+                    AppSpacing.xs,
+                  ),
+                  child: _CompactPlaylistStickyBar(
+                    playlist: playlist,
+                    visibleTracks: visibleTracks,
+                    selectionActive: selectionActive,
+                  ),
                 ),
               ),
             ),
