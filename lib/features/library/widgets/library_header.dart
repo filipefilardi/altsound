@@ -13,7 +13,7 @@ class LibraryHeader extends StatelessWidget {
       children: [
         Expanded(
           child: Text(
-            'Your Library',
+            'Library',
             style: Theme.of(context).textTheme.headlineMedium,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
