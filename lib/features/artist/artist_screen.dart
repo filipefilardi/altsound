@@ -2,10 +2,13 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:palette_generator/palette_generator.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
+import 'package:altsound/core/widgets/artwork_placeholder.dart';
 import 'package:altsound/core/widgets/error_state.dart';
+import 'package:altsound/core/widgets/pinned_action_bar_delegate.dart';
 import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
 import 'package:altsound/data/jellyfin/models/media_item.dart';
 import 'package:altsound/features/artist/widgets/about_section.dart';
@@ -31,10 +34,7 @@ class ArtistScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(artistProvider(artistId));
     return Scaffold(
-      bottomNavigationBar: const MiniPlayerSlot(
-        withTopDivider: true,
-        reserveSpaceWhenEmpty: true,
-      ),
+      bottomNavigationBar: const MiniPlayerSlot(),
       body: async.when(
         loading: () => const ArtistLoading(),
         error: (e, _) => SafeArea(
@@ -59,13 +59,66 @@ class ArtistScreen extends ConsumerWidget {
   }
 }
 
-class _ArtistView extends ConsumerWidget {
+class _ArtistView extends ConsumerStatefulWidget {
   const _ArtistView({required this.artist});
 
   final Artist artist;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_ArtistView> createState() => _ArtistViewState();
+}
+
+class _ArtistViewState extends ConsumerState<_ArtistView> {
+  Color _backdrop = AppColors.surfaceElevated;
+
+  @override
+  void initState() {
+    super.initState();
+    _extractPalette();
+  }
+
+  @override
+  void didUpdateWidget(covariant _ArtistView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.artist.id != widget.artist.id ||
+        oldWidget.artist.imageTag != widget.artist.imageTag) {
+      _extractPalette();
+    }
+  }
+
+  Future<void> _extractPalette() async {
+    final repo = ref.read(jellyfinRepositoryProvider);
+    final url = repo.imageUrl(
+      widget.artist.id,
+      imageTag: widget.artist.imageTag,
+      size: 200,
+    );
+    try {
+      final palette = await PaletteGenerator.fromImageProvider(
+        CachedNetworkImageProvider(url),
+        size: const Size(200, 200),
+        maximumColorCount: 8,
+      );
+      final c =
+          palette.dominantColor?.color ??
+          palette.vibrantColor?.color ??
+          palette.darkVibrantColor?.color;
+      if (c != null && mounted) {
+        setState(
+          () => _backdrop = Color.alphaBlend(
+            c.withValues(alpha: 0.55),
+            AppColors.background,
+          ),
+        );
+      }
+    } catch (_) {
+      // ignore palette failures
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final artist = widget.artist;
     final repo = ref.read(jellyfinRepositoryProvider);
     final imageUrl = repo.imageUrl(
       artist.id,
@@ -78,73 +131,94 @@ class _ArtistView extends ConsumerWidget {
       child: CustomScrollView(
         slivers: [
           SliverAppBar(
-            expandedHeight: 300,
+            expandedHeight: 380,
             pinned: true,
             stretch: true,
             leading: BackButton(onPressed: () => context.pop()),
-            title: Text(artist.name),
             flexibleSpace: FlexibleSpaceBar(
               stretchModes: const [StretchMode.zoomBackground],
-              background: Stack(
-                fit: StackFit.expand,
-                children: [
-                  CachedNetworkImage(
-                    imageUrl: imageUrl,
-                    fit: BoxFit.cover,
-                    placeholder: (_, __) =>
-                        const ColoredBox(color: AppColors.surfaceElevated),
-                    errorWidget: (_, __, ___) =>
-                        const ColoredBox(color: AppColors.surfaceElevated),
-                  ),
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.black.withValues(alpha: 0.15),
-                          AppColors.background.withValues(alpha: 0.6),
-                          AppColors.background,
-                        ],
-                        stops: const [0.3, 0.7, 1.0],
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      _backdrop,
+                      Color.alphaBlend(
+                        _backdrop.withValues(alpha: 0.5),
+                        AppColors.background,
                       ),
-                    ),
+                      AppColors.background,
+                    ],
+                    stops: [0.0, 0.62, 1.0],
                   ),
-                  Positioned(
-                    bottom: 16,
-                    left: 16,
-                    right: 16,
+                ),
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.md,
+                      AppSpacing.md,
+                      AppSpacing.md,
+                      AppSpacing.md,
+                    ),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.45),
+                                blurRadius: 28,
+                                offset: const Offset(0, 12),
+                                spreadRadius: -6,
+                              ),
+                            ],
+                          ),
+                          child: ClipOval(
+                            child: CachedNetworkImage(
+                              imageUrl: imageUrl,
+                              width: 220,
+                              height: 220,
+                              fit: BoxFit.cover,
+                              placeholder: (_, __) => const SizedBox(
+                                width: 220,
+                                height: 220,
+                                child: ArtworkPlaceholder(iconSize: 64),
+                              ),
+                              errorWidget: (_, __, ___) => const SizedBox(
+                                width: 220,
+                                height: 220,
+                                child: ArtworkPlaceholder(iconSize: 64),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
                         Text(
                           artist.name,
-                          style: Theme.of(context).textTheme.headlineLarge,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.headlineMedium,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: AppSpacing.xs),
                         Text(
-                          '${artist.albums.length} albums',
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                          ),
+                          '${artist.popularTracks.length} songs • ${artist.albums.length} albums',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: AppColors.textSecondary),
                         ),
                       ],
                     ),
                   ),
-                ],
+                ),
               ),
             ),
           ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                AppSpacing.md,
-                AppSpacing.md,
-                0,
-              ),
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: PinnedActionBarDelegate(
               child: ArtistActionRow(artist: artist),
             ),
           ),
@@ -195,7 +269,7 @@ class _ArtistView extends ConsumerWidget {
           else
             SliverToBoxAdapter(
               child: SizedBox(
-                height: 220,
+                height: 236,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(

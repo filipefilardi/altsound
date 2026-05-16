@@ -3,9 +3,8 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
-import 'package:altsound/core/theme/app_spacing.dart';
-import 'package:altsound/core/utils/format.dart';
 import 'package:altsound/core/widgets/glass_popover.dart';
+import 'package:altsound/core/widgets/media_action_row.dart';
 import 'package:altsound/core/widgets/play_pill.dart';
 import 'package:altsound/data/jellyfin/models/media_item.dart';
 import 'package:altsound/features/downloads/widgets/album_download_button.dart';
@@ -26,70 +25,57 @@ class AlbumActionBar extends ConsumerWidget {
         ref.watch(playerShuffleEnabledProvider).value ?? false;
     final isAlbumPlaying = ref.watch(isContextPlayingProvider(album.id));
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
-      ),
-      child: Row(
-        children: [
-          PlayPill(
-            onTap: album.tracks.isEmpty
-                ? null
-                : () {
-                    final controller = ref.read(playerControllerProvider);
-                    if (isAlbumPlaying) {
-                      controller.togglePlay();
-                      return;
-                    }
-                    controller.playTracks(album.tracks, contextId: album.id);
-                  },
-            icon: isAlbumPlaying
-                ? PhosphorIconsFill.pause
-                : PhosphorIconsFill.play,
-            tooltip: isAlbumPlaying ? 'Pause' : 'Play',
+    return MediaActionRow(
+      actions: [
+        IconButton(
+          tooltip: 'Shuffle',
+          icon: Icon(
+            PhosphorIconsRegular.shuffle,
+            color: shuffleEnabled ? AppColors.primary : AppColors.textPrimary,
           ),
-          const SizedBox(width: AppSpacing.md),
-          IconButton(
-            tooltip: 'Shuffle',
-            icon: Icon(
-              PhosphorIconsRegular.shuffle,
-              color: shuffleEnabled ? AppColors.primary : AppColors.textPrimary,
-            ),
+          onPressed: album.tracks.isEmpty
+              ? null
+              : () => ref.read(playerControllerProvider).toggleShuffle(),
+        ),
+        IconButton(
+          tooltip: 'Instant Mix',
+          icon: const Icon(PhosphorIconsRegular.sparkle),
+          onPressed: album.tracks.isEmpty
+              ? null
+              : () => openInstantMixPage(
+                  context,
+                  ref,
+                  itemId: album.id,
+                  kind: InstantMixSeedKind.album,
+                  title: album.name,
+                ),
+        ),
+        AlbumDownloadButton(album: album),
+        Builder(
+          builder: (anchorCtx) => IconButton(
+            tooltip: 'More actions',
+            icon: const Icon(PhosphorIconsRegular.dotsThreeVertical),
             onPressed: album.tracks.isEmpty
                 ? null
-                : () => ref.read(playerControllerProvider).toggleShuffle(),
+                : () => _showMoreActions(anchorCtx, context, ref),
           ),
-          IconButton(
-            tooltip: 'Instant Mix',
-            icon: const Icon(PhosphorIconsRegular.sparkle),
-            onPressed: album.tracks.isEmpty
-                ? null
-                : () => openInstantMixPage(
-                    context,
-                    ref,
-                    itemId: album.id,
-                    kind: InstantMixSeedKind.album,
-                    title: album.name,
-                  ),
-          ),
-          AlbumDownloadButton(album: album),
-          Builder(
-            builder: (anchorCtx) => IconButton(
-              tooltip: 'More actions',
-              icon: const Icon(PhosphorIconsRegular.dotsThreeVertical),
-              onPressed: album.tracks.isEmpty
-                  ? null
-                  : () => _showMoreActions(anchorCtx, context, ref),
-            ),
-          ),
-          const Spacer(),
-          Text(
-            formatLongDuration(album.totalDuration),
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-        ],
+        ),
+      ],
+      playControl: PlayPill(
+        onTap: album.tracks.isEmpty
+            ? null
+            : () {
+                final controller = ref.read(playerControllerProvider);
+                if (isAlbumPlaying) {
+                  controller.togglePlay();
+                  return;
+                }
+                controller.playTracks(album.tracks, contextId: album.id);
+              },
+        icon: isAlbumPlaying ? PhosphorIconsFill.pause : PhosphorIconsFill.play,
+        tooltip: isAlbumPlaying ? 'Pause' : 'Play',
       ),
+      padding: EdgeInsets.zero,
     );
   }
 
@@ -135,28 +121,4 @@ class AlbumActionBar extends ConsumerWidget {
       ),
     );
   }
-}
-
-/// Sliver delegate for pinning [AlbumActionBar] at the top of the scroll.
-class AlbumActionBarDelegate extends SliverPersistentHeaderDelegate {
-  AlbumActionBarDelegate({required this.child});
-  final Widget child;
-
-  @override
-  double get minExtent => 72;
-  @override
-  double get maxExtent => 72;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return Container(color: AppColors.background, child: child);
-  }
-
-  @override
-  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) =>
-      false;
 }

@@ -3,9 +3,8 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
-import 'package:altsound/core/theme/app_spacing.dart';
-import 'package:altsound/core/utils/format.dart';
 import 'package:altsound/core/widgets/glass_popover.dart';
+import 'package:altsound/core/widgets/media_action_row.dart';
 import 'package:altsound/core/widgets/play_pill.dart';
 import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
 import 'package:altsound/data/jellyfin/models/media_item.dart';
@@ -43,69 +42,60 @@ class InstantMixActionRow extends ConsumerWidget {
     final mixAsync = ref.watch(instantMixTracksProvider(request));
     final isRegenerating = mixAsync.isLoading && mixAsync.hasValue;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
+    return MediaActionRow(
+      actions: [
+        IconButton(
+          tooltip: 'Shuffle',
+          icon: Icon(
+            PhosphorIconsRegular.shuffle,
+            color: shuffleEnabled ? AppColors.primary : AppColors.textPrimary,
+          ),
+          onPressed: () => ref.read(playerControllerProvider).toggleShuffle(),
+        ),
+        IconButton(
+          tooltip: isRegenerating ? 'Regenerating mix' : 'Regenerate mix',
+          icon: isRegenerating
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.primary,
+                  ),
+                )
+              : const Icon(PhosphorIconsRegular.arrowsClockwise),
+          onPressed: isRegenerating
+              ? null
+              : () => ref.invalidate(instantMixTracksProvider(request)),
+        ),
+        Builder(
+          builder: (anchorCtx) => IconButton(
+            tooltip: 'More actions',
+            icon: const Icon(PhosphorIconsRegular.dotsThreeVertical),
+            onPressed: () =>
+                _showMoreActions(anchorCtx, context, ref, hasTracks),
+          ),
+        ),
+      ],
+      playControl: PlayPill(
+        onTap: hasTracks
+            ? () {
+                final controller = ref.read(playerControllerProvider);
+                if (isMixPlaying) {
+                  controller.togglePlay();
+                  return;
+                }
+                controller.playTracks(
+                  tracks,
+                  contextId: contextId,
+                  randomizeStart: false,
+                );
+              }
+            : null,
+        icon: isMixPlaying ? PhosphorIconsFill.pause : PhosphorIconsFill.play,
+        tooltip: isMixPlaying ? 'Pause' : 'Play',
       ),
-      child: Row(
-        children: [
-          PlayPill(
-            onTap: hasTracks
-                ? () {
-                    final controller = ref.read(playerControllerProvider);
-                    if (isMixPlaying) {
-                      controller.togglePlay();
-                      return;
-                    }
-                    controller.playTracks(
-                      tracks,
-                      contextId: contextId,
-                      randomizeStart: false,
-                    );
-                  }
-                : null,
-            icon: isMixPlaying
-                ? PhosphorIconsFill.pause
-                : PhosphorIconsFill.play,
-            tooltip: isMixPlaying ? 'Pause' : 'Play',
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(child: _InstantMixMeta(tracks: tracks)),
-          IconButton(
-            tooltip: 'Shuffle',
-            icon: Icon(
-              PhosphorIconsRegular.shuffle,
-              color: shuffleEnabled ? AppColors.primary : AppColors.textPrimary,
-            ),
-            onPressed: () => ref.read(playerControllerProvider).toggleShuffle(),
-          ),
-          IconButton(
-            tooltip: isRegenerating ? 'Regenerating mix' : 'Regenerate mix',
-            icon: isRegenerating
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppColors.primary,
-                    ),
-                  )
-                : const Icon(PhosphorIconsRegular.arrowsClockwise),
-            onPressed: isRegenerating
-                ? null
-                : () => ref.invalidate(instantMixTracksProvider(request)),
-          ),
-          Builder(
-            builder: (anchorCtx) => IconButton(
-              tooltip: 'More actions',
-              icon: const Icon(PhosphorIconsRegular.dotsThreeVertical),
-              onPressed: () =>
-                  _showMoreActions(anchorCtx, context, ref, hasTracks),
-            ),
-          ),
-        ],
-      ),
+      padding: EdgeInsets.zero,
     );
   }
 
@@ -141,26 +131,6 @@ class InstantMixActionRow extends ConsumerWidget {
           const SizedBox(height: 4),
         ],
       ),
-    );
-  }
-}
-
-class _InstantMixMeta extends StatelessWidget {
-  const _InstantMixMeta({required this.tracks});
-
-  final List<Track> tracks;
-
-  @override
-  Widget build(BuildContext context) {
-    final totalDuration = tracks.fold(
-      Duration.zero,
-      (sum, track) => sum + track.duration,
-    );
-    return Text(
-      formatLongDuration(totalDuration),
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: Theme.of(context).textTheme.bodyMedium,
     );
   }
 }

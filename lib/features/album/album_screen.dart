@@ -10,6 +10,7 @@ import 'package:altsound/core/theme/app_radius.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/core/widgets/artwork_placeholder.dart';
 import 'package:altsound/core/widgets/error_state.dart';
+import 'package:altsound/core/widgets/pinned_action_bar_delegate.dart';
 import 'package:altsound/data/downloads/download_manager.dart';
 import 'package:altsound/data/downloads/download_preferences.dart';
 import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
@@ -44,10 +45,7 @@ class AlbumScreen extends ConsumerWidget {
     });
 
     return Scaffold(
-      bottomNavigationBar: const MiniPlayerSlot(
-        withTopDivider: true,
-        reserveSpaceWhenEmpty: true,
-      ),
+      bottomNavigationBar: const MiniPlayerSlot(),
       body: async.when(
         loading: () {
           // If we have local tracks, skip the spinner while remote metadata loads.
@@ -190,7 +188,7 @@ class _AlbumViewState extends ConsumerState<_AlbumView> {
             expandedHeight: 380,
             pinned: true,
             stretch: true,
-            backgroundColor: _backdrop,
+            backgroundColor: AppColors.background,
             leading: BackButton(onPressed: () => context.pop()),
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
@@ -277,13 +275,7 @@ class _AlbumViewState extends ConsumerState<_AlbumView> {
                               child: Text(
                                 album.artistName,
                                 style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(
-                                      color:
-                                          album.artistId == null ||
-                                              album.artistId!.isEmpty
-                                          ? AppColors.textSecondary
-                                          : AppColors.primary,
-                                    ),
+                                    ?.copyWith(color: AppColors.textSecondary),
                               ),
                             ),
                             if (album.year != null)
@@ -307,7 +299,7 @@ class _AlbumViewState extends ConsumerState<_AlbumView> {
           ),
           SliverPersistentHeader(
             pinned: true,
-            delegate: AlbumActionBarDelegate(
+            delegate: PinnedActionBarDelegate(
               child: AlbumActionBar(album: album),
             ),
           ),

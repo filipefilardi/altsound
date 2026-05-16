@@ -9,6 +9,7 @@ import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/core/utils/search_normalization.dart';
 import 'package:altsound/core/widgets/empty_state.dart';
 import 'package:altsound/core/widgets/error_state.dart';
+import 'package:altsound/core/widgets/pinned_action_bar_delegate.dart';
 import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
 import 'package:altsound/data/jellyfin/models/media_item.dart';
 import 'package:altsound/features/player/instant_mix.dart';
@@ -105,10 +106,7 @@ class _InstantMixScreenState extends ConsumerState<InstantMixScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      bottomNavigationBar: const MiniPlayerSlot(
-        withTopDivider: true,
-        reserveSpaceWhenEmpty: true,
-      ),
+      bottomNavigationBar: const MiniPlayerSlot(),
       body: mixAsync.when(
         skipLoadingOnReload: true,
         loading: () => const InstantMixLoading(),
@@ -149,12 +147,15 @@ class _InstantMixScreenState extends ConsumerState<InstantMixScreen> {
                     ),
                   )
                 else ...[
-                  SliverToBoxAdapter(
-                    child: InstantMixActionRow(
-                      seedItemId: seedItemId,
-                      seedKind: seedKind,
-                      seedTitle: seedTitle,
-                      tracks: visibleTracks,
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: PinnedActionBarDelegate(
+                      child: InstantMixActionRow(
+                        seedItemId: seedItemId,
+                        seedKind: seedKind,
+                        seedTitle: seedTitle,
+                        tracks: visibleTracks,
+                      ),
                     ),
                   ),
                   SliverToBoxAdapter(
