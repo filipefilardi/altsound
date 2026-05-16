@@ -34,10 +34,7 @@ class ArtistScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(artistProvider(artistId));
     return Scaffold(
-      bottomNavigationBar: const MiniPlayerSlot(
-        withTopDivider: true,
-        reserveSpaceWhenEmpty: true,
-      ),
+      bottomNavigationBar: const MiniPlayerSlot(),
       body: async.when(
         loading: () => const ArtistLoading(),
         error: (e, _) => SafeArea(

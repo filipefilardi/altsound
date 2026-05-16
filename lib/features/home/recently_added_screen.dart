@@ -22,10 +22,7 @@ class RecentlyAddedScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Recently Added')),
-      bottomNavigationBar: const MiniPlayerSlot(
-        withTopDivider: true,
-        reserveSpaceWhenEmpty: true,
-      ),
+      bottomNavigationBar: const MiniPlayerSlot(),
       body: async.when(
         loading: () => const GridLoading(),
         error: (e, _) => ErrorStateView(

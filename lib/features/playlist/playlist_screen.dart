@@ -264,10 +264,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                 ],
               )
             : AppBar(title: const Text('Playlist')),
-        bottomNavigationBar: const MiniPlayerSlot(
-          withTopDivider: true,
-          reserveSpaceWhenEmpty: true,
-        ),
+        bottomNavigationBar: const MiniPlayerSlot(),
         body: async.when(
           loading: () {
             final offlinePlaylist = _buildOfflinePlaylist(

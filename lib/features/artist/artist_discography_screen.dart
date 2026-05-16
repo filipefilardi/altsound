@@ -23,10 +23,7 @@ class ArtistDiscographyScreen extends ConsumerWidget {
     final async = ref.watch(artistProvider(artistId));
     return Scaffold(
       appBar: AppBar(title: const Text('Discography')),
-      bottomNavigationBar: const MiniPlayerSlot(
-        withTopDivider: true,
-        reserveSpaceWhenEmpty: true,
-      ),
+      bottomNavigationBar: const MiniPlayerSlot(),
       body: async.when(
         loading: () => const DiscographyLoading(),
         error: (e, _) => ErrorStateView(

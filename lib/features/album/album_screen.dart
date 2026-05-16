@@ -45,10 +45,7 @@ class AlbumScreen extends ConsumerWidget {
     });
 
     return Scaffold(
-      bottomNavigationBar: const MiniPlayerSlot(
-        withTopDivider: true,
-        reserveSpaceWhenEmpty: true,
-      ),
+      bottomNavigationBar: const MiniPlayerSlot(),
       body: async.when(
         loading: () {
           // If we have local tracks, skip the spinner while remote metadata loads.

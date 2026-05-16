@@ -106,10 +106,7 @@ class _InstantMixScreenState extends ConsumerState<InstantMixScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      bottomNavigationBar: const MiniPlayerSlot(
-        withTopDivider: true,
-        reserveSpaceWhenEmpty: true,
-      ),
+      bottomNavigationBar: const MiniPlayerSlot(),
       body: mixAsync.when(
         skipLoadingOnReload: true,
         loading: () => const InstantMixLoading(),
