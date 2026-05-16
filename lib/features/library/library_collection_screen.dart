@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:altsound/core/layout/adaptive_breakpoints.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/core/utils/search_normalization.dart';
 import 'package:altsound/core/widgets/empty_state.dart';
@@ -45,12 +46,14 @@ class _LibraryCollectionScreenState
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
-        actions: const [
-          Padding(
-            padding: EdgeInsets.only(right: AppSpacing.sm),
-            child: HeaderActionButtons(),
-          ),
-        ],
+        actions: isDesktopLayout(context)
+            ? null
+            : const [
+                Padding(
+                  padding: EdgeInsets.only(right: AppSpacing.sm),
+                  child: HeaderActionButtons(),
+                ),
+              ],
       ),
       body: items.when(
         loading: () => const CollectionLoadingRows(),
