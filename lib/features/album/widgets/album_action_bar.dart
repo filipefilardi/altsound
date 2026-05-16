@@ -55,7 +55,7 @@ class AlbumActionBar extends ConsumerWidget {
         Builder(
           builder: (anchorCtx) => IconButton(
             tooltip: 'More actions',
-            icon: const Icon(PhosphorIconsRegular.dotsThreeVertical),
+            icon: const Icon(PhosphorIconsRegular.dotsThree),
             onPressed: album.tracks.isEmpty
                 ? null
                 : () => _showMoreActions(anchorCtx, context, ref),
