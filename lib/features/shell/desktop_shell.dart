@@ -103,9 +103,7 @@ class _DesktopTopNavBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final location = GoRouter.of(
-      context,
-    ).routeInformationProvider.value.uri.path;
+    final location = GoRouterState.of(context).uri.path;
     final syncPlayActive =
         ref.watch(syncPlayControllerProvider).activeGroup != null;
     void goIfNeeded(String target) {
