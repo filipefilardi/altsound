@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
+import 'package:altsound/core/widgets/artwork_placeholder.dart';
 import 'package:altsound/core/widgets/error_state.dart';
 import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
 import 'package:altsound/data/jellyfin/models/media_item.dart';
@@ -78,73 +79,91 @@ class _ArtistView extends ConsumerWidget {
       child: CustomScrollView(
         slivers: [
           SliverAppBar(
-            expandedHeight: 300,
+            expandedHeight: 380,
             pinned: true,
             stretch: true,
             leading: BackButton(onPressed: () => context.pop()),
-            title: Text(artist.name),
             flexibleSpace: FlexibleSpaceBar(
               stretchModes: const [StretchMode.zoomBackground],
-              background: Stack(
-                fit: StackFit.expand,
-                children: [
-                  CachedNetworkImage(
-                    imageUrl: imageUrl,
-                    fit: BoxFit.cover,
-                    placeholder: (_, __) =>
-                        const ColoredBox(color: AppColors.surfaceElevated),
-                    errorWidget: (_, __, ___) =>
-                        const ColoredBox(color: AppColors.surfaceElevated),
+              background: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      AppColors.surfaceElevated,
+                      AppColors.surface,
+                      AppColors.background,
+                    ],
+                    stops: [0.0, 0.62, 1.0],
                   ),
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.black.withValues(alpha: 0.15),
-                          AppColors.background.withValues(alpha: 0.6),
-                          AppColors.background,
-                        ],
-                        stops: const [0.3, 0.7, 1.0],
-                      ),
+                ),
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.md,
+                      AppSpacing.md,
+                      AppSpacing.md,
+                      AppSpacing.md,
                     ),
-                  ),
-                  Positioned(
-                    bottom: 16,
-                    left: 16,
-                    right: 16,
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.45),
+                                blurRadius: 28,
+                                offset: const Offset(0, 12),
+                                spreadRadius: -6,
+                              ),
+                            ],
+                          ),
+                          child: ClipOval(
+                            child: CachedNetworkImage(
+                              imageUrl: imageUrl,
+                              width: 220,
+                              height: 220,
+                              fit: BoxFit.cover,
+                              placeholder: (_, __) => const SizedBox(
+                                width: 220,
+                                height: 220,
+                                child: ArtworkPlaceholder(iconSize: 64),
+                              ),
+                              errorWidget: (_, __, ___) => const SizedBox(
+                                width: 220,
+                                height: 220,
+                                child: ArtworkPlaceholder(iconSize: 64),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
                         Text(
                           artist.name,
-                          style: Theme.of(context).textTheme.headlineLarge,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.headlineMedium,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: AppSpacing.xs),
                         Text(
-                          '${artist.albums.length} albums',
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
-                          ),
+                          '${artist.popularTracks.length} songs • ${artist.albums.length} albums',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: AppColors.textSecondary),
                         ),
                       ],
                     ),
                   ),
-                ],
+                ),
               ),
             ),
           ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                AppSpacing.md,
-                AppSpacing.md,
-                0,
-              ),
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: ArtistActionBarDelegate(
               child: ArtistActionRow(artist: artist),
             ),
           ),
@@ -195,7 +214,7 @@ class _ArtistView extends ConsumerWidget {
           else
             SliverToBoxAdapter(
               child: SizedBox(
-                height: 220,
+                height: 236,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(
