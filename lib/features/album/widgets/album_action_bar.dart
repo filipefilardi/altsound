@@ -49,7 +49,12 @@ class AlbumActionBar extends ConsumerWidget {
                 : PhosphorIconsFill.play,
             tooltip: isAlbumPlaying ? 'Pause' : 'Play',
           ),
-          const SizedBox(width: AppSpacing.md),
+          const Spacer(),
+          Text(
+            formatLongDuration(album.totalDuration),
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(width: AppSpacing.sm),
           IconButton(
             tooltip: 'Shuffle',
             icon: Icon(
@@ -82,11 +87,6 @@ class AlbumActionBar extends ConsumerWidget {
                   ? null
                   : () => _showMoreActions(anchorCtx, context, ref),
             ),
-          ),
-          const Spacer(),
-          Text(
-            formatLongDuration(album.totalDuration),
-            style: Theme.of(context).textTheme.bodyMedium,
           ),
         ],
       ),
