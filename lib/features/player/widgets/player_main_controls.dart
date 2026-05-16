@@ -37,7 +37,10 @@ class PlayerMainControls extends ConsumerWidget {
               onPressed: controller.previous,
             ),
             const SizedBox(width: AppSpacing.lg),
-            PlayerPlayPauseButton(playing: playing, onTap: controller.togglePlay),
+            PlayerPlayPauseButton(
+              playing: playing,
+              onTap: controller.togglePlay,
+            ),
             const SizedBox(width: AppSpacing.lg),
             IconButton(
               iconSize: 32,

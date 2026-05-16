@@ -11,11 +11,7 @@ import 'package:altsound/features/syncplay/syncplay_controller.dart';
 /// Top bar of the now-playing screen: dismiss arrow + centered (album / cast
 /// status) label.
 class PlayerTopBar extends ConsumerWidget {
-  const PlayerTopBar({
-    required this.album,
-    required this.albumId,
-    super.key,
-  });
+  const PlayerTopBar({required this.album, required this.albumId, super.key});
 
   final String album;
   final String? albumId;
