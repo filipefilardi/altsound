@@ -278,11 +278,7 @@ class _AlbumViewState extends ConsumerState<_AlbumView> {
                                 album.artistName,
                                 style: Theme.of(context).textTheme.bodyMedium
                                     ?.copyWith(
-                                      color:
-                                          album.artistId == null ||
-                                              album.artistId!.isEmpty
-                                          ? AppColors.textSecondary
-                                          : AppColors.primary,
+                                      color: AppColors.textSecondary,
                                     ),
                               ),
                             ),
