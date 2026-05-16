@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
+import 'package:altsound/core/widgets/media_action_row.dart';
 import 'package:altsound/core/widgets/glass_popover.dart';
 import 'package:altsound/core/widgets/play_pill.dart';
 import 'package:altsound/data/jellyfin/models/media_item.dart';
@@ -26,8 +27,8 @@ class ArtistActionRow extends ConsumerWidget {
     final isArtistPlaying = ref.watch(isContextPlayingProvider(artist.id));
     final hasTracks = artist.popularTracks.isNotEmpty;
 
-    return Row(
-      children: [
+    return MediaActionRow(
+      actions: [
         IconButton(
           tooltip: 'Shuffle',
           icon: Icon(
@@ -61,27 +62,27 @@ class ArtistActionRow extends ConsumerWidget {
                 : null,
           ),
         ),
-        const Spacer(),
-        PlayPill(
-          onTap: hasTracks
-              ? () {
-                  final controller = ref.read(playerControllerProvider);
-                  if (isArtistPlaying) {
-                    controller.togglePlay();
-                    return;
-                  }
-                  controller.playTracks(
-                    artist.popularTracks,
-                    contextId: artist.id,
-                  );
-                }
-              : null,
-          icon: isArtistPlaying
-              ? PhosphorIconsFill.pause
-              : PhosphorIconsFill.play,
-          tooltip: isArtistPlaying ? 'Pause' : 'Play',
-        ),
       ],
+      playControl: PlayPill(
+        onTap: hasTracks
+            ? () {
+                final controller = ref.read(playerControllerProvider);
+                if (isArtistPlaying) {
+                  controller.togglePlay();
+                  return;
+                }
+                controller.playTracks(
+                  artist.popularTracks,
+                  contextId: artist.id,
+                );
+              }
+            : null,
+        icon: isArtistPlaying
+            ? PhosphorIconsFill.pause
+            : PhosphorIconsFill.play,
+        tooltip: isArtistPlaying ? 'Pause' : 'Play',
+      ),
+      padding: EdgeInsets.zero,
     );
   }
 

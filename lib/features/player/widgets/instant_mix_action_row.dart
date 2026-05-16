@@ -3,8 +3,8 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
-import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/core/widgets/glass_popover.dart';
+import 'package:altsound/core/widgets/media_action_row.dart';
 import 'package:altsound/core/widgets/play_pill.dart';
 import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
 import 'package:altsound/data/jellyfin/models/media_item.dart';
@@ -42,14 +42,9 @@ class InstantMixActionRow extends ConsumerWidget {
     final mixAsync = ref.watch(instantMixTracksProvider(request));
     final isRegenerating = mixAsync.isLoading && mixAsync.hasValue;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
-      ),
-      child: Row(
-        children: [
-          IconButton(
+    return MediaActionRow(
+      actions: [
+        IconButton(
             tooltip: 'Shuffle',
             icon: Icon(
               PhosphorIconsRegular.shuffle,
@@ -81,28 +76,26 @@ class InstantMixActionRow extends ConsumerWidget {
                   _showMoreActions(anchorCtx, context, ref, hasTracks),
             ),
           ),
-          const Spacer(),
-          PlayPill(
-            onTap: hasTracks
-                ? () {
-                    final controller = ref.read(playerControllerProvider);
-                    if (isMixPlaying) {
-                      controller.togglePlay();
-                      return;
-                    }
-                    controller.playTracks(
-                      tracks,
-                      contextId: contextId,
-                      randomizeStart: false,
-                    );
-                  }
-                : null,
-            icon: isMixPlaying
-                ? PhosphorIconsFill.pause
-                : PhosphorIconsFill.play,
-            tooltip: isMixPlaying ? 'Pause' : 'Play',
-          ),
-        ],
+      ],
+      playControl: PlayPill(
+        onTap: hasTracks
+            ? () {
+                final controller = ref.read(playerControllerProvider);
+                if (isMixPlaying) {
+                  controller.togglePlay();
+                  return;
+                }
+                controller.playTracks(
+                  tracks,
+                  contextId: contextId,
+                  randomizeStart: false,
+                );
+              }
+            : null,
+        icon: isMixPlaying
+            ? PhosphorIconsFill.pause
+            : PhosphorIconsFill.play,
+        tooltip: isMixPlaying ? 'Pause' : 'Play',
       ),
     );
   }

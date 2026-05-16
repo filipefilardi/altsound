@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/widgets/glass_popover.dart';
+import 'package:altsound/core/widgets/media_action_row.dart';
 import 'package:altsound/core/widgets/play_pill.dart';
 import 'package:altsound/data/jellyfin/models/media_item.dart';
 import 'package:altsound/features/downloads/widgets/playlist_download_button.dart';
@@ -54,8 +55,8 @@ class PlaylistActionRow extends ConsumerWidget {
       opacity: selectionActive ? 0.45 : 1,
       child: IgnorePointer(
         ignoring: selectionActive,
-        child: Row(
-          children: [
+        child: MediaActionRow(
+          actions: [
             IconButton(
               tooltip: 'Shuffle',
               icon: Icon(
@@ -77,26 +78,25 @@ class PlaylistActionRow extends ConsumerWidget {
                     : null,
               ),
             ),
-            const Spacer(),
-            PlayPill(
-              onTap: enabled
-                  ? () {
-                      if (isPlaylistPlaying) {
-                        controller.togglePlay();
-                        return;
-                      }
-                      controller.playTracks(
-                        visibleTracks,
-                        contextId: playlist.id,
-                      );
-                    }
-                  : null,
-              icon: isPlaylistPlaying
-                  ? PhosphorIconsFill.pause
-                  : PhosphorIconsFill.play,
-              tooltip: isPlaylistPlaying ? 'Pause' : 'Play',
-            ),
           ],
+          playControl: PlayPill(
+            onTap: enabled
+                ? () {
+                    if (isPlaylistPlaying) {
+                      controller.togglePlay();
+                      return;
+                    }
+                    controller.playTracks(
+                      visibleTracks,
+                      contextId: playlist.id,
+                    );
+                  }
+                : null,
+            icon: isPlaylistPlaying
+                ? PhosphorIconsFill.pause
+                : PhosphorIconsFill.play,
+            tooltip: isPlaylistPlaying ? 'Pause' : 'Play',
+          ),
         ),
       ),
     );
