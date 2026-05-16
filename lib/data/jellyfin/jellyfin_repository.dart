@@ -863,7 +863,10 @@ class JellyfinRepository {
     required String artistId,
     required List<Track> fallbackTracks,
   }) async {
-    final breakdown = await _reporting.globalItemBreakdown(days: 3650, limit: 2000);
+    final breakdown = await _reporting.globalItemBreakdown(
+      days: 3650,
+      limit: 2000,
+    );
     if (breakdown == null || breakdown.isEmpty) return fallbackTracks;
 
     final scoreByTrackId = <String, int>{};
@@ -874,12 +877,18 @@ class JellyfinRepository {
       if (trackId.isEmpty) continue;
       final score = row.count > 0 ? row.count : row.timeSeconds;
       if (score <= 0) continue;
-      scoreByTrackId.update(trackId, (value) => value + score, ifAbsent: () => score);
+      scoreByTrackId.update(
+        trackId,
+        (value) => value + score,
+        ifAbsent: () => score,
+      );
       orderByTrackId.putIfAbsent(trackId, () => order++);
     }
     if (scoreByTrackId.isEmpty) return fallbackTracks;
 
-    final tracks = await tracksByIds(scoreByTrackId.keys.toList(growable: false));
+    final tracks = await tracksByIds(
+      scoreByTrackId.keys.toList(growable: false),
+    );
     final byId = {for (final track in tracks) track.id: track};
     final ranked =
         scoreByTrackId.keys
@@ -888,7 +897,9 @@ class JellyfinRepository {
             .where((track) => track.artistId == artistId)
             .toList(growable: false)
           ..sort((a, b) {
-            final byScore = scoreByTrackId[b.id]!.compareTo(scoreByTrackId[a.id]!);
+            final byScore = scoreByTrackId[b.id]!.compareTo(
+              scoreByTrackId[a.id]!,
+            );
             if (byScore != 0) return byScore;
             return orderByTrackId[a.id]!.compareTo(orderByTrackId[b.id]!);
           });
