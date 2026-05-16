@@ -52,7 +52,7 @@ class PlayerSecondaryControls extends ConsumerWidget {
               ? null
               : () => controller.toggleShuffle(),
           icon: Icon(
-            PhosphorIconsBold.shuffle,
+            PhosphorIconsRegular.shuffle,
             color: shuffled ? AppColors.primary : AppColors.textSecondary,
             size: 22,
           ),
@@ -64,8 +64,8 @@ class PlayerSecondaryControls extends ConsumerWidget {
               : () => controller.cycleRepeatMode(),
           icon: Icon(
             loop == LoopMode.one
-                ? PhosphorIconsBold.repeatOnce
-                : PhosphorIconsBold.repeat,
+                ? PhosphorIconsRegular.repeatOnce
+                : PhosphorIconsRegular.repeat,
             color: loop == LoopMode.off
                 ? AppColors.textSecondary
                 : AppColors.primary,
@@ -82,7 +82,7 @@ class PlayerSecondaryControls extends ConsumerWidget {
             title: mediaItem.title,
           ),
           icon: const Icon(
-            PhosphorIconsBold.sparkle,
+            PhosphorIconsRegular.sparkle,
             color: AppColors.textSecondary,
             size: 22,
           ),
@@ -95,7 +95,9 @@ class PlayerSecondaryControls extends ConsumerWidget {
                   _onPlaylistTap(context, ref, trackId: mediaItem.id),
                 ),
           icon: Icon(
-            saved ? PhosphorIconsBold.listChecks : PhosphorIconsBold.listPlus,
+            saved
+                ? PhosphorIconsRegular.listChecks
+                : PhosphorIconsRegular.listPlus,
             color: saved ? AppColors.primary : AppColors.textSecondary,
             size: 24,
           ),

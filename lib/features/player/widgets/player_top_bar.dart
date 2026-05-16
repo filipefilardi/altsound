@@ -9,18 +9,16 @@ import 'package:altsound/features/remote/remote_player_controller.dart';
 import 'package:altsound/features/syncplay/syncplay_controller.dart';
 
 /// Top bar of the now-playing screen: dismiss arrow + centered (album / cast
-/// status) label + queue button.
+/// status) label.
 class PlayerTopBar extends ConsumerWidget {
   const PlayerTopBar({
     required this.album,
     required this.albumId,
-    required this.onQueue,
     super.key,
   });
 
   final String album;
   final String? albumId;
-  final VoidCallback onQueue;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -36,7 +34,7 @@ class PlayerTopBar extends ConsumerWidget {
         ? 'SYNCPLAY: ${syncGroup.name.toUpperCase()}'
         : 'PLAYING FROM ALBUM';
     // Reserve symmetric space on both sides so the centered text is not
-    // pushed off-center by edge icons (one icon per side, ~48 px each).
+    // pushed off-center by edge icons (left icon + mirrored right reserve).
     const sideReserve = 48.0;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
@@ -92,24 +90,12 @@ class PlayerTopBar extends ConsumerWidget {
                 ),
               ),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  icon: const Icon(PhosphorIconsRegular.caretDown, size: 30),
-                  onPressed: () => context.pop(),
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(PhosphorIconsRegular.queue, size: 24),
-                      onPressed: onQueue,
-                      tooltip: 'Up next',
-                    ),
-                  ],
-                ),
-              ],
+            Align(
+              alignment: Alignment.centerLeft,
+              child: IconButton(
+                icon: const Icon(PhosphorIconsRegular.caretDown, size: 30),
+                onPressed: () => context.pop(),
+              ),
             ),
           ],
         ),

@@ -85,7 +85,6 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                     PlayerTopBar(
                       album: mediaItem.album ?? '',
                       albumId: albumId,
-                      onQueue: () => showQueueBottomSheet(context, ref),
                     ),
                     Expanded(
                       child: LayoutBuilder(
@@ -156,7 +155,11 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen> {
                     const SizedBox(height: AppSpacing.md),
                     const PlayerScrubber(),
                     const SizedBox(height: AppSpacing.md),
-                    PlayerMainControls(playing: playing),
+                    PlayerMainControls(
+                      playing: playing,
+                      onLyrics: _openLyrics,
+                      onQueue: () => showQueueBottomSheet(context, ref),
+                    ),
                     const SizedBox(height: AppSpacing.lg),
                   ],
                 ),

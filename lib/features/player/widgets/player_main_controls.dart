@@ -9,33 +9,69 @@ import 'package:altsound/features/player/player_providers.dart';
 
 /// Previous / Play-Pause / Next transport row on the now-playing screen.
 class PlayerMainControls extends ConsumerWidget {
-  const PlayerMainControls({required this.playing, super.key});
+  const PlayerMainControls({
+    required this.playing,
+    required this.onLyrics,
+    required this.onQueue,
+    super.key,
+  });
   final bool playing;
+  final VoidCallback onLyrics;
+  final VoidCallback onQueue;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.read(playerControllerProvider);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        IconButton(
-          iconSize: 32,
-          icon: const Icon(
-            PhosphorIconsFill.skipBack,
-            color: AppColors.textPrimary,
-          ),
-          onPressed: controller.previous,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(
+              iconSize: 32,
+              icon: const Icon(
+                PhosphorIconsFill.skipBack,
+                color: AppColors.textPrimary,
+              ),
+              onPressed: controller.previous,
+            ),
+            const SizedBox(width: AppSpacing.lg),
+            PlayerPlayPauseButton(playing: playing, onTap: controller.togglePlay),
+            const SizedBox(width: AppSpacing.lg),
+            IconButton(
+              iconSize: 32,
+              icon: const Icon(
+                PhosphorIconsFill.skipForward,
+                color: AppColors.textPrimary,
+              ),
+              onPressed: controller.next,
+            ),
+          ],
         ),
-        const SizedBox(width: AppSpacing.lg),
-        PlayerPlayPauseButton(playing: playing, onTap: controller.togglePlay),
-        const SizedBox(width: AppSpacing.lg),
-        IconButton(
-          iconSize: 32,
-          icon: const Icon(
-            PhosphorIconsFill.skipForward,
-            color: AppColors.textPrimary,
-          ),
-          onPressed: controller.next,
+        const SizedBox(height: AppSpacing.xs),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            IconButton(
+              iconSize: 22,
+              icon: const Icon(
+                PhosphorIconsRegular.microphoneStage,
+                color: AppColors.textSecondary,
+              ),
+              onPressed: onLyrics,
+              tooltip: 'Lyrics',
+            ),
+            IconButton(
+              iconSize: 22,
+              icon: const Icon(
+                PhosphorIconsRegular.queue,
+                color: AppColors.textSecondary,
+              ),
+              onPressed: onQueue,
+              tooltip: 'Queue',
+            ),
+          ],
         ),
       ],
     );
