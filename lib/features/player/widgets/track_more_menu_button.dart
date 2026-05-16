@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/widgets/app_snackbar.dart';
 import 'package:altsound/core/widgets/glass_popover.dart';
 import 'package:altsound/data/jellyfin/models/media_item.dart';
 import 'package:altsound/features/player/instant_mix.dart';
@@ -41,9 +42,7 @@ class TrackMoreMenuButton extends ConsumerWidget {
                 onTap: () async {
                   await ref.read(playerControllerProvider).playNext(track);
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Playing next')),
-                    );
+                    showAppSnackBar(context, 'Playing next');
                   }
                 },
               ),
@@ -64,9 +63,7 @@ class TrackMoreMenuButton extends ConsumerWidget {
                 onTap: () async {
                   await ref.read(playerControllerProvider).addToQueue(track);
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Added to queue')),
-                    );
+                    showAppSnackBar(context, 'Added to queue');
                   }
                 },
               ),

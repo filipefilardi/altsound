@@ -18,7 +18,7 @@ import 'package:altsound/features/player/widgets/add_track_to_playlist_sheet.dar
 import 'package:altsound/features/player/widgets/player_hero_art.dart';
 import 'package:altsound/features/player/widgets/queue_bottom_sheet.dart';
 
-class DesktopMiniPlayer extends ConsumerWidget {
+class DesktopMiniPlayer extends ConsumerStatefulWidget {
   const DesktopMiniPlayer({this.edgeToEdge = true, super.key});
 
   final bool edgeToEdge;
@@ -32,7 +32,14 @@ class DesktopMiniPlayer extends ConsumerWidget {
   );
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DesktopMiniPlayer> createState() => _DesktopMiniPlayerState();
+}
+
+class _DesktopMiniPlayerState extends ConsumerState<DesktopMiniPlayer> {
+  double? _dragSeekValueMs;
+
+  @override
+  Widget build(BuildContext context) {
     final mediaItem = ref.watch(effectiveMediaItemProvider);
     if (mediaItem == null) return const SizedBox.shrink();
 
@@ -48,16 +55,19 @@ class DesktopMiniPlayer extends ConsumerWidget {
       _ => false,
     };
     final artistId = mediaItem.extras?['artistId'] as String?;
-    final horizontal = edgeToEdge ? 16.0 : 10.0;
+    final horizontal = widget.edgeToEdge ? 16.0 : 10.0;
     final clampedPosition = position > duration ? duration : position;
     final sliderMax = duration.inMilliseconds.toDouble().clamp(
       1.0,
       double.infinity,
     );
-    final sliderValue = clampedPosition.inMilliseconds.toDouble().clamp(
+    final actualSliderValue = clampedPosition.inMilliseconds.toDouble().clamp(
       0.0,
       sliderMax,
     );
+    final dragSeekValue = _dragSeekValueMs?.clamp(0.0, sliderMax);
+    final sliderValue = (dragSeekValue ?? actualSliderValue).toDouble();
+    final displayedPosition = Duration(milliseconds: sliderValue.toInt());
     final volume = ref.watch(playerVolumeProvider).value ?? 1.0;
     final muted = controller.isEffectivelyMuted || volume <= 0.001;
 
@@ -150,7 +160,8 @@ class DesktopMiniPlayer extends ConsumerWidget {
                               onPressed: controller.toggleShuffle,
                               tooltip: 'Shuffle',
                               padding: EdgeInsets.zero,
-                              constraints: _auxButtonConstraints,
+                              constraints:
+                                  DesktopMiniPlayer._auxButtonConstraints,
                               visualDensity: VisualDensity.compact,
                             ),
                             const SizedBox(width: AppSpacing.sm),
@@ -162,7 +173,8 @@ class DesktopMiniPlayer extends ConsumerWidget {
                               onPressed: controller.previous,
                               tooltip: 'Previous',
                               padding: EdgeInsets.zero,
-                              constraints: _controlButtonConstraints,
+                              constraints:
+                                  DesktopMiniPlayer._controlButtonConstraints,
                               visualDensity: VisualDensity.compact,
                             ),
                             Container(
@@ -189,7 +201,8 @@ class DesktopMiniPlayer extends ConsumerWidget {
                                 onPressed: controller.togglePlay,
                                 tooltip: playing ? 'Pause' : 'Play',
                                 padding: EdgeInsets.zero,
-                                constraints: _controlButtonConstraints,
+                                constraints:
+                                    DesktopMiniPlayer._controlButtonConstraints,
                                 visualDensity: VisualDensity.compact,
                               ),
                             ),
@@ -201,7 +214,8 @@ class DesktopMiniPlayer extends ConsumerWidget {
                               onPressed: controller.next,
                               tooltip: 'Next',
                               padding: EdgeInsets.zero,
-                              constraints: _controlButtonConstraints,
+                              constraints:
+                                  DesktopMiniPlayer._controlButtonConstraints,
                               visualDensity: VisualDensity.compact,
                             ),
                             const SizedBox(width: AppSpacing.sm),
@@ -218,7 +232,8 @@ class DesktopMiniPlayer extends ConsumerWidget {
                               onPressed: controller.cycleRepeatMode,
                               tooltip: 'Repeat',
                               padding: EdgeInsets.zero,
-                              constraints: _auxButtonConstraints,
+                              constraints:
+                                  DesktopMiniPlayer._auxButtonConstraints,
                               visualDensity: VisualDensity.compact,
                             ),
                           ],
@@ -232,7 +247,7 @@ class DesktopMiniPlayer extends ConsumerWidget {
                                 SizedBox(
                                   width: 40,
                                   child: Text(
-                                    formatDuration(clampedPosition),
+                                    formatDuration(displayedPosition),
                                     textAlign: TextAlign.right,
                                     style: const TextStyle(
                                       color: AppColors.textSecondary,
@@ -250,20 +265,29 @@ class DesktopMiniPlayer extends ConsumerWidget {
                                           .withValues(alpha: 0.35),
                                       thumbColor: AppColors.primary,
                                       thumbShape: const RoundSliderThumbShape(
-                                        enabledThumbRadius: 3.5,
+                                        enabledThumbRadius: 5,
                                       ),
                                       overlayShape:
                                           const RoundSliderOverlayShape(
-                                            overlayRadius: 9,
+                                            overlayRadius: 10,
                                           ),
                                     ),
                                     child: Slider(
                                       value: sliderValue,
                                       min: 0,
                                       max: sliderMax,
-                                      onChanged: (value) => controller.seek(
-                                        Duration(milliseconds: value.toInt()),
+                                      onChangeStart: (value) => setState(
+                                        () => _dragSeekValueMs = value,
                                       ),
+                                      onChanged: (value) => setState(
+                                        () => _dragSeekValueMs = value,
+                                      ),
+                                      onChangeEnd: (value) {
+                                        controller.seek(
+                                          Duration(milliseconds: value.toInt()),
+                                        );
+                                        setState(() => _dragSeekValueMs = null);
+                                      },
                                     ),
                                   ),
                                 ),
@@ -310,7 +334,8 @@ class DesktopMiniPlayer extends ConsumerWidget {
                               ),
                               tooltip: 'Instant Mix',
                               padding: EdgeInsets.zero,
-                              constraints: _auxButtonConstraints,
+                              constraints:
+                                  DesktopMiniPlayer._auxButtonConstraints,
                               visualDensity: VisualDensity.compact,
                               color: AppColors.textSecondary,
                             ),
@@ -323,7 +348,8 @@ class DesktopMiniPlayer extends ConsumerWidget {
                               onPressed: () => context.push('/lyrics'),
                               tooltip: 'Lyrics',
                               padding: EdgeInsets.zero,
-                              constraints: _auxButtonConstraints,
+                              constraints:
+                                  DesktopMiniPlayer._auxButtonConstraints,
                               visualDensity: VisualDensity.compact,
                               color: AppColors.textSecondary,
                             ),
@@ -338,7 +364,8 @@ class DesktopMiniPlayer extends ConsumerWidget {
                               onPressed: controller.toggleMute,
                               tooltip: muted ? 'Unmute' : 'Mute',
                               padding: EdgeInsets.zero,
-                              constraints: _auxButtonConstraints,
+                              constraints:
+                                  DesktopMiniPlayer._auxButtonConstraints,
                               visualDensity: VisualDensity.compact,
                               color: muted
                                   ? AppColors.primary
@@ -378,7 +405,8 @@ class DesktopMiniPlayer extends ConsumerWidget {
                                   showQueueBottomSheet(context, ref),
                               tooltip: 'Queue',
                               padding: EdgeInsets.zero,
-                              constraints: _auxButtonConstraints,
+                              constraints:
+                                  DesktopMiniPlayer._auxButtonConstraints,
                               visualDensity: VisualDensity.compact,
                               color: AppColors.textSecondary,
                             ),
@@ -400,7 +428,8 @@ class DesktopMiniPlayer extends ConsumerWidget {
                               ),
                               tooltip: 'Add to playlist',
                               padding: EdgeInsets.zero,
-                              constraints: _auxButtonConstraints,
+                              constraints:
+                                  DesktopMiniPlayer._auxButtonConstraints,
                               visualDensity: VisualDensity.compact,
                             ),
                           ],

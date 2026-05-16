@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/core/utils/search_normalization.dart';
+import 'package:altsound/core/widgets/app_snackbar.dart';
 import 'package:altsound/core/widgets/error_state.dart';
 import 'package:altsound/core/widgets/glass_popover.dart';
 import 'package:altsound/core/widgets/pinned_action_bar_delegate.dart';
@@ -498,12 +499,9 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
     final orderedIds = orderedTracks.map((t) => t.playlistItemId).toList();
     if (currentIds.length != orderedIds.length ||
         orderedIds.any((id) => id == null || id.isEmpty)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Could not reorder this playlist. Refresh and try again.',
-          ),
-        ),
+      showAppSnackBar(
+        context,
+        'Could not reorder this playlist. Refresh and try again.',
       );
       return false;
     }
@@ -534,15 +532,11 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
           );
       ref.invalidate(playlistProvider(playlist.id));
       if (!context.mounted) return true;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(successMessage)));
+      showAppSnackBar(context, successMessage);
       return true;
     } catch (e) {
       if (!context.mounted) return false;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not update playlist order: $e')),
-      );
+      showAppSnackBar(context, 'Could not update playlist order: $e');
       return false;
     }
   }
@@ -608,14 +602,10 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
       ref.invalidate(playlistProvider(playlist.id));
       ref.invalidate(playlistsProvider);
       if (!context.mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Renamed to "$playlistName"')));
+      showAppSnackBar(context, 'Renamed to "$playlistName"');
     } catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Could not rename playlist: $e')));
+      showAppSnackBar(context, 'Could not rename playlist: $e');
     }
   }
 
@@ -669,22 +659,17 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
       ref.invalidate(currentTrackPlaylistPresenceProvider);
       ref.invalidate(nowPlayingFavoriteProvider);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              trackIds.length == 1
-                  ? 'Added 1 song to liked songs'
-                  : 'Added ${trackIds.length} songs to liked songs',
-            ),
-          ),
+        showAppSnackBar(
+          context,
+          trackIds.length == 1
+              ? 'Added 1 song to liked songs'
+              : 'Added ${trackIds.length} songs to liked songs',
         );
         onDone();
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not add to liked songs: $e')),
-        );
+        showAppSnackBar(context, 'Could not add to liked songs: $e');
       }
     }
   }
@@ -779,20 +764,15 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
         final skippedText = skippedCount == 0
             ? ''
             : ' · $skippedCount duplicate${skippedCount == 1 ? '' : 's'} skipped';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Added $addedCount song${addedCount == 1 ? '' : 's'} to "${chosen.name}"$skippedText',
-            ),
-          ),
+        showAppSnackBar(
+          context,
+          'Added $addedCount song${addedCount == 1 ? '' : 's'} to "${chosen.name}"$skippedText',
         );
         onDone();
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not add to playlist: $e')),
-        );
+        showAppSnackBar(context, 'Could not add to playlist: $e');
       }
     }
   }
@@ -844,20 +824,15 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
       ref.invalidate(playlistProvider(playlistId));
       ref.invalidate(currentTrackPlaylistPresenceProvider);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              count == 1 ? 'Removed 1 song' : 'Removed $count songs',
-            ),
-          ),
+        showAppSnackBar(
+          context,
+          count == 1 ? 'Removed 1 song' : 'Removed $count songs',
         );
         onDone();
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Could not remove: $e')));
+        showAppSnackBar(context, 'Could not remove: $e');
       }
     }
   }
@@ -902,18 +877,13 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
       ref.invalidate(playlistProvider(playlist.id));
       ref.invalidate(currentTrackPlaylistPresenceProvider);
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Removed ${duplicates.length} duplicate${duplicates.length == 1 ? '' : 's'}',
-          ),
-        ),
+      showAppSnackBar(
+        context,
+        'Removed ${duplicates.length} duplicate${duplicates.length == 1 ? '' : 's'}',
       );
     } catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not remove duplicates: $e')),
-      );
+      showAppSnackBar(context, 'Could not remove duplicates: $e');
     }
   }
 }

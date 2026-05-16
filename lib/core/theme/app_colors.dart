@@ -8,7 +8,7 @@ class AppColors {
   static const surfaceElevated = Color(0xFF1B212B);
   static const surfaceHighlight = Color(0xFF242B36);
 
-  static const primary = Color(0xFF7B68EE);
+  static const primary = Color(0xFF8676F2);
   static const primaryDark = Color(0xFF5A4EC8);
   static const accent = Color(0xFFA78BFA);
 

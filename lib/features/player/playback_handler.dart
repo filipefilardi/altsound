@@ -468,14 +468,51 @@ class PlaybackHandler extends BaseAudioHandler with SeekHandler {
   Future<void> seek(Duration position) => _player.seek(position);
 
   @override
-  Future<void> skipToNext() =>
-      _runSkipIgnoringRepeatOne(() => _player.seekToNext());
+  Future<void> skipToNext() async {
+    // The app physically reorders queue items for shuffle. Navigating "next"
+    // should follow that visible order, including manually queued tracks.
+    // just_audio's seekToNext uses its effective shuffle order, which can
+    // diverge after runtime queue inserts/reorders.
+    if (_player.shuffleModeEnabled) {
+      final q = queue.value;
+      final current = _player.currentIndex ?? -1;
+      if (current >= 0 && current < q.length - 1) {
+        await _runSkipIgnoringRepeatOne(
+          () => _player.seek(Duration.zero, index: current + 1),
+        );
+        return;
+      }
+      if (_player.loopMode == LoopMode.all && q.isNotEmpty) {
+        await _runSkipIgnoringRepeatOne(
+          () => _player.seek(Duration.zero, index: 0),
+        );
+        return;
+      }
+    }
+    await _runSkipIgnoringRepeatOne(() => _player.seekToNext());
+  }
 
   @override
   Future<void> skipToPrevious() async {
     if (_player.position > _skipPreviousRestartThreshold) {
       await _player.seek(Duration.zero);
       return;
+    }
+    if (_player.shuffleModeEnabled) {
+      final q = queue.value;
+      final current = _player.currentIndex ?? -1;
+      if (current > 0 && current < q.length) {
+        await _runSkipIgnoringRepeatOne(
+          () => _player.seek(Duration.zero, index: current - 1),
+        );
+        return;
+      }
+      if (_player.loopMode == LoopMode.all && q.isNotEmpty && current == 0) {
+        await _runSkipIgnoringRepeatOne(
+          () => _player.seek(Duration.zero, index: q.length - 1),
+        );
+        return;
+      }
     }
     await _runSkipIgnoringRepeatOne(() => _player.seekToPrevious());
   }

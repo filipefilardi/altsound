@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
+import 'package:altsound/core/widgets/app_snackbar.dart';
 import 'package:altsound/core/widgets/settings_group.dart';
 import 'package:altsound/data/playlists/playlist_backup_repository.dart';
 import 'package:altsound/features/auth/auth_controller.dart';
@@ -234,9 +235,7 @@ class _PlaylistBackupScreenState extends ConsumerState<PlaylistBackupScreen> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    showAppSnackBar(context, message);
   }
 }
 

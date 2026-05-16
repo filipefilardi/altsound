@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
+import 'package:altsound/core/widgets/app_snackbar.dart';
 import 'package:altsound/core/utils/format.dart';
 import 'package:altsound/data/downloads/download_manager.dart';
 import 'package:altsound/data/downloads/download_preferences.dart';
@@ -134,9 +135,7 @@ Future<void> _confirmRemoveAll(
   if (confirmed == true) {
     await manager.clearAllDownloads();
     if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('All downloads removed')));
+      showAppSnackBar(context, 'All downloads removed');
     }
   }
 }

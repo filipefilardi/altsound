@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
+import 'package:altsound/core/widgets/app_snackbar.dart';
 import 'package:altsound/core/widgets/glass_popover.dart';
 import 'package:altsound/core/widgets/local_or_network_image.dart';
 import 'package:altsound/data/downloads/download_manager.dart';
@@ -217,8 +218,11 @@ class _SearchTrackMenuButton extends ConsumerWidget {
                 GlassPopoverItem(
                   icon: PhosphorIconsRegular.queue,
                   label: 'Add to queue',
-                  onTap: () =>
-                      ref.read(playerControllerProvider).addToQueue(track),
+                  onTap: () async {
+                    await ref.read(playerControllerProvider).addToQueue(track);
+                    if (!context.mounted) return;
+                    showAppSnackBar(context, 'Added to queue');
+                  },
                 ),
                 if (track.albumId != null && track.albumId!.isNotEmpty)
                   GlassPopoverItem(
@@ -259,7 +263,7 @@ String _labelFor(MediaKind k) => switch (k) {
 };
 
 void _showOfflineUnavailable(BuildContext context, String message) {
-  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  showAppSnackBar(context, message);
 }
 
 bool _hasDownloadedAlbum(String albumId, DownloadsState downloads) {

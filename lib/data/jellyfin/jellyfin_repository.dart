@@ -14,6 +14,7 @@ import 'package:altsound/data/jellyfin/jellyfin_api.dart';
 import 'package:altsound/data/jellyfin/models/jellyfin_session.dart';
 import 'package:altsound/data/jellyfin/models/lyrics.dart';
 import 'package:altsound/data/jellyfin/models/media_item.dart';
+import 'package:altsound/data/jellyfin/playback_reporting_api.dart';
 
 class _NoSession implements Exception {
   @override
@@ -27,13 +28,17 @@ class JellyfinServerInfo {
 }
 
 final jellyfinRepositoryProvider = Provider<JellyfinRepository>((ref) {
-  return JellyfinRepository(ref.watch(jellyfinApiProvider));
+  return JellyfinRepository(
+    ref.watch(jellyfinApiProvider),
+    ref.watch(playbackReportingApiProvider),
+  );
 });
 
 class JellyfinRepository {
-  JellyfinRepository(this._api);
+  JellyfinRepository(this._api, this._reporting);
 
   final JellyfinApi _api;
+  final PlaybackReportingApi _reporting;
   String? _likedSongsPlaylistId;
   Future<List<BrowseItem>>? _searchCatalogFuture;
   Future<List<BrowseItem>>? _searchRefreshFuture;
@@ -818,7 +823,7 @@ class JellyfinRepository {
         'Recursive': true,
         'ArtistIds': artistId,
         'SortBy': 'ProductionYear,SortName',
-        'SortOrder': 'Ascending',
+        'SortOrder': 'Descending',
       },
     );
     final albums = ((albumsRes.data?['Items'] as List?) ?? const [])
@@ -843,11 +848,63 @@ class JellyfinRepository {
         .cast<Map<String, dynamic>>()
         .map(Track.fromJson)
         .toList();
+    final global = await _globalPopularTracksForArtist(
+      artistId: artistId,
+      fallbackTracks: popularTracks,
+    );
     return Artist.fromJson(
       detail.data ?? {},
-      popularTracks: popularTracks,
+      popularTracks: global,
       albums: albums,
     );
+  }
+
+  Future<List<Track>> _globalPopularTracksForArtist({
+    required String artistId,
+    required List<Track> fallbackTracks,
+  }) async {
+    final breakdown = await _reporting.globalItemBreakdown(
+      days: 3650,
+      limit: 2000,
+    );
+    if (breakdown == null || breakdown.isEmpty) return fallbackTracks;
+
+    final scoreByTrackId = <String, int>{};
+    final orderByTrackId = <String, int>{};
+    var order = 0;
+    for (final row in breakdown) {
+      final trackId = row.label;
+      if (trackId.isEmpty) continue;
+      final score = row.count > 0 ? row.count : row.timeSeconds;
+      if (score <= 0) continue;
+      scoreByTrackId.update(
+        trackId,
+        (value) => value + score,
+        ifAbsent: () => score,
+      );
+      orderByTrackId.putIfAbsent(trackId, () => order++);
+    }
+    if (scoreByTrackId.isEmpty) return fallbackTracks;
+
+    final tracks = await tracksByIds(
+      scoreByTrackId.keys.toList(growable: false),
+    );
+    final byId = {for (final track in tracks) track.id: track};
+    final ranked =
+        scoreByTrackId.keys
+            .map((id) => byId[id])
+            .whereType<Track>()
+            .where((track) => track.artistId == artistId)
+            .toList(growable: false)
+          ..sort((a, b) {
+            final byScore = scoreByTrackId[b.id]!.compareTo(
+              scoreByTrackId[a.id]!,
+            );
+            if (byScore != 0) return byScore;
+            return orderByTrackId[a.id]!.compareTo(orderByTrackId[b.id]!);
+          });
+    if (ranked.isEmpty) return fallbackTracks;
+    return ranked;
   }
 
   Future<PlaylistDetail> playlist(String playlistId) async {

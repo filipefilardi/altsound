@@ -3,6 +3,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/widgets/app_snackbar.dart';
 import 'package:altsound/data/downloads/download_manager.dart';
 import 'package:altsound/data/downloads/download_preferences.dart';
 import 'package:altsound/data/jellyfin/models/media_item.dart';
@@ -33,7 +34,7 @@ class ArtistDownloadButton extends ConsumerWidget {
         ? 'Nothing to download'
         : 'Downloading $enqueued song${enqueued == 1 ? '' : 's'} from ${artist.name}'
               '${failed > 0 ? ' ($failed album${failed == 1 ? '' : 's'} failed)' : ''}';
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    showAppSnackBar(context, msg);
   }
 
   @override
