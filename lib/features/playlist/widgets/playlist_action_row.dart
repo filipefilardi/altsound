@@ -56,25 +56,6 @@ class PlaylistActionRow extends ConsumerWidget {
         ignoring: selectionActive,
         child: Row(
           children: [
-            PlayPill(
-              onTap: enabled
-                  ? () {
-                      if (isPlaylistPlaying) {
-                        controller.togglePlay();
-                        return;
-                      }
-                      controller.playTracks(
-                        visibleTracks,
-                        contextId: playlist.id,
-                      );
-                    }
-                  : null,
-              icon: isPlaylistPlaying
-                  ? PhosphorIconsFill.pause
-                  : PhosphorIconsFill.play,
-              tooltip: isPlaylistPlaying ? 'Pause' : 'Play',
-            ),
-            const Spacer(),
             IconButton(
               tooltip: 'Shuffle',
               icon: Icon(
@@ -95,6 +76,25 @@ class PlaylistActionRow extends ConsumerWidget {
                           _showMoreActions(anchorCtx, context, ref, controller)
                     : null,
               ),
+            ),
+            const Spacer(),
+            PlayPill(
+              onTap: enabled
+                  ? () {
+                      if (isPlaylistPlaying) {
+                        controller.togglePlay();
+                        return;
+                      }
+                      controller.playTracks(
+                        visibleTracks,
+                        contextId: playlist.id,
+                      );
+                    }
+                  : null,
+              icon: isPlaylistPlaying
+                  ? PhosphorIconsFill.pause
+                  : PhosphorIconsFill.play,
+              tooltip: isPlaylistPlaying ? 'Pause' : 'Play',
             ),
           ],
         ),

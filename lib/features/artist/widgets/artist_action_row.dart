@@ -28,26 +28,6 @@ class ArtistActionRow extends ConsumerWidget {
 
     return Row(
       children: [
-        PlayPill(
-          onTap: hasTracks
-              ? () {
-                  final controller = ref.read(playerControllerProvider);
-                  if (isArtistPlaying) {
-                    controller.togglePlay();
-                    return;
-                  }
-                  controller.playTracks(
-                    artist.popularTracks,
-                    contextId: artist.id,
-                  );
-                }
-              : null,
-          icon: isArtistPlaying
-              ? PhosphorIconsFill.pause
-              : PhosphorIconsFill.play,
-          tooltip: isArtistPlaying ? 'Pause' : 'Play',
-        ),
-        const Spacer(),
         IconButton(
           tooltip: 'Shuffle',
           icon: Icon(
@@ -80,6 +60,26 @@ class ArtistActionRow extends ConsumerWidget {
                 ? () => _showMoreActions(anchorCtx, context, ref)
                 : null,
           ),
+        ),
+        const Spacer(),
+        PlayPill(
+          onTap: hasTracks
+              ? () {
+                  final controller = ref.read(playerControllerProvider);
+                  if (isArtistPlaying) {
+                    controller.togglePlay();
+                    return;
+                  }
+                  controller.playTracks(
+                    artist.popularTracks,
+                    contextId: artist.id,
+                  );
+                }
+              : null,
+          icon: isArtistPlaying
+              ? PhosphorIconsFill.pause
+              : PhosphorIconsFill.play,
+          tooltip: isArtistPlaying ? 'Pause' : 'Play',
         ),
       ],
     );

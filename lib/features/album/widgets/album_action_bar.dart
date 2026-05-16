@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
-import 'package:altsound/core/utils/format.dart';
 import 'package:altsound/core/widgets/glass_popover.dart';
 import 'package:altsound/core/widgets/play_pill.dart';
 import 'package:altsound/data/jellyfin/models/media_item.dart';
@@ -33,28 +32,6 @@ class AlbumActionBar extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          PlayPill(
-            onTap: album.tracks.isEmpty
-                ? null
-                : () {
-                    final controller = ref.read(playerControllerProvider);
-                    if (isAlbumPlaying) {
-                      controller.togglePlay();
-                      return;
-                    }
-                    controller.playTracks(album.tracks, contextId: album.id);
-                  },
-            icon: isAlbumPlaying
-                ? PhosphorIconsFill.pause
-                : PhosphorIconsFill.play,
-            tooltip: isAlbumPlaying ? 'Pause' : 'Play',
-          ),
-          const Spacer(),
-          Text(
-            formatLongDuration(album.totalDuration),
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-          const SizedBox(width: AppSpacing.sm),
           IconButton(
             tooltip: 'Shuffle',
             icon: Icon(
@@ -87,6 +64,23 @@ class AlbumActionBar extends ConsumerWidget {
                   ? null
                   : () => _showMoreActions(anchorCtx, context, ref),
             ),
+          ),
+          const Spacer(),
+          PlayPill(
+            onTap: album.tracks.isEmpty
+                ? null
+                : () {
+                    final controller = ref.read(playerControllerProvider);
+                    if (isAlbumPlaying) {
+                      controller.togglePlay();
+                      return;
+                    }
+                    controller.playTracks(album.tracks, contextId: album.id);
+                  },
+            icon: isAlbumPlaying
+                ? PhosphorIconsFill.pause
+                : PhosphorIconsFill.play,
+            tooltip: isAlbumPlaying ? 'Pause' : 'Play',
           ),
         ],
       ),

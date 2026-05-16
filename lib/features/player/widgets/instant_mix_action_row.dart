@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
-import 'package:altsound/core/utils/format.dart';
 import 'package:altsound/core/widgets/glass_popover.dart';
 import 'package:altsound/core/widgets/play_pill.dart';
 import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
@@ -50,28 +49,6 @@ class InstantMixActionRow extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          PlayPill(
-            onTap: hasTracks
-                ? () {
-                    final controller = ref.read(playerControllerProvider);
-                    if (isMixPlaying) {
-                      controller.togglePlay();
-                      return;
-                    }
-                    controller.playTracks(
-                      tracks,
-                      contextId: contextId,
-                      randomizeStart: false,
-                    );
-                  }
-                : null,
-            icon: isMixPlaying
-                ? PhosphorIconsFill.pause
-                : PhosphorIconsFill.play,
-            tooltip: isMixPlaying ? 'Pause' : 'Play',
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(child: _InstantMixMeta(tracks: tracks)),
           IconButton(
             tooltip: 'Shuffle',
             icon: Icon(
@@ -103,6 +80,27 @@ class InstantMixActionRow extends ConsumerWidget {
               onPressed: () =>
                   _showMoreActions(anchorCtx, context, ref, hasTracks),
             ),
+          ),
+          const Spacer(),
+          PlayPill(
+            onTap: hasTracks
+                ? () {
+                    final controller = ref.read(playerControllerProvider);
+                    if (isMixPlaying) {
+                      controller.togglePlay();
+                      return;
+                    }
+                    controller.playTracks(
+                      tracks,
+                      contextId: contextId,
+                      randomizeStart: false,
+                    );
+                  }
+                : null,
+            icon: isMixPlaying
+                ? PhosphorIconsFill.pause
+                : PhosphorIconsFill.play,
+            tooltip: isMixPlaying ? 'Pause' : 'Play',
           ),
         ],
       ),
@@ -141,26 +139,6 @@ class InstantMixActionRow extends ConsumerWidget {
           const SizedBox(height: 4),
         ],
       ),
-    );
-  }
-}
-
-class _InstantMixMeta extends StatelessWidget {
-  const _InstantMixMeta({required this.tracks});
-
-  final List<Track> tracks;
-
-  @override
-  Widget build(BuildContext context) {
-    final totalDuration = tracks.fold(
-      Duration.zero,
-      (sum, track) => sum + track.duration,
-    );
-    return Text(
-      formatLongDuration(totalDuration),
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: Theme.of(context).textTheme.bodyMedium,
     );
   }
 }
