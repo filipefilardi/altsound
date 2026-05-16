@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:palette_generator/palette_generator.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_radius.dart';
@@ -24,7 +25,75 @@ class InstantMixHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = seedTitle?.trim();
+    return _InstantMixHeaderBody(
+      seedTitle: seedTitle,
+      artworkUrl: artworkUrl,
+      trackCount: trackCount,
+    );
+  }
+}
+
+class _InstantMixHeaderBody extends StatefulWidget {
+  const _InstantMixHeaderBody({
+    required this.seedTitle,
+    required this.artworkUrl,
+    required this.trackCount,
+  });
+
+  final String? seedTitle;
+  final String? artworkUrl;
+  final int trackCount;
+
+  @override
+  State<_InstantMixHeaderBody> createState() => _InstantMixHeaderBodyState();
+}
+
+class _InstantMixHeaderBodyState extends State<_InstantMixHeaderBody> {
+  Color _backdrop = AppColors.surfaceElevated;
+
+  @override
+  void initState() {
+    super.initState();
+    _extractPalette();
+  }
+
+  @override
+  void didUpdateWidget(covariant _InstantMixHeaderBody oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.artworkUrl != widget.artworkUrl) {
+      _extractPalette();
+    }
+  }
+
+  Future<void> _extractPalette() async {
+    final url = widget.artworkUrl;
+    if (url == null || !url.startsWith('http')) return;
+    try {
+      final palette = await PaletteGenerator.fromImageProvider(
+        NetworkImage(url),
+        size: const Size(200, 200),
+        maximumColorCount: 8,
+      );
+      final c =
+          palette.dominantColor?.color ??
+          palette.vibrantColor?.color ??
+          palette.darkVibrantColor?.color;
+      if (c != null && mounted) {
+        setState(
+          () => _backdrop = Color.alphaBlend(
+            c.withValues(alpha: 0.55),
+            AppColors.background,
+          ),
+        );
+      }
+    } catch (_) {
+      // ignore palette failures
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final title = widget.seedTitle?.trim();
     return Container(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.md,
@@ -32,13 +101,16 @@ class InstantMixHeader extends StatelessWidget {
         AppSpacing.md,
         AppSpacing.md,
       ),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            AppColors.surfaceElevated,
-            AppColors.surface,
+            _backdrop,
+            Color.alphaBlend(
+              _backdrop.withValues(alpha: 0.5),
+              AppColors.background,
+            ),
             AppColors.background,
           ],
           stops: [0.0, 0.6, 1.0],
@@ -46,7 +118,7 @@ class InstantMixHeader extends StatelessWidget {
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final textBlockHeight = trackCount > 0 ? 86.0 : 66.0;
+          final textBlockHeight = widget.trackCount > 0 ? 86.0 : 66.0;
           final artSize = (constraints.maxHeight - textBlockHeight).clamp(
             96.0,
             220.0,
@@ -73,7 +145,7 @@ class InstantMixHeader extends StatelessWidget {
                     width: artSize,
                     height: artSize,
                     child: LocalOrNetworkImage(
-                      source: artworkUrl,
+                      source: widget.artworkUrl,
                       placeholderBuilder: (_) => const ArtworkPlaceholder(
                         icon: PhosphorIconsRegular.sparkle,
                         iconSize: 64,
@@ -104,10 +176,10 @@ class InstantMixHeader extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
-              if (trackCount > 0) ...[
+              if (widget.trackCount > 0) ...[
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  '$trackCount song${trackCount == 1 ? '' : 's'}',
+                  '${widget.trackCount} song${widget.trackCount == 1 ? '' : 's'}',
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ],

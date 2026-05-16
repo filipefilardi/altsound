@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:palette_generator/palette_generator.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
@@ -61,13 +62,66 @@ class ArtistScreen extends ConsumerWidget {
   }
 }
 
-class _ArtistView extends ConsumerWidget {
+class _ArtistView extends ConsumerStatefulWidget {
   const _ArtistView({required this.artist});
 
   final Artist artist;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_ArtistView> createState() => _ArtistViewState();
+}
+
+class _ArtistViewState extends ConsumerState<_ArtistView> {
+  Color _backdrop = AppColors.surfaceElevated;
+
+  @override
+  void initState() {
+    super.initState();
+    _extractPalette();
+  }
+
+  @override
+  void didUpdateWidget(covariant _ArtistView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.artist.id != widget.artist.id ||
+        oldWidget.artist.imageTag != widget.artist.imageTag) {
+      _extractPalette();
+    }
+  }
+
+  Future<void> _extractPalette() async {
+    final repo = ref.read(jellyfinRepositoryProvider);
+    final url = repo.imageUrl(
+      widget.artist.id,
+      imageTag: widget.artist.imageTag,
+      size: 200,
+    );
+    try {
+      final palette = await PaletteGenerator.fromImageProvider(
+        CachedNetworkImageProvider(url),
+        size: const Size(200, 200),
+        maximumColorCount: 8,
+      );
+      final c =
+          palette.dominantColor?.color ??
+          palette.vibrantColor?.color ??
+          palette.darkVibrantColor?.color;
+      if (c != null && mounted) {
+        setState(
+          () => _backdrop = Color.alphaBlend(
+            c.withValues(alpha: 0.55),
+            AppColors.background,
+          ),
+        );
+      }
+    } catch (_) {
+      // ignore palette failures
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final artist = widget.artist;
     final repo = ref.read(jellyfinRepositoryProvider);
     final imageUrl = repo.imageUrl(
       artist.id,
@@ -87,13 +141,16 @@ class _ArtistView extends ConsumerWidget {
             flexibleSpace: FlexibleSpaceBar(
               stretchModes: const [StretchMode.zoomBackground],
               background: Container(
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      AppColors.surfaceElevated,
-                      AppColors.surface,
+                      _backdrop,
+                      Color.alphaBlend(
+                        _backdrop.withValues(alpha: 0.5),
+                        AppColors.background,
+                      ),
                       AppColors.background,
                     ],
                     stops: [0.0, 0.62, 1.0],

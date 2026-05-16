@@ -191,7 +191,7 @@ class _AlbumViewState extends ConsumerState<_AlbumView> {
             expandedHeight: 380,
             pinned: true,
             stretch: true,
-            backgroundColor: _backdrop,
+            backgroundColor: AppColors.background,
             leading: BackButton(onPressed: () => context.pop()),
             flexibleSpace: FlexibleSpaceBar(
               background: Container(

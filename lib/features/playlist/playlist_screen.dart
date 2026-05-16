@@ -1010,7 +1010,7 @@ extension _CompareChain on int {
   int ifEqual(int next) => this == 0 ? next : this;
 }
 
-class _PlaylistView extends ConsumerWidget {
+class _PlaylistView extends ConsumerStatefulWidget {
   const _PlaylistView({
     required this.playlist,
     required this.visibleTracks,
@@ -1044,7 +1044,15 @@ class _PlaylistView extends ConsumerWidget {
   final VoidCallback? onDelete;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_PlaylistView> createState() => _PlaylistViewState();
+}
+
+class _PlaylistViewState extends ConsumerState<_PlaylistView> {
+  @override
+  Widget build(BuildContext context) {
+    final playlist = widget.playlist;
+    final visibleTracks = widget.visibleTracks;
+    final inSelection = widget.inSelection;
     return RefreshIndicator(
       onRefresh: () async => ref.refresh(playlistProvider(playlist.id).future),
       child: CustomScrollView(
@@ -1068,12 +1076,12 @@ class _PlaylistView extends ConsumerWidget {
                 playlist: playlist,
                 visibleTracks: visibleTracks,
                 selectionActive: inSelection,
-                onSort: onSort,
-                onEdit: onEdit,
-                duplicateCount: duplicateCount,
-                onRemoveDuplicates: onRemoveDuplicates,
-                onRename: onRename,
-                onDelete: onDelete,
+                onSort: widget.onSort,
+                onEdit: widget.onEdit,
+                duplicateCount: widget.duplicateCount,
+                onRemoveDuplicates: widget.onRemoveDuplicates,
+                onRename: widget.onRename,
+                onDelete: widget.onDelete,
               ),
             ),
           ),
@@ -1086,10 +1094,11 @@ class _PlaylistView extends ConsumerWidget {
             ),
             sliver: SliverList.list(
               children: [
-                if (filterController != null && playlist.tracks.isNotEmpty) ...[
+                if (widget.filterController != null &&
+                    playlist.tracks.isNotEmpty) ...[
                   TrackFilterBar(
-                    controller: filterController!,
-                    filterQuery: filterQuery,
+                    controller: widget.filterController!,
+                    filterQuery: widget.filterQuery,
                     visibleCount: visibleTracks.length,
                     totalCount: playlist.tracks.length,
                     hintText: 'Filter playlist',
@@ -1102,7 +1111,7 @@ class _PlaylistView extends ConsumerWidget {
                       vertical: AppSpacing.lg,
                     ),
                     child: Text(
-                      filterQuery.isEmpty
+                      widget.filterQuery.isEmpty
                           ? 'No songs in this playlist yet.'
                           : 'No songs match your filter.',
                       style: const TextStyle(color: AppColors.textSecondary),
@@ -1116,9 +1125,10 @@ class _PlaylistView extends ConsumerWidget {
                       allTracks: visibleTracks,
                       contextId: playlist.id,
                       inSelection: inSelection,
-                      isSelected: selectedTrackIds.contains(entry.value.id),
-                      onLongPress: () => onLongPress(entry.value.id),
-                      onToggleSelected: () => onToggleSelected(entry.value.id),
+                      isSelected: widget.selectedTrackIds.contains(entry.value.id),
+                      onLongPress: () => widget.onLongPress(entry.value.id),
+                      onToggleSelected: () =>
+                          widget.onToggleSelected(entry.value.id),
                     ),
                   ),
               ],
