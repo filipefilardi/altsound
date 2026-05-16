@@ -10,6 +10,8 @@ import 'package:altsound/data/local/connectivity_provider.dart';
 import 'package:altsound/features/home/home_screen.dart';
 import 'package:altsound/features/library/library_screen.dart';
 import 'package:altsound/features/player/widgets/mini_player_slot.dart';
+import 'package:altsound/features/remote/remote_player_controller.dart';
+import 'package:altsound/features/remote/remote_sessions_sheet.dart';
 import 'package:altsound/features/syncplay/syncplay_controller.dart';
 import 'package:altsound/features/syncplay/syncplay_sheet.dart';
 
@@ -106,6 +108,7 @@ class _DesktopTopNavBar extends ConsumerWidget {
     final location = GoRouterState.of(context).uri.path;
     final syncPlayActive =
         ref.watch(syncPlayControllerProvider).activeGroup != null;
+    final castConnected = ref.watch(activeRemoteSessionIdProvider) != null;
     void goIfNeeded(String target) {
       if (location != target) context.go(target);
     }
@@ -161,6 +164,13 @@ class _DesktopTopNavBar extends ConsumerWidget {
                     tooltip: 'SyncPlay',
                     isSelected: syncPlayActive,
                     onPressed: (anchor) => showSyncPlayPopover(anchor),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  _TopNavIconButton(
+                    icon: PhosphorIconsRegular.screencast,
+                    tooltip: 'Play on…',
+                    isSelected: castConnected,
+                    onPressed: (anchor) => showRemoteSessionsPopover(anchor),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   _TopNavIconButton(
