@@ -9,20 +9,31 @@ import 'package:altsound/features/player/player_providers.dart';
 /// Scrub bar + elapsed / remaining timestamps. Drives playback position via
 /// [playerControllerProvider.seek]; renders using effective (local *or*
 /// remote) position/duration providers.
-class PlayerScrubber extends ConsumerWidget {
+class PlayerScrubber extends ConsumerStatefulWidget {
   const PlayerScrubber({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PlayerScrubber> createState() => _PlayerScrubberState();
+}
+
+class _PlayerScrubberState extends ConsumerState<PlayerScrubber> {
+  double? _dragValueMs;
+
+  @override
+  Widget build(BuildContext context) {
     final position = ref.watch(effectivePositionProvider);
     final duration = ref.watch(effectiveDurationProvider);
+    final controller = ref.read(playerControllerProvider);
 
     final clamped = position > duration ? duration : position;
     final maxMs = duration.inMilliseconds.toDouble().clamp(
       1.0,
       double.infinity,
     );
-    final value = clamped.inMilliseconds.toDouble().clamp(0.0, maxMs);
+    final actualValue = clamped.inMilliseconds.toDouble().clamp(0.0, maxMs);
+    final dragValue = _dragValueMs?.clamp(0.0, maxMs);
+    final value = (dragValue ?? actualValue).toDouble();
+    final displayedPosition = Duration(milliseconds: value.toInt());
 
     return Column(
       children: [
@@ -39,9 +50,12 @@ class PlayerScrubber extends ConsumerWidget {
             value: value,
             min: 0,
             max: maxMs,
-            onChanged: (x) => ref
-                .read(playerControllerProvider)
-                .seek(Duration(milliseconds: x.toInt())),
+            onChangeStart: (x) => setState(() => _dragValueMs = x),
+            onChanged: (x) => setState(() => _dragValueMs = x),
+            onChangeEnd: (x) {
+              controller.seek(Duration(milliseconds: x.toInt()));
+              setState(() => _dragValueMs = null);
+            },
           ),
         ),
         Padding(
@@ -50,7 +64,7 @@ class PlayerScrubber extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                formatDuration(clamped),
+                formatDuration(displayedPosition),
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),
