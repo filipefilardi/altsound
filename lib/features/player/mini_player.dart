@@ -141,9 +141,7 @@ class MiniPlayer extends ConsumerWidget {
                               ),
                             ),
                             _RoundIcon(
-                              icon: saved
-                                  ? PhosphorIconsRegular.listChecks
-                                  : PhosphorIconsRegular.listPlus,
+                              icon: PhosphorIconsRegular.listPlus,
                               iconColor: saved ? AppColors.primary : null,
                               onTap: () => unawaited(
                                 _onMiniPlayerPlaylistTap(

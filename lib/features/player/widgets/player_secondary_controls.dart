@@ -95,9 +95,7 @@ class PlayerSecondaryControls extends ConsumerWidget {
                   _onPlaylistTap(context, ref, trackId: mediaItem.id),
                 ),
           icon: Icon(
-            saved
-                ? PhosphorIconsRegular.listChecks
-                : PhosphorIconsRegular.listPlus,
+            PhosphorIconsRegular.listPlus,
             color: saved ? AppColors.primary : AppColors.textSecondary,
             size: 24,
           ),

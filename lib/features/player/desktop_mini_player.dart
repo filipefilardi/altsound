@@ -385,9 +385,7 @@ class DesktopMiniPlayer extends ConsumerWidget {
                             const SizedBox(width: AppSpacing.xs),
                             IconButton(
                               icon: Icon(
-                                saved
-                                    ? PhosphorIconsRegular.listChecks
-                                    : PhosphorIconsRegular.listPlus,
+                                PhosphorIconsRegular.listPlus,
                                 size: 20,
                                 color: saved
                                     ? AppColors.primary
