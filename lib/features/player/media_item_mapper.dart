@@ -43,7 +43,6 @@ MediaItem mediaItemForTrack({
     artUri: art == null ? null : Uri.parse(art),
     extras: {
       'streamUrl': streamUrl,
-      'streamingQuality': quality.name,
       'jellyfinId': track.id,
       'albumId': track.albumId,
       'artistId': track.artistId,
