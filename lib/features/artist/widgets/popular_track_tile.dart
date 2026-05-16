@@ -47,13 +47,38 @@ class PopularTrackTile extends ConsumerWidget {
 
     return ListTile(
       contentPadding: EdgeInsets.zero,
-      leading: SearchTrackArtwork(
-        imageUrl: imageUrl,
-        jellyfinTrackId: track.id,
-        isArtistShape: false,
+      leading: SizedBox(
+        width: 88,
+        child: Row(
+          children: [
+            SizedBox(
+              width: 18,
+              child: Text(
+                '$rank',
+                textAlign: TextAlign.end,
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: SearchTrackArtwork(
+                  imageUrl: imageUrl,
+                  jellyfinTrackId: track.id,
+                  isArtistShape: false,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
       title: Text(
-        '$rank. ${track.name}',
+        track.name,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
