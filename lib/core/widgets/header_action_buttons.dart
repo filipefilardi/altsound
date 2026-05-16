@@ -22,12 +22,6 @@ class HeaderActionButtons extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         _HeaderActionButton(
-          icon: PhosphorIconsRegular.magnifyingGlass,
-          tooltip: 'Search',
-          onPressed: (_) => context.go('/search'),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        _HeaderActionButton(
           icon: PhosphorIconsRegular.usersThree,
           tooltip: 'SyncPlay',
           active: syncPlayActive,
