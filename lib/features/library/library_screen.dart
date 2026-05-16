@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
+import 'package:altsound/core/widgets/app_snackbar.dart';
 import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
 import 'package:altsound/data/jellyfin/models/media_item.dart';
 import 'package:altsound/features/library/widgets/library_categories.dart';
@@ -134,10 +135,9 @@ class LibraryContent extends ConsumerWidget {
         .likedSongsPlaylist();
     if (playlist == null) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Like any song to create your Liked Songs playlist.'),
-        ),
+      showAppSnackBar(
+        context,
+        'Like any song to create your Liked Songs playlist.',
       );
       return;
     }
@@ -175,9 +175,7 @@ class LibraryContent extends ConsumerWidget {
     await ref.read(jellyfinRepositoryProvider).createPlaylist(playlistName);
     ref.invalidate(playlistsProvider);
     if (!context.mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('"$playlistName" created')));
+    showAppSnackBar(context, '"$playlistName" created');
   }
 }
 

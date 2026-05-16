@@ -160,7 +160,8 @@ class _DesktopMiniPlayerState extends ConsumerState<DesktopMiniPlayer> {
                               onPressed: controller.toggleShuffle,
                               tooltip: 'Shuffle',
                               padding: EdgeInsets.zero,
-                              constraints: DesktopMiniPlayer._auxButtonConstraints,
+                              constraints:
+                                  DesktopMiniPlayer._auxButtonConstraints,
                               visualDensity: VisualDensity.compact,
                             ),
                             const SizedBox(width: AppSpacing.sm),
@@ -172,7 +173,8 @@ class _DesktopMiniPlayerState extends ConsumerState<DesktopMiniPlayer> {
                               onPressed: controller.previous,
                               tooltip: 'Previous',
                               padding: EdgeInsets.zero,
-                              constraints: DesktopMiniPlayer._controlButtonConstraints,
+                              constraints:
+                                  DesktopMiniPlayer._controlButtonConstraints,
                               visualDensity: VisualDensity.compact,
                             ),
                             Container(
@@ -199,7 +201,8 @@ class _DesktopMiniPlayerState extends ConsumerState<DesktopMiniPlayer> {
                                 onPressed: controller.togglePlay,
                                 tooltip: playing ? 'Pause' : 'Play',
                                 padding: EdgeInsets.zero,
-                                constraints: DesktopMiniPlayer._controlButtonConstraints,
+                                constraints:
+                                    DesktopMiniPlayer._controlButtonConstraints,
                                 visualDensity: VisualDensity.compact,
                               ),
                             ),
@@ -211,7 +214,8 @@ class _DesktopMiniPlayerState extends ConsumerState<DesktopMiniPlayer> {
                               onPressed: controller.next,
                               tooltip: 'Next',
                               padding: EdgeInsets.zero,
-                              constraints: DesktopMiniPlayer._controlButtonConstraints,
+                              constraints:
+                                  DesktopMiniPlayer._controlButtonConstraints,
                               visualDensity: VisualDensity.compact,
                             ),
                             const SizedBox(width: AppSpacing.sm),
@@ -228,7 +232,8 @@ class _DesktopMiniPlayerState extends ConsumerState<DesktopMiniPlayer> {
                               onPressed: controller.cycleRepeatMode,
                               tooltip: 'Repeat',
                               padding: EdgeInsets.zero,
-                              constraints: DesktopMiniPlayer._auxButtonConstraints,
+                              constraints:
+                                  DesktopMiniPlayer._auxButtonConstraints,
                               visualDensity: VisualDensity.compact,
                             ),
                           ],
@@ -279,13 +284,9 @@ class _DesktopMiniPlayerState extends ConsumerState<DesktopMiniPlayer> {
                                       ),
                                       onChangeEnd: (value) {
                                         controller.seek(
-                                          Duration(
-                                            milliseconds: value.toInt(),
-                                          ),
+                                          Duration(milliseconds: value.toInt()),
                                         );
-                                        setState(
-                                          () => _dragSeekValueMs = null,
-                                        );
+                                        setState(() => _dragSeekValueMs = null);
                                       },
                                     ),
                                   ),
@@ -333,7 +334,8 @@ class _DesktopMiniPlayerState extends ConsumerState<DesktopMiniPlayer> {
                               ),
                               tooltip: 'Instant Mix',
                               padding: EdgeInsets.zero,
-                              constraints: DesktopMiniPlayer._auxButtonConstraints,
+                              constraints:
+                                  DesktopMiniPlayer._auxButtonConstraints,
                               visualDensity: VisualDensity.compact,
                               color: AppColors.textSecondary,
                             ),
@@ -346,7 +348,8 @@ class _DesktopMiniPlayerState extends ConsumerState<DesktopMiniPlayer> {
                               onPressed: () => context.push('/lyrics'),
                               tooltip: 'Lyrics',
                               padding: EdgeInsets.zero,
-                              constraints: DesktopMiniPlayer._auxButtonConstraints,
+                              constraints:
+                                  DesktopMiniPlayer._auxButtonConstraints,
                               visualDensity: VisualDensity.compact,
                               color: AppColors.textSecondary,
                             ),
@@ -361,7 +364,8 @@ class _DesktopMiniPlayerState extends ConsumerState<DesktopMiniPlayer> {
                               onPressed: controller.toggleMute,
                               tooltip: muted ? 'Unmute' : 'Mute',
                               padding: EdgeInsets.zero,
-                              constraints: DesktopMiniPlayer._auxButtonConstraints,
+                              constraints:
+                                  DesktopMiniPlayer._auxButtonConstraints,
                               visualDensity: VisualDensity.compact,
                               color: muted
                                   ? AppColors.primary
@@ -401,7 +405,8 @@ class _DesktopMiniPlayerState extends ConsumerState<DesktopMiniPlayer> {
                                   showQueueBottomSheet(context, ref),
                               tooltip: 'Queue',
                               padding: EdgeInsets.zero,
-                              constraints: DesktopMiniPlayer._auxButtonConstraints,
+                              constraints:
+                                  DesktopMiniPlayer._auxButtonConstraints,
                               visualDensity: VisualDensity.compact,
                               color: AppColors.textSecondary,
                             ),
@@ -423,7 +428,8 @@ class _DesktopMiniPlayerState extends ConsumerState<DesktopMiniPlayer> {
                               ),
                               tooltip: 'Add to playlist',
                               padding: EdgeInsets.zero,
-                              constraints: DesktopMiniPlayer._auxButtonConstraints,
+                              constraints:
+                                  DesktopMiniPlayer._auxButtonConstraints,
                               visualDensity: VisualDensity.compact,
                             ),
                           ],

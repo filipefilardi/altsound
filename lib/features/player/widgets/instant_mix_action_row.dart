@@ -3,6 +3,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/widgets/app_snackbar.dart';
 import 'package:altsound/core/widgets/glass_popover.dart';
 import 'package:altsound/core/widgets/media_action_row.dart';
 import 'package:altsound/core/widgets/play_pill.dart';
@@ -144,10 +145,9 @@ Future<void> _addMixToQueue(
       .read(playerControllerProvider)
       .addTracksToQueue(tracks);
   if (!context.mounted) return;
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text('Added $added song${added == 1 ? '' : 's'} to queue'),
-    ),
+  showAppSnackBar(
+    context,
+    'Added $added song${added == 1 ? '' : 's'} to queue',
   );
 }
 
@@ -176,18 +176,13 @@ Future<void> _createPlaylistFromMix(
     );
     ref.invalidate(playlistProvider(playlist.id));
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Created "${playlist.name}" with ${tracks.length} song${tracks.length == 1 ? '' : 's'}',
-        ),
-      ),
+    showAppSnackBar(
+      context,
+      'Created "${playlist.name}" with ${tracks.length} song${tracks.length == 1 ? '' : 's'}',
     );
   } catch (e) {
     if (!context.mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Could not create playlist: $e')));
+    showAppSnackBar(context, 'Could not create playlist: $e');
   }
 }
 

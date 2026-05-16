@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/utils/format.dart';
+import 'package:altsound/core/widgets/app_snackbar.dart';
 import 'package:altsound/core/widgets/settings_group.dart';
 
 final _imageCacheSizeProvider = FutureProvider.autoDispose<int>((ref) async {
@@ -56,9 +57,7 @@ class StorageGroup extends ConsumerWidget {
             await DefaultCacheManager().emptyCache();
             ref.invalidate(_imageCacheSizeProvider);
             if (!context.mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Image cache cleared')),
-            );
+            showAppSnackBar(context, 'Image cache cleared');
           },
         ),
       ],

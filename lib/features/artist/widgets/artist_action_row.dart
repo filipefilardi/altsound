@@ -3,6 +3,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
+import 'package:altsound/core/widgets/app_snackbar.dart';
 import 'package:altsound/core/widgets/media_action_row.dart';
 import 'package:altsound/core/widgets/glass_popover.dart';
 import 'package:altsound/core/widgets/play_pill.dart';
@@ -113,12 +114,9 @@ class ArtistActionRow extends ConsumerWidget {
                   .read(playerControllerProvider)
                   .addTracksToQueue(artist.popularTracks);
               if (!context.mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Added $added song${added == 1 ? '' : 's'} to queue',
-                  ),
-                ),
+              showAppSnackBar(
+                context,
+                'Added $added song${added == 1 ? '' : 's'} to queue',
               );
             },
           ),

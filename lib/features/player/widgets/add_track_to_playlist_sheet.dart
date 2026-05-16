@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:altsound/core/widgets/app_snackbar.dart';
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_radius.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
@@ -48,14 +49,10 @@ Future<void> _addTrackToLikedSongs(
     _invalidateTrackPlaylistPresence(ref);
     ref.invalidate(nowPlayingFavoriteProvider);
     if (!context.mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Added to Liked songs')));
+    showAppSnackBar(context, 'Added to Liked songs');
   } catch (e) {
     if (!context.mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Could not add to Liked songs: $e')));
+    showAppSnackBar(context, 'Could not add to Liked songs: $e');
   }
 }
 
@@ -98,12 +95,9 @@ Future<void> openAddTracksToPlaylistFlow(
   final skippedText = skippedCount == 0
       ? ''
       : ' · $skippedCount duplicate${skippedCount == 1 ? '' : 's'} skipped';
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(
-        'Added $addedCount song${addedCount == 1 ? '' : 's'} to "${target.name}"$skippedText',
-      ),
-    ),
+  showAppSnackBar(
+    context,
+    'Added $addedCount song${addedCount == 1 ? '' : 's'} to "${target.name}"$skippedText',
   );
 }
 
@@ -189,9 +183,7 @@ Future<void> _showCreatePlaylistDialog(
   final created = await repo.createPlaylist(playlistName);
   await repo.addTrackToPlaylist(trackId: trackId, playlistId: created.id);
   if (!context.mounted) return;
-  ScaffoldMessenger.of(
-    context,
-  ).showSnackBar(SnackBar(content: Text('Playlist "${created.name}" created')));
+  showAppSnackBar(context, 'Playlist "${created.name}" created');
 }
 
 class _ManageTrackPlaylistsSheet extends ConsumerStatefulWidget {
@@ -375,9 +367,7 @@ class _ManageTrackPlaylistsSheetState
       _invalidateTrackPlaylistPresence(ref);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not update ${playlist.name}: $e')),
-      );
+      showAppSnackBar(context, 'Could not update ${playlist.name}: $e');
     }
   }
 
@@ -441,9 +431,7 @@ class _ManageTrackPlaylistsSheetState
       ref.invalidate(nowPlayingFavoriteProvider);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not update Liked songs: $e')),
-      );
+      showAppSnackBar(context, 'Could not update Liked songs: $e');
     }
   }
 

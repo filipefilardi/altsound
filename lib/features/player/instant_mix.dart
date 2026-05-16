@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:altsound/core/widgets/app_snackbar.dart';
 import 'package:altsound/data/local/connectivity_provider.dart';
 
 enum InstantMixSeedKind {
@@ -35,11 +36,8 @@ void openInstantMixPage(
   required InstantMixSeedKind kind,
   String? title,
 }) {
-  final messenger = ScaffoldMessenger.of(context);
   if (ref.read(isOfflineProvider)) {
-    messenger.showSnackBar(
-      const SnackBar(content: Text('Instant Mix needs the server.')),
-    );
+    showAppSnackBar(context, 'Instant Mix needs the server.');
     return;
   }
 

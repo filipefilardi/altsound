@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:altsound/core/layout/adaptive_breakpoints.dart';
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
+import 'package:altsound/core/widgets/app_snackbar.dart';
 import 'package:altsound/data/local/connectivity_provider.dart';
 import 'package:altsound/features/player/player_providers.dart';
 import 'package:altsound/features/player/widgets/mini_player_slot.dart';
@@ -29,17 +30,12 @@ class _AppShellState extends ConsumerState<AppShell> {
     _errorSub = ref.listenManual(playerErrorProvider, (_, next) {
       next.whenData((err) {
         if (!mounted) return;
-        final messenger = ScaffoldMessenger.maybeOf(context);
-        messenger?.hideCurrentSnackBar();
-        messenger?.showSnackBar(
-          SnackBar(
-            duration: const Duration(seconds: 5),
-            content: Text(err.title),
-            action: SnackBarAction(
-              label: 'Skip',
-              onPressed: () => ref.read(playerControllerProvider).next(),
-            ),
-          ),
+        showAppSnackBar(
+          context,
+          err.title,
+          duration: const Duration(seconds: 5),
+          actionLabel: 'Skip',
+          onAction: () => ref.read(playerControllerProvider).next(),
         );
       });
     });
