@@ -77,6 +77,7 @@ class AlbumActionBar extends ConsumerWidget {
             : PhosphorIconsFill.play,
         tooltip: isAlbumPlaying ? 'Pause' : 'Play',
       ),
+      padding: EdgeInsets.zero,
     );
   }
 
@@ -122,28 +123,4 @@ class AlbumActionBar extends ConsumerWidget {
       ),
     );
   }
-}
-
-/// Sliver delegate for pinning [AlbumActionBar] at the top of the scroll.
-class AlbumActionBarDelegate extends SliverPersistentHeaderDelegate {
-  AlbumActionBarDelegate({required this.child});
-  final Widget child;
-
-  @override
-  double get minExtent => 72;
-  @override
-  double get maxExtent => 72;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return Container(color: AppColors.background, child: child);
-  }
-
-  @override
-  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) =>
-      false;
 }

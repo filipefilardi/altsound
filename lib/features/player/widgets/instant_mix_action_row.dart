@@ -97,6 +97,7 @@ class InstantMixActionRow extends ConsumerWidget {
             : PhosphorIconsFill.play,
         tooltip: isMixPlaying ? 'Pause' : 'Play',
       ),
+      padding: EdgeInsets.zero,
     );
   }
 

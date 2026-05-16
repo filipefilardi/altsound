@@ -8,13 +8,13 @@ import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/core/utils/search_normalization.dart';
 import 'package:altsound/core/widgets/error_state.dart';
 import 'package:altsound/core/widgets/glass_popover.dart';
+import 'package:altsound/core/widgets/pinned_action_bar_delegate.dart';
 import 'package:altsound/data/downloads/download_manager.dart';
 import 'package:altsound/data/downloads/download_preferences.dart';
 import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
 import 'package:altsound/data/jellyfin/models/media_item.dart';
 import 'package:altsound/features/player/current_track_playlist_presence.dart';
 import 'package:altsound/features/player/now_playing_favorite.dart';
-import 'package:altsound/features/player/player_providers.dart';
 import 'package:altsound/features/player/widgets/mini_player_slot.dart';
 import 'package:altsound/features/player/widgets/track_listing_widgets.dart';
 import 'package:altsound/features/playlist/playlist_providers.dart';
@@ -1050,18 +1050,31 @@ class _PlaylistView extends ConsumerWidget {
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.xs,
+              ),
+              child: PlaylistHeader(playlist: playlist),
+            ),
+          ),
           SliverPersistentHeader(
             pinned: true,
-            delegate: _PlaylistStickyHeaderDelegate(
-              playlist: playlist,
-              visibleTracks: visibleTracks,
-              selectionActive: inSelection,
-              onSort: onSort,
-              onEdit: onEdit,
-              duplicateCount: duplicateCount,
-              onRemoveDuplicates: onRemoveDuplicates,
-              onRename: onRename,
-              onDelete: onDelete,
+            delegate: PinnedActionBarDelegate(
+              child: PlaylistActionRow(
+                playlist: playlist,
+                visibleTracks: visibleTracks,
+                selectionActive: inSelection,
+                onSort: onSort,
+                onEdit: onEdit,
+                duplicateCount: duplicateCount,
+                onRemoveDuplicates: onRemoveDuplicates,
+                onRename: onRename,
+                onDelete: onDelete,
+              ),
             ),
           ),
           SliverPadding(
@@ -1110,190 +1123,6 @@ class _PlaylistView extends ConsumerWidget {
                   ),
               ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PlaylistStickyHeaderDelegate extends SliverPersistentHeaderDelegate {
-  _PlaylistStickyHeaderDelegate({
-    required this.playlist,
-    required this.visibleTracks,
-    required this.selectionActive,
-    required this.onSort,
-    required this.onEdit,
-    required this.duplicateCount,
-    required this.onRemoveDuplicates,
-    required this.onRename,
-    required this.onDelete,
-  });
-
-  final PlaylistDetail playlist;
-  final List<Track> visibleTracks;
-  final bool selectionActive;
-  final ValueChanged<BuildContext>? onSort;
-  final VoidCallback? onEdit;
-  final int duplicateCount;
-  final VoidCallback? onRemoveDuplicates;
-  final VoidCallback? onRename;
-  final VoidCallback? onDelete;
-
-  static const double _collapsedHeight = 64;
-  static const double _expandedHeight = 228;
-
-  @override
-  double get minExtent => _collapsedHeight;
-  @override
-  double get maxExtent => _expandedHeight;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    final t = ((shrinkOffset) / (maxExtent - minExtent)).clamp(0.0, 1.0);
-    final showCompact = t > 0.55;
-    return ColoredBox(
-      color: AppColors.background,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Opacity(
-            opacity: 1 - t,
-            child: IgnorePointer(
-              ignoring: showCompact,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  AppSpacing.md,
-                  AppSpacing.md,
-                  AppSpacing.xs,
-                ),
-                child: SingleChildScrollView(
-                  physics: const NeverScrollableScrollPhysics(),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      PlaylistHeader(playlist: playlist),
-                      const SizedBox(height: AppSpacing.md),
-                      PlaylistActionRow(
-                        playlist: playlist,
-                        visibleTracks: visibleTracks,
-                        selectionActive: selectionActive,
-                        onSort: onSort,
-                        onEdit: onEdit,
-                        duplicateCount: duplicateCount,
-                        onRemoveDuplicates: onRemoveDuplicates,
-                        onRename: onRename,
-                        onDelete: onDelete,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: IgnorePointer(
-              ignoring: !showCompact,
-              child: Opacity(
-                opacity: t,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.md,
-                    0,
-                    AppSpacing.md,
-                    AppSpacing.xs,
-                  ),
-                  child: _CompactPlaylistStickyBar(
-                    playlist: playlist,
-                    visibleTracks: visibleTracks,
-                    selectionActive: selectionActive,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  @override
-  bool shouldRebuild(covariant _PlaylistStickyHeaderDelegate oldDelegate) {
-    return playlist != oldDelegate.playlist ||
-        visibleTracks != oldDelegate.visibleTracks ||
-        selectionActive != oldDelegate.selectionActive ||
-        onSort != oldDelegate.onSort ||
-        onEdit != oldDelegate.onEdit ||
-        duplicateCount != oldDelegate.duplicateCount ||
-        onRemoveDuplicates != oldDelegate.onRemoveDuplicates ||
-        onRename != oldDelegate.onRename ||
-        onDelete != oldDelegate.onDelete;
-  }
-}
-
-class _CompactPlaylistStickyBar extends ConsumerWidget {
-  const _CompactPlaylistStickyBar({
-    required this.playlist,
-    required this.visibleTracks,
-    required this.selectionActive,
-  });
-
-  final PlaylistDetail playlist;
-  final List<Track> visibleTracks;
-  final bool selectionActive;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final controller = ref.read(playerControllerProvider);
-    final shuffleEnabled =
-        ref.watch(playerShuffleEnabledProvider).value ?? false;
-    final isPlaylistPlaying = ref.watch(isContextPlayingProvider(playlist.id));
-    final enabled = visibleTracks.isNotEmpty && !selectionActive;
-    return Opacity(
-      opacity: selectionActive ? 0.45 : 1,
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              playlist.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-          ),
-          IconButton(
-            tooltip: isPlaylistPlaying ? 'Pause' : 'Play',
-            onPressed: enabled
-                ? () {
-                    if (isPlaylistPlaying) {
-                      controller.togglePlay();
-                      return;
-                    }
-                    controller.playTracks(
-                      visibleTracks,
-                      contextId: playlist.id,
-                    );
-                  }
-                : null,
-            icon: Icon(
-              isPlaylistPlaying
-                  ? PhosphorIconsFill.pause
-                  : PhosphorIconsFill.play,
-            ),
-          ),
-          IconButton(
-            tooltip: 'Shuffle',
-            icon: Icon(
-              PhosphorIconsRegular.shuffle,
-              color: shuffleEnabled ? AppColors.primary : AppColors.textPrimary,
-            ),
-            onPressed: enabled ? () => controller.toggleShuffle() : null,
           ),
         ],
       ),

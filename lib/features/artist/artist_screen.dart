@@ -7,6 +7,7 @@ import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/core/widgets/artwork_placeholder.dart';
 import 'package:altsound/core/widgets/error_state.dart';
+import 'package:altsound/core/widgets/pinned_action_bar_delegate.dart';
 import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
 import 'package:altsound/data/jellyfin/models/media_item.dart';
 import 'package:altsound/features/artist/widgets/about_section.dart';
@@ -163,7 +164,7 @@ class _ArtistView extends ConsumerWidget {
           ),
           SliverPersistentHeader(
             pinned: true,
-            delegate: ArtistActionBarDelegate(
+            delegate: PinnedActionBarDelegate(
               child: ArtistActionRow(artist: artist),
             ),
           ),

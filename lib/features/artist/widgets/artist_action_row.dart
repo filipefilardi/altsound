@@ -3,7 +3,6 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
-import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/core/widgets/media_action_row.dart';
 import 'package:altsound/core/widgets/glass_popover.dart';
 import 'package:altsound/core/widgets/play_pill.dart';
@@ -128,35 +127,4 @@ class ArtistActionRow extends ConsumerWidget {
       ),
     );
   }
-}
-
-class ArtistActionBarDelegate extends SliverPersistentHeaderDelegate {
-  ArtistActionBarDelegate({required this.child});
-
-  final Widget child;
-
-  @override
-  double get minExtent => 72;
-  @override
-  double get maxExtent => 72;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return Container(
-      color: AppColors.background,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
-      ),
-      child: child,
-    );
-  }
-
-  @override
-  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) =>
-      false;
 }

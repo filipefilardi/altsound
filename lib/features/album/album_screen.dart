@@ -10,6 +10,7 @@ import 'package:altsound/core/theme/app_radius.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/core/widgets/artwork_placeholder.dart';
 import 'package:altsound/core/widgets/error_state.dart';
+import 'package:altsound/core/widgets/pinned_action_bar_delegate.dart';
 import 'package:altsound/data/downloads/download_manager.dart';
 import 'package:altsound/data/downloads/download_preferences.dart';
 import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
@@ -303,7 +304,7 @@ class _AlbumViewState extends ConsumerState<_AlbumView> {
           ),
           SliverPersistentHeader(
             pinned: true,
-            delegate: AlbumActionBarDelegate(
+            delegate: PinnedActionBarDelegate(
               child: AlbumActionBar(album: album),
             ),
           ),

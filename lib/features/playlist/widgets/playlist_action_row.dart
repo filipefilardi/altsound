@@ -97,6 +97,7 @@ class PlaylistActionRow extends ConsumerWidget {
                 : PhosphorIconsFill.play,
             tooltip: isPlaylistPlaying ? 'Pause' : 'Play',
           ),
+          padding: EdgeInsets.zero,
         ),
       ),
     );
