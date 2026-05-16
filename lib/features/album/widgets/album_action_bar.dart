@@ -28,38 +28,38 @@ class AlbumActionBar extends ConsumerWidget {
     return MediaActionRow(
       actions: [
         IconButton(
-            tooltip: 'Shuffle',
-            icon: Icon(
-              PhosphorIconsRegular.shuffle,
-              color: shuffleEnabled ? AppColors.primary : AppColors.textPrimary,
-            ),
+          tooltip: 'Shuffle',
+          icon: Icon(
+            PhosphorIconsRegular.shuffle,
+            color: shuffleEnabled ? AppColors.primary : AppColors.textPrimary,
+          ),
+          onPressed: album.tracks.isEmpty
+              ? null
+              : () => ref.read(playerControllerProvider).toggleShuffle(),
+        ),
+        IconButton(
+          tooltip: 'Instant Mix',
+          icon: const Icon(PhosphorIconsRegular.sparkle),
+          onPressed: album.tracks.isEmpty
+              ? null
+              : () => openInstantMixPage(
+                  context,
+                  ref,
+                  itemId: album.id,
+                  kind: InstantMixSeedKind.album,
+                  title: album.name,
+                ),
+        ),
+        AlbumDownloadButton(album: album),
+        Builder(
+          builder: (anchorCtx) => IconButton(
+            tooltip: 'More actions',
+            icon: const Icon(PhosphorIconsRegular.dotsThreeVertical),
             onPressed: album.tracks.isEmpty
                 ? null
-                : () => ref.read(playerControllerProvider).toggleShuffle(),
+                : () => _showMoreActions(anchorCtx, context, ref),
           ),
-          IconButton(
-            tooltip: 'Instant Mix',
-            icon: const Icon(PhosphorIconsRegular.sparkle),
-            onPressed: album.tracks.isEmpty
-                ? null
-                : () => openInstantMixPage(
-                    context,
-                    ref,
-                    itemId: album.id,
-                    kind: InstantMixSeedKind.album,
-                    title: album.name,
-                  ),
-          ),
-          AlbumDownloadButton(album: album),
-          Builder(
-            builder: (anchorCtx) => IconButton(
-              tooltip: 'More actions',
-              icon: const Icon(PhosphorIconsRegular.dotsThreeVertical),
-              onPressed: album.tracks.isEmpty
-                  ? null
-                  : () => _showMoreActions(anchorCtx, context, ref),
-            ),
-          ),
+        ),
       ],
       playControl: PlayPill(
         onTap: album.tracks.isEmpty
@@ -72,9 +72,7 @@ class AlbumActionBar extends ConsumerWidget {
                 }
                 controller.playTracks(album.tracks, contextId: album.id);
               },
-        icon: isAlbumPlaying
-            ? PhosphorIconsFill.pause
-            : PhosphorIconsFill.play,
+        icon: isAlbumPlaying ? PhosphorIconsFill.pause : PhosphorIconsFill.play,
         tooltip: isAlbumPlaying ? 'Pause' : 'Play',
       ),
       padding: EdgeInsets.zero,

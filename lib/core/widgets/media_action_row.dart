@@ -24,13 +24,7 @@ class MediaActionRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: padding,
-      child: Row(
-        children: [
-          ...actions,
-          const Spacer(),
-          playControl,
-        ],
-      ),
+      child: Row(children: [...actions, const Spacer(), playControl]),
     );
   }
 }

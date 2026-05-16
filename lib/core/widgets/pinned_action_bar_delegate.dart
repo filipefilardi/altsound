@@ -30,11 +30,7 @@ class PinnedActionBarDelegate extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
-    return Container(
-      color: backgroundColor,
-      padding: padding,
-      child: child,
-    );
+    return Container(color: backgroundColor, padding: padding, child: child);
   }
 
   @override

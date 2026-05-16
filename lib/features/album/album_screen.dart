@@ -275,9 +275,7 @@ class _AlbumViewState extends ConsumerState<_AlbumView> {
                               child: Text(
                                 album.artistName,
                                 style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(
-                                      color: AppColors.textSecondary,
-                                    ),
+                                    ?.copyWith(color: AppColors.textSecondary),
                               ),
                             ),
                             if (album.year != null)

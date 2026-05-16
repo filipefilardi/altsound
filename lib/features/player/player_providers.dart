@@ -153,8 +153,10 @@ class PlayerController {
 
   bool _queueMatchesCurrentStreamingQuality(MediaItem? item) {
     final queuedQuality = item?.extras?['streamingQuality'] as String?;
-    final currentQuality =
-        ref.read(playbackPreferencesProvider).streamingQuality.name;
+    final currentQuality = ref
+        .read(playbackPreferencesProvider)
+        .streamingQuality
+        .name;
     return queuedQuality == currentQuality;
   }
 
@@ -167,17 +169,22 @@ class PlayerController {
         : quality.bitrate;
     final currentIndex = handler.player.currentIndex ?? 0;
     final position = handler.player.position;
-    final rebuilt = currentQueue.map((item) {
-      final jellyfinId = item.extras?['jellyfinId'] as String?;
-      final isOffline = item.extras?['isOffline'] == true;
-      if (jellyfinId == null || isOffline) {
-        return item;
-      }
-      final extras = Map<String, dynamic>.from(item.extras ?? const {});
-      extras['streamingQuality'] = quality.name;
-      extras['streamUrl'] = repo.streamUrl(jellyfinId, maxBitrate: maxBitrate);
-      return item.copyWith(extras: extras);
-    }).toList(growable: false);
+    final rebuilt = currentQueue
+        .map((item) {
+          final jellyfinId = item.extras?['jellyfinId'] as String?;
+          final isOffline = item.extras?['isOffline'] == true;
+          if (jellyfinId == null || isOffline) {
+            return item;
+          }
+          final extras = Map<String, dynamic>.from(item.extras ?? const {});
+          extras['streamingQuality'] = quality.name;
+          extras['streamUrl'] = repo.streamUrl(
+            jellyfinId,
+            maxBitrate: maxBitrate,
+          );
+          return item.copyWith(extras: extras);
+        })
+        .toList(growable: false);
     await handler.loadQueue(
       rebuilt,
       initialIndex: currentIndex.clamp(0, rebuilt.length - 1),

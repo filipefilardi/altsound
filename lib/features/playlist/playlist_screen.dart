@@ -1122,7 +1122,9 @@ class _PlaylistViewState extends ConsumerState<_PlaylistView> {
                       allTracks: visibleTracks,
                       contextId: playlist.id,
                       inSelection: inSelection,
-                      isSelected: widget.selectedTrackIds.contains(entry.value.id),
+                      isSelected: widget.selectedTrackIds.contains(
+                        entry.value.id,
+                      ),
                       onLongPress: () => widget.onLongPress(entry.value.id),
                       onToggleSelected: () =>
                           widget.onToggleSelected(entry.value.id),

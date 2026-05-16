@@ -45,37 +45,37 @@ class InstantMixActionRow extends ConsumerWidget {
     return MediaActionRow(
       actions: [
         IconButton(
-            tooltip: 'Shuffle',
-            icon: Icon(
-              PhosphorIconsRegular.shuffle,
-              color: shuffleEnabled ? AppColors.primary : AppColors.textPrimary,
-            ),
-            onPressed: () => ref.read(playerControllerProvider).toggleShuffle(),
+          tooltip: 'Shuffle',
+          icon: Icon(
+            PhosphorIconsRegular.shuffle,
+            color: shuffleEnabled ? AppColors.primary : AppColors.textPrimary,
           ),
-          IconButton(
-            tooltip: isRegenerating ? 'Regenerating mix' : 'Regenerate mix',
-            icon: isRegenerating
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppColors.primary,
-                    ),
-                  )
-                : const Icon(PhosphorIconsRegular.arrowsClockwise),
-            onPressed: isRegenerating
-                ? null
-                : () => ref.invalidate(instantMixTracksProvider(request)),
+          onPressed: () => ref.read(playerControllerProvider).toggleShuffle(),
+        ),
+        IconButton(
+          tooltip: isRegenerating ? 'Regenerating mix' : 'Regenerate mix',
+          icon: isRegenerating
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.primary,
+                  ),
+                )
+              : const Icon(PhosphorIconsRegular.arrowsClockwise),
+          onPressed: isRegenerating
+              ? null
+              : () => ref.invalidate(instantMixTracksProvider(request)),
+        ),
+        Builder(
+          builder: (anchorCtx) => IconButton(
+            tooltip: 'More actions',
+            icon: const Icon(PhosphorIconsRegular.dotsThreeVertical),
+            onPressed: () =>
+                _showMoreActions(anchorCtx, context, ref, hasTracks),
           ),
-          Builder(
-            builder: (anchorCtx) => IconButton(
-              tooltip: 'More actions',
-              icon: const Icon(PhosphorIconsRegular.dotsThreeVertical),
-              onPressed: () =>
-                  _showMoreActions(anchorCtx, context, ref, hasTracks),
-            ),
-          ),
+        ),
       ],
       playControl: PlayPill(
         onTap: hasTracks
@@ -92,9 +92,7 @@ class InstantMixActionRow extends ConsumerWidget {
                 );
               }
             : null,
-        icon: isMixPlaying
-            ? PhosphorIconsFill.pause
-            : PhosphorIconsFill.play,
+        icon: isMixPlaying ? PhosphorIconsFill.pause : PhosphorIconsFill.play,
         tooltip: isMixPlaying ? 'Pause' : 'Play',
       ),
       padding: EdgeInsets.zero,
