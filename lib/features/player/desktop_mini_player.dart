@@ -250,11 +250,11 @@ class DesktopMiniPlayer extends ConsumerWidget {
                                           .withValues(alpha: 0.35),
                                       thumbColor: AppColors.primary,
                                       thumbShape: const RoundSliderThumbShape(
-                                        enabledThumbRadius: 3.5,
+                                        enabledThumbRadius: 5,
                                       ),
                                       overlayShape:
                                           const RoundSliderOverlayShape(
-                                            overlayRadius: 9,
+                                            overlayRadius: 10,
                                           ),
                                     ),
                                     child: Slider(

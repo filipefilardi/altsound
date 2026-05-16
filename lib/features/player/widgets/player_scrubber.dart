@@ -32,7 +32,7 @@ class PlayerScrubber extends ConsumerWidget {
             activeTrackColor: AppColors.primary,
             thumbColor: AppColors.primary,
             overlayColor: AppColors.primary.withValues(alpha: 0.16),
-            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
+            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
             overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
           ),
           child: Slider(
