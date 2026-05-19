@@ -25,7 +25,7 @@ class LyricsView extends ConsumerWidget {
     final async = ref.watch(lyricsProvider(trackId));
     return async.when(
       loading: () => const _LoadingLyrics(),
-      error: (_, __) => ErrorStateView(
+      error: (_, _) => ErrorStateView(
         icon: PhosphorIconsRegular.cloudSlash,
         title: 'Could not load lyrics',
         message: 'Check your connection and try again.',

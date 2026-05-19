@@ -26,7 +26,7 @@ class AccountCard extends ConsumerWidget {
     final bool? online = info.when(
       data: (i) => i != null,
       loading: () => null,
-      error: (_, __) => false,
+      error: (_, _) => false,
     );
 
     return Material(
@@ -183,7 +183,7 @@ Future<void> _showAccountSheet(BuildContext context, JellyfinSession session) {
           return info.when(
             data: (i) => i == null ? 'Unreachable' : (extract(i) ?? '—'),
             loading: () => 'Checking…',
-            error: (_, __) => 'Unreachable',
+            error: (_, _) => 'Unreachable',
           );
         }
 

@@ -40,7 +40,7 @@ class _AuthListenable extends ChangeNotifier {
   _AuthListenable(this._ref) {
     _sub = _ref.listen<AuthState>(
       authControllerProvider,
-      (_, __) => notifyListeners(),
+      (_, _) => notifyListeners(),
       fireImmediately: false,
     );
   }
@@ -84,7 +84,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
+      GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
       GoRoute(
         path: '/now-playing',
         parentNavigatorKey: _rootNavigatorKey,
@@ -94,7 +94,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           opaque: true,
           transitionDuration: const Duration(milliseconds: 220),
           reverseTransitionDuration: const Duration(milliseconds: 180),
-          transitionsBuilder: (_, animation, __, child) {
+          transitionsBuilder: (_, animation, _, child) {
             return FadeTransition(
               opacity: CurvedAnimation(
                 parent: animation,
@@ -116,7 +116,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           opaque: true,
           transitionDuration: const Duration(milliseconds: 320),
           reverseTransitionDuration: const Duration(milliseconds: 240),
-          transitionsBuilder: (_, animation, __, child) {
+          transitionsBuilder: (_, animation, _, child) {
             final curved = CurvedAnimation(
               parent: animation,
               curve: Curves.easeOutCubic,
@@ -148,17 +148,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         branches: [
           StatefulShellBranch(
             navigatorKey: _homeBranchNavigatorKey,
-            routes: [
-              GoRoute(path: '/', builder: (_, __) => const HomeScreen()),
-            ],
+            routes: [GoRoute(path: '/', builder: (_, _) => const HomeScreen())],
           ),
           StatefulShellBranch(
             navigatorKey: _searchBranchNavigatorKey,
             routes: [
-              GoRoute(
-                path: '/search',
-                builder: (_, __) => const SearchScreen(),
-              ),
+              GoRoute(path: '/search', builder: (_, _) => const SearchScreen()),
             ],
           ),
           StatefulShellBranch(
@@ -166,7 +161,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/library',
-                builder: (_, __) => const LibraryScreen(),
+                builder: (_, _) => const LibraryScreen(),
               ),
             ],
           ),

@@ -24,7 +24,7 @@ class DiscographyLoading extends StatelessWidget {
           childAspectRatio: 0.7,
         ),
         itemCount: 8,
-        itemBuilder: (_, __) => Column(
+        itemBuilder: (_, _) => Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             AspectRatio(

@@ -1176,7 +1176,7 @@ class JellyfinRepository {
       'fillHeight': '$size',
       'fillWidth': '$size',
       'quality': '90',
-      if (imageTag != null) 'tag': imageTag,
+      'tag': ?imageTag,
       'api_key': s.accessToken,
     };
     final query = params.entries

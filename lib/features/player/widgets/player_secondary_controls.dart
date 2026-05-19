@@ -30,12 +30,12 @@ class PlayerSecondaryControls extends ConsumerWidget {
         .watch(playerLoopModeProvider)
         .when(
           data: (v) => v,
-          error: (_, __) => LoopMode.off,
+          error: (_, _) => LoopMode.off,
           loading: () => LoopMode.off,
         );
     final shuffled = ref
         .watch(playerShuffleEnabledProvider)
-        .when(data: (v) => v, error: (_, __) => false, loading: () => false);
+        .when(data: (v) => v, error: (_, _) => false, loading: () => false);
     final controller = ref.read(playerControllerProvider);
     final offline = mediaItem.extras?['isOffline'] == true;
     final presenceAsync = ref.watch(currentTrackPlaylistPresenceProvider);

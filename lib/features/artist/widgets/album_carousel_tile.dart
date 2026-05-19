@@ -40,9 +40,9 @@ class AlbumCarouselTile extends ConsumerWidget {
                         imageUrl: imageUrl,
                         width: double.infinity,
                         fit: BoxFit.cover,
-                        placeholder: (_, __) =>
+                        placeholder: (_, _) =>
                             Container(color: AppColors.surfaceElevated),
-                        errorWidget: (_, __, ___) => const ArtworkPlaceholder(),
+                        errorWidget: (_, _, _) => const ArtworkPlaceholder(),
                       ),
               ),
             ),

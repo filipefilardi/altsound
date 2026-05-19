@@ -182,12 +182,12 @@ class _ArtistViewState extends ConsumerState<_ArtistView> {
                               width: 220,
                               height: 220,
                               fit: BoxFit.cover,
-                              placeholder: (_, __) => const SizedBox(
+                              placeholder: (_, _) => const SizedBox(
                                 width: 220,
                                 height: 220,
                                 child: ArtworkPlaceholder(iconSize: 64),
                               ),
-                              errorWidget: (_, __, ___) => const SizedBox(
+                              errorWidget: (_, _, _) => const SizedBox(
                                 width: 220,
                                 height: 220,
                                 child: ArtworkPlaceholder(iconSize: 64),
@@ -276,7 +276,7 @@ class _ArtistViewState extends ConsumerState<_ArtistView> {
                     horizontal: AppSpacing.md,
                   ),
                   itemCount: artist.albums.length,
-                  separatorBuilder: (_, __) =>
+                  separatorBuilder: (_, _) =>
                       const SizedBox(width: AppSpacing.md),
                   itemBuilder: (_, i) =>
                       AlbumCarouselTile(album: artist.albums[i]),

@@ -39,13 +39,13 @@ class PlayerHeroArt extends StatelessWidget {
             ? Image(
                 image: FileImage(File(artUri.toFilePath())),
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const _ArtFallback(),
+                errorBuilder: (_, _, _) => const _ArtFallback(),
               )
             : CachedNetworkImage(
                 imageUrl: artUri.toString(),
                 fit: BoxFit.cover,
-                placeholder: (_, __) => const _ArtFallback(),
-                errorWidget: (_, __, ___) => const _ArtFallback(),
+                placeholder: (_, _) => const _ArtFallback(),
+                errorWidget: (_, _, _) => const _ArtFallback(),
               ),
       ),
     );

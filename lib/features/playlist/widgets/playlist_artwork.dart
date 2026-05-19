@@ -62,9 +62,9 @@ class PlaylistArtwork extends ConsumerWidget {
               return CachedNetworkImage(
                 imageUrl: imageUrl,
                 fit: BoxFit.cover,
-                placeholder: (_, __) =>
+                placeholder: (_, _) =>
                     const ColoredBox(color: AppColors.surfaceElevated),
-                errorWidget: (_, __, ___) =>
+                errorWidget: (_, _, _) =>
                     const ArtworkPlaceholder(icon: PhosphorIconsRegular.queue),
               );
             },
@@ -90,9 +90,9 @@ class PlaylistArtwork extends ConsumerWidget {
             : CachedNetworkImage(
                 imageUrl: imageUrl,
                 fit: BoxFit.cover,
-                placeholder: (_, __) =>
+                placeholder: (_, _) =>
                     const ColoredBox(color: AppColors.surfaceElevated),
-                errorWidget: (_, __, ___) =>
+                errorWidget: (_, _, _) =>
                     const ArtworkPlaceholder(icon: PhosphorIconsRegular.queue),
               ),
       ),

@@ -69,9 +69,9 @@ class DownloadedAlbumTile extends ConsumerWidget {
                         size: 200,
                       ),
                       fit: BoxFit.cover,
-                      placeholder: (_, __) =>
+                      placeholder: (_, _) =>
                           Container(color: AppColors.surfaceElevated),
-                      errorWidget: (_, __, ___) => const Icon(
+                      errorWidget: (_, _, _) => const Icon(
                         PhosphorIconsRegular.disc,
                         color: AppColors.textTertiary,
                       ),

@@ -104,7 +104,7 @@ class RemoteSessionsRepository {
   ]) async {
     await _api.dio.post<void>(
       '/Sessions/$sessionId/Command',
-      data: {'Name': name, if (arguments != null) 'Arguments': arguments},
+      data: {'Name': name, 'Arguments': ?arguments},
     );
   }
 }

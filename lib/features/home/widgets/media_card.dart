@@ -59,8 +59,8 @@ class MediaCard extends ConsumerWidget {
                         : CachedNetworkImage(
                             imageUrl: imageUrl,
                             fit: BoxFit.cover,
-                            placeholder: (_, __) => const _Fallback(),
-                            errorWidget: (_, __, ___) => const _Fallback(),
+                            placeholder: (_, _) => const _Fallback(),
+                            errorWidget: (_, _, _) => const _Fallback(),
                           ),
                   ),
                 ),

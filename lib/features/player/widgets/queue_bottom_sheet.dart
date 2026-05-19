@@ -397,9 +397,9 @@ class _RowArt extends StatelessWidget {
             : CachedNetworkImage(
                 imageUrl: art.toString(),
                 fit: BoxFit.cover,
-                placeholder: (_, __) =>
+                placeholder: (_, _) =>
                     const ColoredBox(color: AppColors.background),
-                errorWidget: (_, __, ___) => const ColoredBox(
+                errorWidget: (_, _, _) => const ColoredBox(
                   color: AppColors.background,
                   child: Icon(
                     PhosphorIconsRegular.musicNote,

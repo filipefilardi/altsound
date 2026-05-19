@@ -48,7 +48,7 @@ class StorageGroup extends ConsumerWidget {
             size.when(
               data: (b) => b == 0 ? 'Empty' : formatBytes(b),
               loading: () => '…',
-              error: (_, __) => '—',
+              error: (_, _) => '—',
             ),
             style: const TextStyle(color: AppColors.textSecondary),
           ),
