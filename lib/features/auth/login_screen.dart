@@ -88,7 +88,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             children: [
                               Text(
                                 'AltSound',
-                                style: Theme.of(context).textTheme.displayMedium,
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.displayMedium,
                                 textAlign: TextAlign.center,
                               ),
                               const SizedBox(height: AppSpacing.sm),
@@ -109,7 +111,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   hintText: 'https://jellyfin.example.com',
                                   prefixIcon: Icon(PiconsRegular.hardDrives),
                                 ),
-                                validator: (v) => (v == null || v.trim().isEmpty)
+                                validator: (v) =>
+                                    (v == null || v.trim().isEmpty)
                                     ? 'Required'
                                     : null,
                               ),
@@ -123,7 +126,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   labelText: 'Username',
                                   prefixIcon: Icon(PiconsRegular.user),
                                 ),
-                                validator: (v) => (v == null || v.trim().isEmpty)
+                                validator: (v) =>
+                                    (v == null || v.trim().isEmpty)
                                     ? 'Required'
                                     : null,
                               ),

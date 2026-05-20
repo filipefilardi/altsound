@@ -109,9 +109,7 @@ class _LibraryCollectionScreenState
                         message: 'Nothing matched "$_term".',
                       )
                     : ListView.builder(
-                        padding: const EdgeInsets.only(
-                          bottom: AppSpacing.lg,
-                        ),
+                        padding: const EdgeInsets.only(bottom: AppSpacing.lg),
                         itemCount: filtered.length,
                         itemBuilder: (context, index) {
                           final item = filtered[index];
