@@ -20,11 +20,11 @@ class AppGradients {
     colors: [AppColors.primary, AppColors.primary],
   );
 
-  /// Solid dark charcoal backdrop for the login screen.
+  /// Soft primary-tinted radial used on the login backdrop.
   static const loginBackdrop = RadialGradient(
     center: Alignment(0, -0.6),
     radius: 1.1,
-    colors: [AppColors.background, AppColors.background],
+    colors: [Color(0x338676F2), AppColors.background],
     stops: [0.0, 0.85],
   );
 }
