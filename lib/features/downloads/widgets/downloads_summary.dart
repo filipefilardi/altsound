@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_radius.dart';
@@ -40,7 +40,7 @@ class DownloadsSummary extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppRadius.sm),
             ),
             child: const Icon(
-              PhosphorIconsRegular.downloadSimple,
+              PiconsRegular.downloadSimple,
               color: AppColors.primary,
               size: 25,
             ),

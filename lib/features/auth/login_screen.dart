@@ -1,5 +1,7 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
@@ -59,90 +61,119 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 420),
-                child: Form(
-                  key: _formKey,
-                  autovalidateMode: AutovalidateMode.onUserInteraction,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        'AltSound',
-                        style: Theme.of(context).textTheme.displayMedium,
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      Text(
-                        'Connect to your Jellyfin server',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: AppSpacing.xxl),
-                      TextFormField(
-                        controller: _serverCtrl,
-                        keyboardType: TextInputType.url,
-                        autocorrect: false,
-                        enableSuggestions: false,
-                        textInputAction: TextInputAction.next,
-                        decoration: const InputDecoration(
-                          labelText: 'Server URL',
-                          hintText: 'https://jellyfin.example.com',
-                          prefixIcon: Icon(PhosphorIconsRegular.hardDrives),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 28, sigmaY: 28),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: AppColors.primary.withValues(alpha: 0.22),
                         ),
-                        validator: (v) =>
-                            (v == null || v.trim().isEmpty) ? 'Required' : null,
+                        color: AppColors.surface.withValues(alpha: 0.78),
                       ),
-                      const SizedBox(height: AppSpacing.md),
-                      TextFormField(
-                        controller: _userCtrl,
-                        autocorrect: false,
-                        enableSuggestions: false,
-                        textInputAction: TextInputAction.next,
-                        decoration: const InputDecoration(
-                          labelText: 'Username',
-                          prefixIcon: Icon(PhosphorIconsRegular.user),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.lg,
+                          AppSpacing.xl,
+                          AppSpacing.lg,
+                          AppSpacing.xl,
                         ),
-                        validator: (v) =>
-                            (v == null || v.trim().isEmpty) ? 'Required' : null,
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      TextFormField(
-                        controller: _passCtrl,
-                        obscureText: _obscure,
-                        textInputAction: TextInputAction.done,
-                        onFieldSubmitted: (_) => _submit(),
-                        decoration: InputDecoration(
-                          labelText: 'Password',
-                          prefixIcon: const Icon(PhosphorIconsRegular.lock),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscure
-                                  ? PhosphorIconsRegular.eye
-                                  : PhosphorIconsRegular.eyeSlash,
-                            ),
-                            onPressed: () =>
-                                setState(() => _obscure = !_obscure),
+                        child: Form(
+                          key: _formKey,
+                          autovalidateMode: AutovalidateMode.onUserInteraction,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Text(
+                                'AltSound',
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.displayMedium,
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: AppSpacing.sm),
+                              Text(
+                                'Connect to your Jellyfin server',
+                                style: Theme.of(context).textTheme.bodyMedium,
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: AppSpacing.xxl),
+                              TextFormField(
+                                controller: _serverCtrl,
+                                keyboardType: TextInputType.url,
+                                autocorrect: false,
+                                enableSuggestions: false,
+                                textInputAction: TextInputAction.next,
+                                decoration: const InputDecoration(
+                                  labelText: 'Server URL',
+                                  hintText: 'https://jellyfin.example.com',
+                                  prefixIcon: Icon(PiconsRegular.hardDrives),
+                                ),
+                                validator: (v) =>
+                                    (v == null || v.trim().isEmpty)
+                                    ? 'Required'
+                                    : null,
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+                              TextFormField(
+                                controller: _userCtrl,
+                                autocorrect: false,
+                                enableSuggestions: false,
+                                textInputAction: TextInputAction.next,
+                                decoration: const InputDecoration(
+                                  labelText: 'Username',
+                                  prefixIcon: Icon(PiconsRegular.user),
+                                ),
+                                validator: (v) =>
+                                    (v == null || v.trim().isEmpty)
+                                    ? 'Required'
+                                    : null,
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+                              TextFormField(
+                                controller: _passCtrl,
+                                obscureText: _obscure,
+                                textInputAction: TextInputAction.done,
+                                onFieldSubmitted: (_) => _submit(),
+                                decoration: InputDecoration(
+                                  labelText: 'Password',
+                                  prefixIcon: const Icon(PiconsRegular.lock),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      _obscure
+                                          ? PiconsRegular.eye
+                                          : PiconsRegular.eyeSlash,
+                                    ),
+                                    onPressed: () =>
+                                        setState(() => _obscure = !_obscure),
+                                  ),
+                                ),
+                              ),
+                              if (errorMessage != null) ...[
+                                const SizedBox(height: AppSpacing.md),
+                                LoginErrorBanner(message: errorMessage),
+                              ],
+                              const SizedBox(height: AppSpacing.xl),
+                              ElevatedButton(
+                                onPressed: loading ? null : _submit,
+                                child: loading
+                                    ? const SizedBox(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2.5,
+                                          color: AppColors.onAccent,
+                                        ),
+                                      )
+                                    : const Text('SIGN IN'),
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                      if (errorMessage != null) ...[
-                        const SizedBox(height: AppSpacing.md),
-                        LoginErrorBanner(message: errorMessage),
-                      ],
-                      const SizedBox(height: AppSpacing.xl),
-                      ElevatedButton(
-                        onPressed: loading ? null : _submit,
-                        child: loading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                  color: AppColors.onAccent,
-                                ),
-                              )
-                            : const Text('SIGN IN'),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),

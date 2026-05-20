@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -25,8 +25,8 @@ class LyricsView extends ConsumerWidget {
     final async = ref.watch(lyricsProvider(trackId));
     return async.when(
       loading: () => const _LoadingLyrics(),
-      error: (_, __) => ErrorStateView(
-        icon: PhosphorIconsRegular.cloudSlash,
+      error: (_, _) => ErrorStateView(
+        icon: PiconsRegular.cloudSlash,
         title: 'Could not load lyrics',
         message: 'Check your connection and try again.',
         onRetry: () => ref.invalidate(lyricsProvider(trackId)),
@@ -34,7 +34,7 @@ class LyricsView extends ConsumerWidget {
       data: (lyrics) {
         if (lyrics == null || lyrics.isEmpty) {
           return const EmptyState(
-            icon: PhosphorIconsRegular.microphoneStage,
+            icon: PiconsRegular.microphoneStage,
             title: 'No lyrics available',
             message: 'This track has no lyrics on the Jellyfin server.',
           );

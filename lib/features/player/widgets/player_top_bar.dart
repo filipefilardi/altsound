@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -89,7 +89,7 @@ class PlayerTopBar extends ConsumerWidget {
             Align(
               alignment: Alignment.centerLeft,
               child: IconButton(
-                icon: const Icon(PhosphorIconsRegular.caretDown, size: 30),
+                icon: const Icon(PiconsRegular.caretDown, size: 30),
                 onPressed: () => context.pop(),
               ),
             ),

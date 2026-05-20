@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_radius.dart';
@@ -22,7 +22,7 @@ class LibraryCategories extends StatelessWidget {
       children: [
         Expanded(
           child: _LibraryCategoryCard(
-            icon: PhosphorIconsRegular.disc,
+            icon: PiconsRegular.disc,
             label: 'Albums',
             onTap: onAlbums,
           ),
@@ -30,7 +30,7 @@ class LibraryCategories extends StatelessWidget {
         const SizedBox(width: AppSpacing.sm),
         Expanded(
           child: _LibraryCategoryCard(
-            icon: PhosphorIconsRegular.user,
+            icon: PiconsRegular.user,
             label: 'Artists',
             onTap: onArtists,
           ),

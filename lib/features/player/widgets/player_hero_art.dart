@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:audio_service/audio_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
 
@@ -39,13 +39,13 @@ class PlayerHeroArt extends StatelessWidget {
             ? Image(
                 image: FileImage(File(artUri.toFilePath())),
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const _ArtFallback(),
+                errorBuilder: (_, _, _) => const _ArtFallback(),
               )
             : CachedNetworkImage(
                 imageUrl: artUri.toString(),
                 fit: BoxFit.cover,
-                placeholder: (_, __) => const _ArtFallback(),
-                errorWidget: (_, __, ___) => const _ArtFallback(),
+                placeholder: (_, _) => const _ArtFallback(),
+                errorWidget: (_, _, _) => const _ArtFallback(),
               ),
       ),
     );
@@ -65,7 +65,7 @@ class _ArtFallback extends StatelessWidget {
       color: AppColors.surfaceElevated,
       child: const Center(
         child: Icon(
-          PhosphorIconsRegular.musicNote,
+          PiconsRegular.musicNote,
           size: 64,
           color: AppColors.textTertiary,
         ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -19,7 +19,7 @@ class LibraryGroup extends ConsumerWidget {
       label: 'Library',
       children: [
         ListTile(
-          leading: const Icon(PhosphorIconsRegular.downloadSimple),
+          leading: const Icon(PiconsRegular.downloadSimple),
           title: const Text('Downloads'),
           subtitle: Text(
             '${downloads.tracks.length} tracks · ${formatBytes(downloads.totalSizeBytes)}',
@@ -28,7 +28,7 @@ class LibraryGroup extends ConsumerWidget {
           onTap: () => context.push('/downloads'),
         ),
         ListTile(
-          leading: const Icon(PhosphorIconsRegular.slidersHorizontal),
+          leading: const Icon(PiconsRegular.slidersHorizontal),
           title: const Text('Download settings'),
           subtitle: const Text(
             'Auto-download, WiFi only',
@@ -37,7 +37,7 @@ class LibraryGroup extends ConsumerWidget {
           onTap: () => context.push('/settings/downloads'),
         ),
         ListTile(
-          leading: const Icon(PhosphorIconsRegular.cloudArrowUp),
+          leading: const Icon(PiconsRegular.cloudArrowUp),
           title: const Text('Playlist backups'),
           subtitle: const Text(
             'Automatic restore points and migration exports',

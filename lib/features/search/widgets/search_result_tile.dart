@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -106,7 +106,7 @@ class SearchResultTile extends ConsumerWidget {
                   const Padding(
                     padding: EdgeInsets.only(right: AppSpacing.xs),
                     child: Icon(
-                      PhosphorIconsRegular.downloadSimple,
+                      PiconsRegular.downloadSimple,
                       size: 14,
                       color: AppColors.primary,
                     ),
@@ -184,7 +184,7 @@ class _SearchTrackMenuButton extends ConsumerWidget {
     return Builder(
       builder: (anchorCtx) => IconButton(
         icon: const Icon(
-          PhosphorIconsRegular.dotsThreeVertical,
+          PiconsRegular.dotsThreeVertical,
           color: AppColors.textSecondary,
         ),
         onPressed: () async {
@@ -206,7 +206,7 @@ class _SearchTrackMenuButton extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 GlassPopoverItem(
-                  icon: PhosphorIconsRegular.listPlus,
+                  icon: PiconsRegular.listPlus,
                   label: 'Add to playlist',
                   onTap: () => openAddTrackToPlaylistFlow(
                     context,
@@ -216,7 +216,7 @@ class _SearchTrackMenuButton extends ConsumerWidget {
                   ),
                 ),
                 GlassPopoverItem(
-                  icon: PhosphorIconsRegular.queue,
+                  icon: PiconsRegular.queue,
                   label: 'Add to queue',
                   onTap: () async {
                     await ref.read(playerControllerProvider).addToQueue(track);
@@ -226,13 +226,13 @@ class _SearchTrackMenuButton extends ConsumerWidget {
                 ),
                 if (track.albumId != null && track.albumId!.isNotEmpty)
                   GlassPopoverItem(
-                    icon: PhosphorIconsRegular.disc,
+                    icon: PiconsRegular.disc,
                     label: 'Go to album',
                     onTap: () => context.push('/album/${track.albumId}'),
                   ),
                 if (track.artistId != null && track.artistId!.isNotEmpty)
                   GlassPopoverItem(
-                    icon: PhosphorIconsRegular.user,
+                    icon: PiconsRegular.user,
                     label: 'Go to artist',
                     onTap: () => context.push('/artist/${track.artistId}'),
                   ),
@@ -249,10 +249,10 @@ class _SearchTrackMenuButton extends ConsumerWidget {
 // ─── Private helpers ────────────────────────────────────────────────────────
 
 IconData _iconFor(MediaKind k) => switch (k) {
-  MediaKind.album => PhosphorIconsRegular.disc,
-  MediaKind.artist => PhosphorIconsRegular.user,
-  MediaKind.track => PhosphorIconsRegular.musicNote,
-  MediaKind.playlist => PhosphorIconsRegular.queue,
+  MediaKind.album => PiconsRegular.disc,
+  MediaKind.artist => PiconsRegular.user,
+  MediaKind.track => PiconsRegular.musicNote,
+  MediaKind.playlist => PiconsRegular.queue,
 };
 
 String _labelFor(MediaKind k) => switch (k) {

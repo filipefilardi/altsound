@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -55,7 +55,7 @@ class _AppShellState extends ConsumerState<AppShell> {
     }
 
     return Scaffold(
-      extendBody: true,
+      extendBody: false,
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -88,18 +88,18 @@ class _AppShellState extends ConsumerState<AppShell> {
                 ),
                 destinations: const [
                   NavigationDestination(
-                    icon: Icon(PhosphorIconsRegular.house),
-                    selectedIcon: Icon(PhosphorIconsRegular.house),
+                    icon: Icon(PiconsRegular.house),
+                    selectedIcon: Icon(PiconsRegular.house),
                     label: 'Home',
                   ),
                   NavigationDestination(
-                    icon: Icon(PhosphorIconsRegular.magnifyingGlass),
-                    selectedIcon: Icon(PhosphorIconsRegular.magnifyingGlass),
+                    icon: Icon(PiconsRegular.magnifyingGlass),
+                    selectedIcon: Icon(PiconsRegular.magnifyingGlass),
                     label: 'Search',
                   ),
                   NavigationDestination(
-                    icon: Icon(PhosphorIconsRegular.musicNotes),
-                    selectedIcon: Icon(PhosphorIconsRegular.musicNotes),
+                    icon: Icon(PiconsRegular.musicNotes),
+                    selectedIcon: Icon(PiconsRegular.musicNotes),
                     label: 'Library',
                   ),
                 ],
@@ -125,7 +125,7 @@ class _OfflineBanner extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            PhosphorIconsRegular.wifiSlash,
+            PiconsRegular.wifiSlash,
             size: 13,
             color: AppColors.textSecondary,
           ),

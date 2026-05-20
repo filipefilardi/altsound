@@ -12,7 +12,7 @@ class SearchResultsSkeleton extends StatelessWidget {
       child: ListView.builder(
         padding: const EdgeInsets.only(top: AppSpacing.sm),
         itemCount: 8,
-        itemBuilder: (_, __) => Padding(
+        itemBuilder: (_, _) => Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
             vertical: AppSpacing.sm,

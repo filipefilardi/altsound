@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -118,13 +118,13 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           GlassPopoverItem(
-            icon: PhosphorIconsRegular.heart,
+            icon: PiconsRegular.heart,
             label: 'Add to liked songs',
             onTap: () =>
                 _bulkAddToLikedSongs(outer, ids, onDone: _clearSelection),
           ),
           GlassPopoverItem(
-            icon: PhosphorIconsRegular.listPlus,
+            icon: PiconsRegular.listPlus,
             label: 'Add to another playlist',
             onTap: () => _showBulkAddToPlaylistDialog(
               outer,
@@ -134,7 +134,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
             ),
           ),
           GlassPopoverItem(
-            icon: PhosphorIconsRegular.alignTop,
+            icon: PiconsRegular.alignTop,
             label: 'Move to top',
             onTap: () => _moveSelectedTracks(
               outer,
@@ -145,7 +145,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
             ),
           ),
           GlassPopoverItem(
-            icon: PhosphorIconsRegular.alignBottom,
+            icon: PiconsRegular.alignBottom,
             label: 'Move to bottom',
             onTap: () => _moveSelectedTracks(
               outer,
@@ -156,7 +156,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
             ),
           ),
           GlassPopoverItem(
-            icon: PhosphorIconsRegular.minusCircle,
+            icon: PiconsRegular.minusCircle,
             label: 'Remove from this playlist',
             destructive: true,
             onTap: () => _confirmBulkRemove(
@@ -216,7 +216,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                     const SizedBox(width: AppSpacing.xs),
                     SelectionToolbarButton(
                       tooltip: 'Clear selection',
-                      icon: PhosphorIconsRegular.x,
+                      icon: PiconsRegular.x,
                       onPressed: _clearSelection,
                     ),
                     SelectionToolbarButton(
@@ -224,10 +224,10 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                           ? 'Clear visible selection'
                           : 'Select visible songs',
                       icon: allVisibleSelected
-                          ? PhosphorIconsRegular.checkSquare
+                          ? PiconsRegular.checkSquare
                           : someVisibleSelected
-                          ? PhosphorIconsRegular.minusSquare
-                          : PhosphorIconsRegular.square,
+                          ? PiconsRegular.minusSquare
+                          : PiconsRegular.square,
                       onPressed: visibleForSelection.isEmpty
                           ? null
                           : () {
@@ -253,7 +253,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
                   Builder(
                     builder: (anchorCtx) => SelectionToolbarButton(
                       tooltip: 'More',
-                      icon: PhosphorIconsRegular.dotsThree,
+                      icon: PiconsRegular.dotsThree,
                       onPressed: _selectedTrackIds.isEmpty
                           ? null
                           : () => _showSelectionActionsPopover(
@@ -384,28 +384,28 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
         children: [
           const GlassPopoverHeader(label: 'SORT BY'),
           _sortItem(
-            icon: PhosphorIconsRegular.listNumbers,
+            icon: PiconsRegular.listNumbers,
             label: 'Custom order',
             sort: _PlaylistSort.custom,
             directional: false,
           ),
           _sortItem(
-            icon: PhosphorIconsRegular.textT,
+            icon: PiconsRegular.textT,
             label: 'Title',
             sort: _PlaylistSort.title,
           ),
           _sortItem(
-            icon: PhosphorIconsRegular.user,
+            icon: PiconsRegular.user,
             label: 'Artist',
             sort: _PlaylistSort.artist,
           ),
           _sortItem(
-            icon: PhosphorIconsRegular.disc,
+            icon: PiconsRegular.disc,
             label: 'Album',
             sort: _PlaylistSort.album,
           ),
           _sortItem(
-            icon: PhosphorIconsRegular.calendarBlank,
+            icon: PiconsRegular.calendarBlank,
             label: 'Date added',
             sort: _PlaylistSort.dateAdded,
           ),
@@ -430,9 +430,9 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
           ? Icon(
               directional
                   ? (descending
-                        ? PhosphorIconsRegular.caretDown
-                        : PhosphorIconsRegular.caretUp)
-                  : PhosphorIconsRegular.check,
+                        ? PiconsRegular.caretDown
+                        : PiconsRegular.caretUp)
+                  : PiconsRegular.check,
               size: 18,
               color: AppColors.primary,
             )
@@ -710,7 +710,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
               if (canPickLiked)
                 ListTile(
                   leading: const Icon(
-                    PhosphorIconsRegular.heart,
+                    PiconsRegular.heart,
                     color: AppColors.like,
                   ),
                   title: const Text('Liked songs'),
@@ -719,7 +719,7 @@ class _PlaylistScreenState extends ConsumerState<PlaylistScreen> {
               ...lists.map(
                 (p) => ListTile(
                   leading: const Icon(
-                    PhosphorIconsRegular.queue,
+                    PiconsRegular.queue,
                     color: AppColors.primary,
                   ),
                   title: Text(

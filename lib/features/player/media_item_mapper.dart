@@ -47,9 +47,8 @@ MediaItem mediaItemForTrack({
       'albumId': track.albumId,
       'artistId': track.artistId,
       'isOffline': localPath != null,
-      if (contextId != null) 'contextId': contextId,
-      if (syncPlayPlaylistItemId != null)
-        'syncPlayPlaylistItemId': syncPlayPlaylistItemId,
+      'contextId': ?contextId,
+      'syncPlayPlaylistItemId': ?syncPlayPlaylistItemId,
     },
   );
 }

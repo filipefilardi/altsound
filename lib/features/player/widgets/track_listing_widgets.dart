@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 
 import 'package:altsound/core/layout/adaptive_breakpoints.dart';
 import 'package:altsound/core/theme/app_colors.dart';
@@ -61,10 +61,7 @@ class TrackFilterBar extends StatelessWidget {
                     width: 1,
                   ),
                 ),
-                prefixIcon: const Icon(
-                  PhosphorIconsRegular.magnifyingGlass,
-                  size: 19,
-                ),
+                prefixIcon: const Icon(PiconsRegular.magnifyingGlass, size: 19),
                 prefixIconConstraints: const BoxConstraints(
                   minWidth: 40,
                   minHeight: 40,
@@ -73,7 +70,7 @@ class TrackFilterBar extends StatelessWidget {
                     ? null
                     : IconButton(
                         tooltip: 'Clear filter',
-                        icon: const Icon(PhosphorIconsRegular.x, size: 18),
+                        icon: const Icon(PiconsRegular.x, size: 18),
                         onPressed: controller.clear,
                       ),
                 suffixIconConstraints: const BoxConstraints(
@@ -218,7 +215,7 @@ class TrackListTile extends StatelessWidget {
                   const Padding(
                     padding: EdgeInsets.only(right: AppSpacing.xs),
                     child: Icon(
-                      PhosphorIconsRegular.downloadSimple,
+                      PiconsRegular.downloadSimple,
                       size: 14,
                       color: AppColors.primary,
                     ),

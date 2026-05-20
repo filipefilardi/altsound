@@ -12,7 +12,7 @@ class CollectionLoadingRows extends StatelessWidget {
       child: ListView.builder(
         padding: const EdgeInsets.only(
           top: AppSpacing.sm,
-          bottom: AppSpacing.miniPlayerInset,
+          bottom: AppSpacing.lg,
         ),
         itemCount: 10,
         itemBuilder: (context, index) => Padding(

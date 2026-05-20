@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 
@@ -30,12 +30,12 @@ class PlayerSecondaryControls extends ConsumerWidget {
         .watch(playerLoopModeProvider)
         .when(
           data: (v) => v,
-          error: (_, __) => LoopMode.off,
+          error: (_, _) => LoopMode.off,
           loading: () => LoopMode.off,
         );
     final shuffled = ref
         .watch(playerShuffleEnabledProvider)
-        .when(data: (v) => v, error: (_, __) => false, loading: () => false);
+        .when(data: (v) => v, error: (_, _) => false, loading: () => false);
     final controller = ref.read(playerControllerProvider);
     final offline = mediaItem.extras?['isOffline'] == true;
     final presenceAsync = ref.watch(currentTrackPlaylistPresenceProvider);
@@ -52,7 +52,7 @@ class PlayerSecondaryControls extends ConsumerWidget {
               ? null
               : () => controller.toggleShuffle(),
           icon: Icon(
-            PhosphorIconsRegular.shuffle,
+            PiconsRegular.shuffle,
             color: shuffled ? AppColors.primary : AppColors.textSecondary,
             size: 22,
           ),
@@ -64,8 +64,8 @@ class PlayerSecondaryControls extends ConsumerWidget {
               : () => controller.cycleRepeatMode(),
           icon: Icon(
             loop == LoopMode.one
-                ? PhosphorIconsRegular.repeatOnce
-                : PhosphorIconsRegular.repeat,
+                ? PiconsRegular.repeatOnce
+                : PiconsRegular.repeat,
             color: loop == LoopMode.off
                 ? AppColors.textSecondary
                 : AppColors.primary,
@@ -82,7 +82,7 @@ class PlayerSecondaryControls extends ConsumerWidget {
             title: mediaItem.title,
           ),
           icon: const Icon(
-            PhosphorIconsRegular.sparkle,
+            PiconsRegular.sparkle,
             color: AppColors.textSecondary,
             size: 22,
           ),
@@ -95,7 +95,7 @@ class PlayerSecondaryControls extends ConsumerWidget {
                   _onPlaylistTap(context, ref, trackId: mediaItem.id),
                 ),
           icon: Icon(
-            PhosphorIconsRegular.listPlus,
+            PiconsRegular.listPlus,
             color: saved ? AppColors.primary : AppColors.textSecondary,
             size: 24,
           ),

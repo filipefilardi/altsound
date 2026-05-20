@@ -75,10 +75,10 @@ class RecentlyAddedScreen extends ConsumerWidget {
                                 imageUrl: imageUrl,
                                 width: double.infinity,
                                 fit: BoxFit.cover,
-                                placeholder: (_, __) => const ColoredBox(
+                                placeholder: (_, _) => const ColoredBox(
                                   color: AppColors.surfaceElevated,
                                 ),
-                                errorWidget: (_, __, ___) =>
+                                errorWidget: (_, _, _) =>
                                     const ArtworkPlaceholder(),
                               ),
                       ),

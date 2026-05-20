@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
@@ -49,7 +49,7 @@ class _PlaylistBackupScreenState extends ConsumerState<PlaylistBackupScreen> {
             label: 'Safety',
             children: [
               SwitchListTile(
-                secondary: const Icon(PhosphorIconsRegular.arrowsClockwise),
+                secondary: const Icon(PiconsRegular.arrowsClockwise),
                 title: const Text('Automatic backups'),
                 subtitle: Text(
                   prefs.lastAutoBackupAt == null
@@ -65,7 +65,7 @@ class _PlaylistBackupScreenState extends ConsumerState<PlaylistBackupScreen> {
                           .setAutoBackupEnabled(value),
               ),
               ListTile(
-                leading: const Icon(PhosphorIconsRegular.cloudArrowUp),
+                leading: const Icon(PiconsRegular.cloudArrowUp),
                 title: const Text('Back up now'),
                 subtitle: const Text(
                   'Save every Jellyfin playlist and track order locally.',
@@ -75,9 +75,7 @@ class _PlaylistBackupScreenState extends ConsumerState<PlaylistBackupScreen> {
                 onTap: _createBackup,
               ),
               ListTile(
-                leading: const Icon(
-                  PhosphorIconsRegular.arrowsCounterClockwise,
-                ),
+                leading: const Icon(PiconsRegular.arrowsCounterClockwise),
                 title: const Text('Restore latest backup'),
                 subtitle: Text(
                   latest == null
@@ -97,7 +95,7 @@ class _PlaylistBackupScreenState extends ConsumerState<PlaylistBackupScreen> {
             label: 'Portability',
             children: [
               ListTile(
-                leading: const Icon(PhosphorIconsRegular.shareNetwork),
+                leading: const Icon(PiconsRegular.shareNetwork),
                 title: const Text('Export migration bundle'),
                 subtitle: Text(
                   latest == null
@@ -109,7 +107,7 @@ class _PlaylistBackupScreenState extends ConsumerState<PlaylistBackupScreen> {
                 onTap: latest == null ? null : () => _exportBackup(latest.file),
               ),
               ListTile(
-                leading: const Icon(PhosphorIconsRegular.fileText),
+                leading: const Icon(PiconsRegular.fileText),
                 title: const Text('Import backup from path'),
                 subtitle: const Text(
                   'Import an AltSound playlist JSON backup.',
@@ -276,7 +274,7 @@ class PlaylistBackupDetailScreen extends ConsumerWidget {
               children: document.playlists.isEmpty
                   ? const [
                       ListTile(
-                        leading: Icon(PhosphorIconsRegular.playlist),
+                        leading: Icon(PiconsRegular.playlist),
                         title: Text('No playlists in this backup'),
                       ),
                     ]

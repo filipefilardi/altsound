@@ -237,12 +237,12 @@ class _AlbumViewState extends ConsumerState<_AlbumView> {
                               width: 220,
                               height: 220,
                               fit: BoxFit.cover,
-                              placeholder: (_, __) => const SizedBox(
+                              placeholder: (_, _) => const SizedBox(
                                 width: 220,
                                 height: 220,
                                 child: ArtworkPlaceholder(iconSize: 64),
                               ),
-                              errorWidget: (_, __, ___) => const SizedBox(
+                              errorWidget: (_, _, _) => const SizedBox(
                                 width: 220,
                                 height: 220,
                                 child: ArtworkPlaceholder(iconSize: 64),

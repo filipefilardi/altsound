@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
@@ -91,7 +91,7 @@ class CollectionDownloadButton extends ConsumerWidget {
       return IconButton(
         tooltip: 'Remove downloads',
         icon: const Icon(
-          PhosphorIconsRegular.downloadSimple,
+          PiconsRegular.downloadSimple,
           color: AppColors.primary,
         ),
         onPressed: () => _confirmDelete(context),
@@ -122,7 +122,7 @@ class CollectionDownloadButton extends ConsumerWidget {
               backgroundColor: AppColors.divider,
             ),
             const Icon(
-              PhosphorIconsRegular.downloadSimple,
+              PiconsRegular.downloadSimple,
               size: 18,
               color: AppColors.textPrimary,
             ),
@@ -135,7 +135,7 @@ class CollectionDownloadButton extends ConsumerWidget {
       return IconButton(
         tooltip: 'Waiting for WiFi — tap to change settings',
         icon: const Icon(
-          PhosphorIconsRegular.wifiSlash,
+          PiconsRegular.wifiSlash,
           color: AppColors.textSecondary,
         ),
         onPressed: () => showWifiRequiredDialog(context),
@@ -145,7 +145,7 @@ class CollectionDownloadButton extends ConsumerWidget {
     return IconButton(
       tooltip: downloadTooltip,
       icon: const Icon(
-        PhosphorIconsRegular.downloadSimple,
+        PiconsRegular.downloadSimple,
         color: AppColors.textPrimary,
       ),
       onPressed: () async {

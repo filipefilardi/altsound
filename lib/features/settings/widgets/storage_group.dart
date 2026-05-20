@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
@@ -42,13 +42,13 @@ class StorageGroup extends ConsumerWidget {
       label: 'Storage',
       children: [
         ListTile(
-          leading: const Icon(PhosphorIconsRegular.image),
+          leading: const Icon(PiconsRegular.image),
           title: const Text('Clear image cache'),
           subtitle: Text(
             size.when(
               data: (b) => b == 0 ? 'Empty' : formatBytes(b),
               loading: () => '…',
-              error: (_, __) => '—',
+              error: (_, _) => '—',
             ),
             style: const TextStyle(color: AppColors.textSecondary),
           ),

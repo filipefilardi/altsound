@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -139,14 +139,14 @@ class _DesktopTopNavBar extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               _TopNavPill(
-                icon: PhosphorIconsRegular.house,
+                icon: PiconsRegular.house,
                 label: 'Home',
                 isSelected: selected('/'),
                 onTap: () => goIfNeeded('/'),
               ),
               const SizedBox(width: AppSpacing.sm),
               _TopNavPill(
-                icon: PhosphorIconsRegular.magnifyingGlass,
+                icon: PiconsRegular.magnifyingGlass,
                 label: 'Search',
                 isSelected: selected('/search'),
                 onTap: () => goIfNeeded('/search'),
@@ -160,28 +160,28 @@ class _DesktopTopNavBar extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   _TopNavIconButton(
-                    icon: PhosphorIconsRegular.usersThree,
+                    icon: PiconsRegular.usersThree,
                     tooltip: 'SyncPlay',
                     isSelected: syncPlayActive,
                     onPressed: (anchor) => showSyncPlayPopover(anchor),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   _TopNavIconButton(
-                    icon: PhosphorIconsRegular.screencast,
+                    icon: PiconsRegular.screencast,
                     tooltip: 'Play on…',
                     isSelected: castConnected,
                     onPressed: (anchor) => showRemoteSessionsPopover(anchor),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   _TopNavIconButton(
-                    icon: PhosphorIconsRegular.downloadSimple,
+                    icon: PiconsRegular.downloadSimple,
                     tooltip: 'Downloads',
                     isSelected: selected('/downloads'),
                     onPressed: (_) => context.push('/downloads'),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   _TopNavIconButton(
-                    icon: PhosphorIconsRegular.gear,
+                    icon: PiconsRegular.gear,
                     tooltip: 'Settings',
                     isSelected: selected('/settings'),
                     onPressed: (_) => goIfNeeded('/settings'),
@@ -292,7 +292,7 @@ class _DesktopOfflineBanner extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            PhosphorIconsRegular.wifiSlash,
+            PiconsRegular.wifiSlash,
             size: 13,
             color: AppColors.textSecondary,
           ),

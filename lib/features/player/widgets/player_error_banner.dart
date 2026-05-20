@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_radius.dart';
@@ -37,7 +37,7 @@ class PlayerErrorBanner extends StatelessWidget {
       child: Row(
         children: [
           const Icon(
-            PhosphorIconsRegular.warningCircle,
+            PiconsRegular.warningCircle,
             color: AppColors.error,
             size: 18,
           ),
@@ -65,7 +65,7 @@ class PlayerErrorBanner extends StatelessWidget {
           ),
           IconButton(
             onPressed: onDismiss,
-            icon: const Icon(PhosphorIconsRegular.x, size: 18),
+            icon: const Icon(PiconsRegular.x, size: 18),
             color: AppColors.textSecondary,
             visualDensity: VisualDensity.compact,
           ),

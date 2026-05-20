@@ -172,14 +172,14 @@ class _BlurredArt extends StatelessWidget {
       return Image(
         image: FileImage(File(artUri.toFilePath())),
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+        errorBuilder: (_, _, _) => const SizedBox.shrink(),
       );
     }
     return CachedNetworkImage(
       imageUrl: artUri.toString(),
       fit: BoxFit.cover,
-      placeholder: (_, __) => const SizedBox.shrink(),
-      errorWidget: (_, __, ___) => const SizedBox.shrink(),
+      placeholder: (_, _) => const SizedBox.shrink(),
+      errorWidget: (_, _, _) => const SizedBox.shrink(),
     );
   }
 }

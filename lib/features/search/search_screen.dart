@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_spacing.dart';
@@ -108,11 +108,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               onChanged: _onChanged,
               decoration: InputDecoration(
                 hintText: 'Search songs, albums, artists, playlists',
-                prefixIcon: const Icon(PhosphorIconsRegular.magnifyingGlass),
+                prefixIcon: const Icon(PiconsRegular.magnifyingGlass),
                 suffixIcon: _ctrl.text.isEmpty
                     ? null
                     : IconButton(
-                        icon: const Icon(PhosphorIconsRegular.x),
+                        icon: const Icon(PiconsRegular.x),
                         onPressed: () {
                           _ctrl.clear();
                           _onChanged('');
@@ -123,9 +123,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           ),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.only(
-                bottom: AppSpacing.miniPlayerInset,
-              ),
+              padding: const EdgeInsets.only(bottom: AppSpacing.lg),
               child: _term.isEmpty
                   ? const _IdleHint()
                   : FutureBuilder<List<BrowseItem>>(
@@ -136,7 +134,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                         }
                         if (snap.hasError) {
                           return EmptyState(
-                            icon: PhosphorIconsRegular.warningCircle,
+                            icon: PiconsRegular.warningCircle,
                             title: 'Search failed',
                             message: '${snap.error}',
                           );
@@ -162,7 +160,7 @@ class _IdleHint extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return EmptyState(
-      icon: PhosphorIconsRegular.magnifyingGlass,
+      icon: PiconsRegular.magnifyingGlass,
       title: 'Search your Jellyfin library',
       message: 'Find songs, albums, and artists you already have.',
     );
@@ -176,7 +174,7 @@ class _NoResults extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return EmptyState(
-      icon: PhosphorIconsRegular.magnifyingGlassMinus,
+      icon: PiconsRegular.magnifyingGlassMinus,
       title: 'No matches in your library',
       message: 'Nothing matched "$term". Try a different spelling.',
     );

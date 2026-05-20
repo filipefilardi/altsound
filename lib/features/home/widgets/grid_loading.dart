@@ -24,7 +24,7 @@ class GridLoading extends StatelessWidget {
           childAspectRatio: 0.72,
         ),
         itemCount: 12,
-        itemBuilder: (_, __) => Column(
+        itemBuilder: (_, _) => Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             AspectRatio(

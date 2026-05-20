@@ -19,7 +19,7 @@ class VersionFooter extends ConsumerWidget {
         pkg.when(
           data: (p) => 'AltSound ${p.version}',
           loading: () => 'AltSound',
-          error: (_, __) => 'AltSound',
+          error: (_, _) => 'AltSound',
         ),
         style: const TextStyle(color: AppColors.textTertiary, fontSize: 12),
       ),

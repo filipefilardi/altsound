@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:just_audio/just_audio.dart';
@@ -151,7 +151,7 @@ class _DesktopMiniPlayerState extends ConsumerState<DesktopMiniPlayer> {
                           children: [
                             IconButton(
                               icon: Icon(
-                                PhosphorIconsRegular.shuffle,
+                                PiconsRegular.shuffle,
                                 size: 20,
                                 color: shuffled
                                     ? AppColors.primary
@@ -166,10 +166,7 @@ class _DesktopMiniPlayerState extends ConsumerState<DesktopMiniPlayer> {
                             ),
                             const SizedBox(width: AppSpacing.sm),
                             IconButton(
-                              icon: const Icon(
-                                PhosphorIconsFill.skipBack,
-                                size: 24,
-                              ),
+                              icon: const Icon(PiconsFill.skipBack, size: 24),
                               onPressed: controller.previous,
                               tooltip: 'Previous',
                               padding: EdgeInsets.zero,
@@ -193,9 +190,7 @@ class _DesktopMiniPlayerState extends ConsumerState<DesktopMiniPlayer> {
                               ),
                               child: IconButton(
                                 icon: Icon(
-                                  playing
-                                      ? PhosphorIconsFill.pause
-                                      : PhosphorIconsFill.play,
+                                  playing ? PiconsFill.pause : PiconsFill.play,
                                   size: 24,
                                 ),
                                 onPressed: controller.togglePlay,
@@ -208,7 +203,7 @@ class _DesktopMiniPlayerState extends ConsumerState<DesktopMiniPlayer> {
                             ),
                             IconButton(
                               icon: const Icon(
-                                PhosphorIconsFill.skipForward,
+                                PiconsFill.skipForward,
                                 size: 24,
                               ),
                               onPressed: controller.next,
@@ -222,8 +217,8 @@ class _DesktopMiniPlayerState extends ConsumerState<DesktopMiniPlayer> {
                             IconButton(
                               icon: Icon(
                                 loopMode == LoopMode.one
-                                    ? PhosphorIconsRegular.repeatOnce
-                                    : PhosphorIconsRegular.repeat,
+                                    ? PiconsRegular.repeatOnce
+                                    : PiconsRegular.repeat,
                                 size: 20,
                                 color: loopMode == LoopMode.off
                                     ? AppColors.textSecondary
@@ -321,10 +316,7 @@ class _DesktopMiniPlayerState extends ConsumerState<DesktopMiniPlayer> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
-                              icon: const Icon(
-                                PhosphorIconsRegular.sparkle,
-                                size: 20,
-                              ),
+                              icon: const Icon(PiconsRegular.sparkle, size: 20),
                               onPressed: () => openInstantMixPage(
                                 context,
                                 ref,
@@ -342,7 +334,7 @@ class _DesktopMiniPlayerState extends ConsumerState<DesktopMiniPlayer> {
                             const SizedBox(width: AppSpacing.xs),
                             IconButton(
                               icon: const Icon(
-                                PhosphorIconsRegular.microphone,
+                                PiconsRegular.microphone,
                                 size: 20,
                               ),
                               onPressed: () => context.push('/lyrics'),
@@ -357,8 +349,8 @@ class _DesktopMiniPlayerState extends ConsumerState<DesktopMiniPlayer> {
                             IconButton(
                               icon: Icon(
                                 muted
-                                    ? PhosphorIconsRegular.speakerSlash
-                                    : PhosphorIconsRegular.speakerHigh,
+                                    ? PiconsRegular.speakerSlash
+                                    : PiconsRegular.speakerHigh,
                                 size: 20,
                               ),
                               onPressed: controller.toggleMute,
@@ -397,10 +389,7 @@ class _DesktopMiniPlayerState extends ConsumerState<DesktopMiniPlayer> {
                             ),
                             const SizedBox(width: AppSpacing.xs),
                             IconButton(
-                              icon: const Icon(
-                                PhosphorIconsRegular.queue,
-                                size: 20,
-                              ),
+                              icon: const Icon(PiconsRegular.queue, size: 20),
                               onPressed: () =>
                                   showQueueBottomSheet(context, ref),
                               tooltip: 'Queue',
@@ -413,7 +402,7 @@ class _DesktopMiniPlayerState extends ConsumerState<DesktopMiniPlayer> {
                             const SizedBox(width: AppSpacing.xs),
                             IconButton(
                               icon: Icon(
-                                PhosphorIconsRegular.listPlus,
+                                PiconsRegular.listPlus,
                                 size: 20,
                                 color: saved
                                     ? AppColors.primary

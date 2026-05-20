@@ -1,6 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
@@ -49,9 +49,7 @@ class PlaylistArtwork extends ConsumerWidget {
             itemBuilder: (_, index) {
               final track = uniqueAlbumTracks[index % uniqueAlbumTracks.length];
               if (track.imageTag == null || track.imageTag!.isEmpty) {
-                return const ArtworkPlaceholder(
-                  icon: PhosphorIconsRegular.queue,
-                );
+                return const ArtworkPlaceholder(icon: PiconsRegular.queue);
               }
               final artId = track.albumImageItemId ?? track.id;
               final imageUrl = repo.imageUrl(
@@ -62,10 +60,10 @@ class PlaylistArtwork extends ConsumerWidget {
               return CachedNetworkImage(
                 imageUrl: imageUrl,
                 fit: BoxFit.cover,
-                placeholder: (_, __) =>
+                placeholder: (_, _) =>
                     const ColoredBox(color: AppColors.surfaceElevated),
-                errorWidget: (_, __, ___) =>
-                    const ArtworkPlaceholder(icon: PhosphorIconsRegular.queue),
+                errorWidget: (_, _, _) =>
+                    const ArtworkPlaceholder(icon: PiconsRegular.queue),
               );
             },
           ),
@@ -86,14 +84,14 @@ class PlaylistArtwork extends ConsumerWidget {
         width: 120,
         height: 120,
         child: imageUrl == null
-            ? const ArtworkPlaceholder(icon: PhosphorIconsRegular.queue)
+            ? const ArtworkPlaceholder(icon: PiconsRegular.queue)
             : CachedNetworkImage(
                 imageUrl: imageUrl,
                 fit: BoxFit.cover,
-                placeholder: (_, __) =>
+                placeholder: (_, _) =>
                     const ColoredBox(color: AppColors.surfaceElevated),
-                errorWidget: (_, __, ___) =>
-                    const ArtworkPlaceholder(icon: PhosphorIconsRegular.queue),
+                errorWidget: (_, _, _) =>
+                    const ArtworkPlaceholder(icon: PiconsRegular.queue),
               ),
       ),
     );

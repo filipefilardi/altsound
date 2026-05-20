@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
@@ -140,7 +140,7 @@ class _InstantMixScreenState extends ConsumerState<InstantMixScreen> {
                   const SliverFillRemaining(
                     hasScrollBody: false,
                     child: EmptyState(
-                      icon: PhosphorIconsRegular.sparkle,
+                      icon: PiconsRegular.sparkle,
                       title: 'No songs found',
                       message:
                           'Jellyfin did not return any tracks for this mix.',

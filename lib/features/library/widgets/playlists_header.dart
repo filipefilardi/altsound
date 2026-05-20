@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
@@ -28,7 +28,7 @@ class PlaylistsHeader extends StatelessWidget {
           ),
           IconButton(
             onPressed: onCreatePlaylist,
-            icon: const Icon(PhosphorIconsRegular.plus, size: 20),
+            icon: const Icon(PiconsRegular.plus, size: 20),
             color: AppColors.primary,
             visualDensity: VisualDensity.compact,
             tooltip: 'New playlist',

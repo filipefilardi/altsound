@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -45,8 +45,8 @@ class OfflineLibraryView extends ConsumerWidget {
       if (!showEmptyState) return const SizedBox.shrink();
       return EmptyState(
         icon: isOffline
-            ? PhosphorIconsRegular.wifiSlash
-            : PhosphorIconsRegular.downloadSimple,
+            ? PiconsRegular.wifiSlash
+            : PiconsRegular.downloadSimple,
         title: isOffline ? "You're offline" : 'No downloads yet',
         message: isOffline
             ? 'No downloaded songs yet.\nDownload albums or playlists while online to listen anywhere.'
@@ -229,7 +229,7 @@ class _ContentTile extends StatelessWidget {
             errorBuilder: (_) => const ColoredBox(
               color: AppColors.surfaceElevated,
               child: Icon(
-                PhosphorIconsRegular.disc,
+                PiconsRegular.disc,
                 color: AppColors.textTertiary,
                 size: 24,
               ),
