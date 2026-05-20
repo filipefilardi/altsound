@@ -98,7 +98,7 @@ class LibraryContent extends ConsumerWidget {
 
               return SliverPadding(
                 padding: const EdgeInsets.only(
-                  bottom: AppSpacing.miniPlayerInset,
+                  bottom: AppSpacing.lg,
                 ),
                 sliver: SliverList.list(
                   children: [

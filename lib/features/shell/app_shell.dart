@@ -55,7 +55,7 @@ class _AppShellState extends ConsumerState<AppShell> {
     }
 
     return Scaffold(
-      extendBody: true,
+      extendBody: false,
       body: SafeArea(
         bottom: false,
         child: Column(

@@ -110,7 +110,7 @@ class _LibraryCollectionScreenState
                       )
                     : ListView.builder(
                         padding: const EdgeInsets.only(
-                          bottom: AppSpacing.miniPlayerInset,
+                          bottom: AppSpacing.lg,
                         ),
                         itemCount: filtered.length,
                         itemBuilder: (context, index) {
