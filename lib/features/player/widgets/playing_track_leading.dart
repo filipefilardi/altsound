@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
@@ -67,10 +67,7 @@ class SearchTrackArtwork extends ConsumerWidget {
     final br = BorderRadius.circular(isArtistShape ? 28 : 8);
     Widget fallback() => Container(
       color: AppColors.surfaceElevated,
-      child: const Icon(
-        PhosphorIconsRegular.musicNote,
-        color: AppColors.textTertiary,
-      ),
+      child: const Icon(PiconsRegular.musicNote, color: AppColors.textTertiary),
     );
     Widget artwork() {
       final url = imageUrl;

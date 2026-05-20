@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
@@ -31,7 +31,7 @@ class AlbumActionBar extends ConsumerWidget {
         IconButton(
           tooltip: 'Shuffle',
           icon: Icon(
-            PhosphorIconsRegular.shuffle,
+            PiconsRegular.shuffle,
             color: shuffleEnabled ? AppColors.primary : AppColors.textPrimary,
           ),
           onPressed: album.tracks.isEmpty
@@ -40,7 +40,7 @@ class AlbumActionBar extends ConsumerWidget {
         ),
         IconButton(
           tooltip: 'Instant Mix',
-          icon: const Icon(PhosphorIconsRegular.sparkle),
+          icon: const Icon(PiconsRegular.sparkle),
           onPressed: album.tracks.isEmpty
               ? null
               : () => openInstantMixPage(
@@ -55,7 +55,7 @@ class AlbumActionBar extends ConsumerWidget {
         Builder(
           builder: (anchorCtx) => IconButton(
             tooltip: 'More actions',
-            icon: const Icon(PhosphorIconsRegular.dotsThree),
+            icon: const Icon(PiconsRegular.dotsThree),
             onPressed: album.tracks.isEmpty
                 ? null
                 : () => _showMoreActions(anchorCtx, context, ref),
@@ -73,7 +73,7 @@ class AlbumActionBar extends ConsumerWidget {
                 }
                 controller.playTracks(album.tracks, contextId: album.id);
               },
-        icon: isAlbumPlaying ? PhosphorIconsFill.pause : PhosphorIconsFill.play,
+        icon: isAlbumPlaying ? PiconsFill.pause : PiconsFill.play,
         tooltip: isAlbumPlaying ? 'Pause' : 'Play',
       ),
       padding: EdgeInsets.zero,
@@ -92,7 +92,7 @@ class AlbumActionBar extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           GlassPopoverItem(
-            icon: PhosphorIconsRegular.listPlus,
+            icon: PiconsRegular.listPlus,
             label: 'Add album to playlist',
             onTap: () => openAddTracksToPlaylistFlow(
               context,
@@ -101,7 +101,7 @@ class AlbumActionBar extends ConsumerWidget {
             ),
           ),
           GlassPopoverItem(
-            icon: PhosphorIconsRegular.listPlus,
+            icon: PiconsRegular.listPlus,
             label: 'Add to queue',
             onTap: () async {
               final added = await ref

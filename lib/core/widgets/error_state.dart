@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
@@ -10,7 +10,7 @@ class ErrorStateView extends StatelessWidget {
     required this.title,
     this.message,
     this.onRetry,
-    this.icon = PhosphorIconsRegular.cloudSlash,
+    this.icon = PiconsRegular.cloudSlash,
   });
 
   final String title;
@@ -53,10 +53,7 @@ class ErrorStateView extends StatelessWidget {
               const SizedBox(height: AppSpacing.md),
               OutlinedButton.icon(
                 onPressed: onRetry,
-                icon: const Icon(
-                  PhosphorIconsRegular.arrowsClockwise,
-                  size: 18,
-                ),
+                icon: const Icon(PiconsRegular.arrowsClockwise, size: 18),
                 label: const Text('Retry'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.textPrimary,

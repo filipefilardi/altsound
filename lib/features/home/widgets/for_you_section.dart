@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
@@ -38,7 +38,7 @@ class ForYouSection extends ConsumerWidget {
           imageUrl: topSong.imageTag == null
               ? null
               : repo.imageUrl(topSong.imageItemId, imageTag: topSong.imageTag),
-          fallbackIcon: PhosphorIconsRegular.musicNote,
+          fallbackIcon: PiconsRegular.musicNote,
           onTap: () => openInstantMixPage(
             context,
             ref,
@@ -63,7 +63,7 @@ class ForYouSection extends ConsumerWidget {
                   discovery.imageItemId,
                   imageTag: discovery.imageTag,
                 ),
-          fallbackIcon: PhosphorIconsRegular.compass,
+          fallbackIcon: PiconsRegular.compass,
           onTap: () => openInstantMixPage(
             context,
             ref,
@@ -84,7 +84,7 @@ class ForYouSection extends ConsumerWidget {
           imageUrl: artist.imageTag == null
               ? null
               : repo.imageUrl(artist.id, imageTag: artist.imageTag),
-          fallbackIcon: PhosphorIconsRegular.user,
+          fallbackIcon: PiconsRegular.user,
           onTap: () => openInstantMixPage(
             context,
             ref,

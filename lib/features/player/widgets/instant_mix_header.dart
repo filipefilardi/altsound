@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 import 'package:palette_generator/palette_generator.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
@@ -147,12 +147,12 @@ class _InstantMixHeaderBodyState extends State<_InstantMixHeaderBody> {
                     child: LocalOrNetworkImage(
                       source: widget.artworkUrl,
                       placeholderBuilder: (_) => const ArtworkPlaceholder(
-                        icon: PhosphorIconsRegular.sparkle,
+                        icon: PiconsRegular.sparkle,
                         iconSize: 64,
                         iconColor: AppColors.primary,
                       ),
                       errorBuilder: (_) => const ArtworkPlaceholder(
-                        icon: PhosphorIconsRegular.sparkle,
+                        icon: PiconsRegular.sparkle,
                         iconSize: 64,
                         iconColor: AppColors.primary,
                       ),

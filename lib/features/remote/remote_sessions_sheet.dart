@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
@@ -47,7 +47,7 @@ class _RemoteSessionsPopover extends ConsumerWidget {
               children: [
                 if (activeId != null)
                   GlassPopoverItem(
-                    icon: PhosphorIconsRegular.deviceMobile,
+                    icon: PiconsRegular.deviceMobile,
                     label: 'This device',
                     onTap: () => _switchToLocal(ref, activeId),
                   ),
@@ -71,12 +71,12 @@ class _RemoteSessionsPopover extends ConsumerWidget {
                       children: [
                         for (final s in sessions)
                           GlassPopoverItem(
-                            icon: PhosphorIconsRegular.screencast,
+                            icon: PiconsRegular.screencast,
                             label: s.deviceName,
                             subtitle: s.client,
                             trailing: s.id == activeId
                                 ? const Icon(
-                                    PhosphorIconsRegular.check,
+                                    PiconsRegular.check,
                                     size: 18,
                                     color: AppColors.like,
                                   )

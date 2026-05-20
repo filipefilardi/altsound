@@ -1,7 +1,7 @@
 import 'package:audio_service/audio_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 
@@ -109,7 +109,7 @@ class _QueueSheetState extends ConsumerState<_QueueSheet> {
                           .read(playerControllerProvider)
                           .clearQueueAfterCurrent();
                     },
-                    icon: const Icon(PhosphorIconsRegular.eraser, size: 18),
+                    icon: const Icon(PiconsRegular.eraser, size: 18),
                     label: const Text('Clear queue'),
                   ),
                 ),
@@ -225,9 +225,7 @@ class _RepeatBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final isOne = loopMode == LoopMode.one;
     final label = isOne ? 'Repeat track' : 'Repeat queue';
-    final icon = isOne
-        ? PhosphorIconsRegular.repeatOnce
-        : PhosphorIconsRegular.repeat;
+    final icon = isOne ? PiconsRegular.repeatOnce : PiconsRegular.repeat;
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
@@ -327,7 +325,7 @@ class _QueueRow extends StatelessWidget {
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
                 child: Icon(
-                  PhosphorIconsRegular.repeatOnce,
+                  PiconsRegular.repeatOnce,
                   color: AppColors.primary,
                   size: 18,
                 ),
@@ -336,7 +334,7 @@ class _QueueRow extends StatelessWidget {
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
                 child: Icon(
-                  PhosphorIconsRegular.queue,
+                  PiconsRegular.queue,
                   color: AppColors.textTertiary,
                   size: 16,
                 ),
@@ -345,7 +343,7 @@ class _QueueRow extends StatelessWidget {
               IconButton(
                 onPressed: onRemove,
                 icon: const Icon(
-                  PhosphorIconsRegular.minusCircle,
+                  PiconsRegular.minusCircle,
                   color: AppColors.textSecondary,
                   size: 20,
                 ),
@@ -361,7 +359,7 @@ class _QueueRow extends StatelessWidget {
                     vertical: AppSpacing.md,
                   ),
                   child: Icon(
-                    PhosphorIconsRegular.dotsSixVertical,
+                    PiconsRegular.dotsSixVertical,
                     color: AppColors.textTertiary,
                     size: 20,
                   ),
@@ -389,7 +387,7 @@ class _RowArt extends StatelessWidget {
             ? const ColoredBox(
                 color: AppColors.background,
                 child: Icon(
-                  PhosphorIconsRegular.musicNote,
+                  PiconsRegular.musicNote,
                   color: AppColors.textTertiary,
                   size: 20,
                 ),
@@ -402,7 +400,7 @@ class _RowArt extends StatelessWidget {
                 errorWidget: (_, _, _) => const ColoredBox(
                   color: AppColors.background,
                   child: Icon(
-                    PhosphorIconsRegular.musicNote,
+                    PiconsRegular.musicNote,
                     color: AppColors.textTertiary,
                     size: 20,
                   ),

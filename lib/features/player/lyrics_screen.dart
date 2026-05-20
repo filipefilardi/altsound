@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -42,7 +42,7 @@ class LyricsScreen extends ConsumerWidget {
       return Scaffold(
         appBar: AppBar(
           leading: IconButton(
-            icon: const Icon(PhosphorIconsRegular.caretDown),
+            icon: const Icon(PiconsRegular.caretDown),
             onPressed: () => context.pop(),
           ),
         ),

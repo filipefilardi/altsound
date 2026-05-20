@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
@@ -86,7 +86,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         decoration: const InputDecoration(
                           labelText: 'Server URL',
                           hintText: 'https://jellyfin.example.com',
-                          prefixIcon: Icon(PhosphorIconsRegular.hardDrives),
+                          prefixIcon: Icon(PiconsRegular.hardDrives),
                         ),
                         validator: (v) =>
                             (v == null || v.trim().isEmpty) ? 'Required' : null,
@@ -99,7 +99,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         textInputAction: TextInputAction.next,
                         decoration: const InputDecoration(
                           labelText: 'Username',
-                          prefixIcon: Icon(PhosphorIconsRegular.user),
+                          prefixIcon: Icon(PiconsRegular.user),
                         ),
                         validator: (v) =>
                             (v == null || v.trim().isEmpty) ? 'Required' : null,
@@ -112,12 +112,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         onFieldSubmitted: (_) => _submit(),
                         decoration: InputDecoration(
                           labelText: 'Password',
-                          prefixIcon: const Icon(PhosphorIconsRegular.lock),
+                          prefixIcon: const Icon(PiconsRegular.lock),
                           suffixIcon: IconButton(
                             icon: Icon(
                               _obscure
-                                  ? PhosphorIconsRegular.eye
-                                  : PhosphorIconsRegular.eyeSlash,
+                                  ? PiconsRegular.eye
+                                  : PiconsRegular.eyeSlash,
                             ),
                             onPressed: () =>
                                 setState(() => _obscure = !_obscure),

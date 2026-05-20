@@ -51,7 +51,7 @@ dependencies:
   package_info_plus: ^10.1.0
   device_info_plus: ^13.1.0
   web_socket_channel: ^3.0.3
-  phosphor_flutter: ^2.1.0
+  picons: ^3.0.1
 
 dev_dependencies:
   flutter_test:

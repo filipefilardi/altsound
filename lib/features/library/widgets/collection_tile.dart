@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -42,9 +42,7 @@ class CollectionTile extends ConsumerWidget {
             errorBuilder: (_) => ColoredBox(
               color: AppColors.surfaceElevated,
               child: Icon(
-                isArtist
-                    ? PhosphorIconsRegular.user
-                    : PhosphorIconsRegular.disc,
+                isArtist ? PiconsRegular.user : PiconsRegular.disc,
                 color: AppColors.textTertiary,
                 size: 24,
               ),

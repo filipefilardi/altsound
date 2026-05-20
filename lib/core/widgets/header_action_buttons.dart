@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -22,7 +22,7 @@ class HeaderActionButtons extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         _HeaderActionButton(
-          icon: PhosphorIconsRegular.usersThree,
+          icon: PiconsRegular.usersThree,
           tooltip: 'SyncPlay',
           active: syncPlayActive,
           onPressed: (anchor) => showSyncPlayPopover(anchor),
@@ -30,21 +30,21 @@ class HeaderActionButtons extends ConsumerWidget {
         const SizedBox(width: AppSpacing.sm),
         _HeaderActionButton(
           icon: castConnected
-              ? PhosphorIconsRegular.screencast
-              : PhosphorIconsRegular.screencast,
+              ? PiconsRegular.screencast
+              : PiconsRegular.screencast,
           tooltip: 'Play on…',
           active: castConnected,
           onPressed: (anchor) => showRemoteSessionsPopover(anchor),
         ),
         const SizedBox(width: AppSpacing.sm),
         _HeaderActionButton(
-          icon: PhosphorIconsRegular.downloadSimple,
+          icon: PiconsRegular.downloadSimple,
           tooltip: 'Downloads',
           onPressed: (_) => context.push('/downloads'),
         ),
         const SizedBox(width: AppSpacing.sm),
         _HeaderActionButton(
-          icon: PhosphorIconsRegular.gear,
+          icon: PiconsRegular.gear,
           tooltip: 'Settings',
           onPressed: (_) => context.push('/settings'),
         ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/layout/adaptive_breakpoints.dart';
@@ -58,7 +58,7 @@ class _LibraryCollectionScreenState
       body: items.when(
         loading: () => const CollectionLoadingRows(),
         error: (e, _) => EmptyState(
-          icon: PhosphorIconsRegular.warningCircle,
+          icon: PiconsRegular.warningCircle,
           title: 'Could not load $title',
           message: '$e',
         ),
@@ -66,8 +66,8 @@ class _LibraryCollectionScreenState
           if (items.isEmpty) {
             return EmptyState(
               icon: widget.kind == LibraryCollectionKind.albums
-                  ? PhosphorIconsRegular.disc
-                  : PhosphorIconsRegular.user,
+                  ? PiconsRegular.disc
+                  : PiconsRegular.user,
               title: 'No $title found',
               message: 'Nothing from your Jellyfin library showed up here.',
             );
@@ -88,13 +88,11 @@ class _LibraryCollectionScreenState
                   onChanged: (value) => setState(() => _term = value.trim()),
                   decoration: InputDecoration(
                     hintText: 'Search ${title.toLowerCase()}',
-                    prefixIcon: const Icon(
-                      PhosphorIconsRegular.magnifyingGlass,
-                    ),
+                    prefixIcon: const Icon(PiconsRegular.magnifyingGlass),
                     suffixIcon: _ctrl.text.isEmpty
                         ? null
                         : IconButton(
-                            icon: const Icon(PhosphorIconsRegular.x),
+                            icon: const Icon(PiconsRegular.x),
                             onPressed: () {
                               _ctrl.clear();
                               setState(() => _term = '');
@@ -106,7 +104,7 @@ class _LibraryCollectionScreenState
               Expanded(
                 child: filtered.isEmpty
                     ? EmptyState(
-                        icon: PhosphorIconsRegular.magnifyingGlassMinus,
+                        icon: PiconsRegular.magnifyingGlassMinus,
                         title: 'No matches',
                         message: 'Nothing matched "$_term".',
                       )

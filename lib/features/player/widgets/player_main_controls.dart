@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
@@ -31,7 +31,7 @@ class PlayerMainControls extends ConsumerWidget {
             IconButton(
               iconSize: 32,
               icon: const Icon(
-                PhosphorIconsFill.skipBack,
+                PiconsFill.skipBack,
                 color: AppColors.textPrimary,
               ),
               onPressed: controller.previous,
@@ -45,7 +45,7 @@ class PlayerMainControls extends ConsumerWidget {
             IconButton(
               iconSize: 32,
               icon: const Icon(
-                PhosphorIconsFill.skipForward,
+                PiconsFill.skipForward,
                 color: AppColors.textPrimary,
               ),
               onPressed: controller.next,
@@ -59,7 +59,7 @@ class PlayerMainControls extends ConsumerWidget {
             IconButton(
               iconSize: 22,
               icon: const Icon(
-                PhosphorIconsRegular.microphoneStage,
+                PiconsRegular.microphoneStage,
                 color: AppColors.textSecondary,
               ),
               onPressed: onLyrics,
@@ -68,7 +68,7 @@ class PlayerMainControls extends ConsumerWidget {
             IconButton(
               iconSize: 22,
               icon: const Icon(
-                PhosphorIconsRegular.queue,
+                PiconsRegular.queue,
                 color: AppColors.textSecondary,
               ),
               onPressed: onQueue,
@@ -117,7 +117,7 @@ class PlayerPlayPauseButton extends StatelessWidget {
           onTap: onTap,
           child: Center(
             child: Icon(
-              playing ? PhosphorIconsFill.pause : PhosphorIconsFill.play,
+              playing ? PiconsFill.pause : PiconsFill.play,
               color: AppColors.onAccent,
               size: 36,
             ),

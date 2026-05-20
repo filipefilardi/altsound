@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
@@ -14,7 +14,7 @@ class BackupPlaylistTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ExpansionTile(
-      leading: const Icon(PhosphorIconsRegular.queue),
+      leading: const Icon(PiconsRegular.queue),
       title: Text(playlist.name, maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: Text(
         '${playlist.tracks.length} songs · ${_formatDuration(Duration(milliseconds: playlist.durationMs))}',
@@ -51,7 +51,7 @@ class BackupPlaylistTile extends StatelessWidget {
               ),
               trailing: track.jellyfinTrackId == null
                   ? const Icon(
-                      PhosphorIconsRegular.linkBreak,
+                      PiconsRegular.linkBreak,
                       color: AppColors.textTertiary,
                       size: 18,
                     )

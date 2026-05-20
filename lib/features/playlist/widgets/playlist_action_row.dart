@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
@@ -61,7 +61,7 @@ class PlaylistActionRow extends ConsumerWidget {
             IconButton(
               tooltip: 'Shuffle',
               icon: Icon(
-                PhosphorIconsRegular.shuffle,
+                PiconsRegular.shuffle,
                 color: shuffleEnabled
                     ? AppColors.primary
                     : AppColors.textPrimary,
@@ -72,7 +72,7 @@ class PlaylistActionRow extends ConsumerWidget {
             Builder(
               builder: (anchorCtx) => IconButton(
                 tooltip: 'More actions',
-                icon: const Icon(PhosphorIconsRegular.dotsThree),
+                icon: const Icon(PiconsRegular.dotsThree),
                 onPressed: canOpenMore
                     ? () =>
                           _showMoreActions(anchorCtx, context, ref, controller)
@@ -93,9 +93,7 @@ class PlaylistActionRow extends ConsumerWidget {
                     );
                   }
                 : null,
-            icon: isPlaylistPlaying
-                ? PhosphorIconsFill.pause
-                : PhosphorIconsFill.play,
+            icon: isPlaylistPlaying ? PiconsFill.pause : PiconsFill.play,
             tooltip: isPlaylistPlaying ? 'Pause' : 'Play',
           ),
           padding: EdgeInsets.zero,
@@ -121,12 +119,12 @@ class PlaylistActionRow extends ConsumerWidget {
           if (hasTracks) ...[
             if (onSort != null)
               GlassPopoverItem(
-                icon: PhosphorIconsRegular.sortAscending,
+                icon: PiconsRegular.sortAscending,
                 label: 'Sort',
                 onTap: () => onSort!.call(anchorCtx),
               ),
             GlassPopoverItem(
-              icon: PhosphorIconsRegular.sparkle,
+              icon: PiconsRegular.sparkle,
               label: 'Instant Mix',
               onTap: () => openInstantMixPage(
                 context,
@@ -138,19 +136,19 @@ class PlaylistActionRow extends ConsumerWidget {
             ),
             if (onEdit != null)
               GlassPopoverItem(
-                icon: PhosphorIconsRegular.notePencil,
+                icon: PiconsRegular.notePencil,
                 label: 'Edit playlist',
                 onTap: () => onEdit!.call(),
               ),
             if (duplicateCount > 0 && onRemoveDuplicates != null)
               GlassPopoverItem(
-                icon: PhosphorIconsRegular.copy,
+                icon: PiconsRegular.copy,
                 label:
                     'Remove $duplicateCount duplicate${duplicateCount == 1 ? '' : 's'}',
                 onTap: () => onRemoveDuplicates!.call(),
               ),
             GlassPopoverItem(
-              icon: PhosphorIconsRegular.listPlus,
+              icon: PiconsRegular.listPlus,
               label: 'Add to playlist',
               onTap: () => openAddTracksToPlaylistFlow(
                 context,
@@ -159,7 +157,7 @@ class PlaylistActionRow extends ConsumerWidget {
               ),
             ),
             GlassPopoverItem(
-              icon: PhosphorIconsRegular.listPlus,
+              icon: PiconsRegular.listPlus,
               label: 'Add to queue',
               onTap: () async {
                 final added = await controller.addTracksToQueue(visibleTracks);
@@ -174,13 +172,13 @@ class PlaylistActionRow extends ConsumerWidget {
           if (showDivider) const Divider(height: 1, color: Color(0x33FFFFFF)),
           if (onRename != null)
             GlassPopoverItem(
-              icon: PhosphorIconsRegular.pencilSimple,
+              icon: PiconsRegular.pencilSimple,
               label: 'Rename playlist',
               onTap: () => onRename!.call(),
             ),
           if (onDelete != null)
             GlassPopoverItem(
-              icon: PhosphorIconsRegular.trash,
+              icon: PiconsRegular.trash,
               label: 'Delete playlist',
               destructive: true,
               onTap: () => onDelete!.call(),

@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/core/theme/app_colors.dart';
@@ -50,7 +50,7 @@ class BackupList extends StatelessWidget {
         error: (e, _) => [
           ListTile(
             leading: const Icon(
-              PhosphorIconsRegular.warningCircle,
+              PiconsRegular.warningCircle,
               color: AppColors.error,
             ),
             title: const Text('Could not load backups'),
@@ -64,7 +64,7 @@ class BackupList extends StatelessWidget {
           if (items.isEmpty) {
             return const [
               ListTile(
-                leading: Icon(PhosphorIconsRegular.package),
+                leading: Icon(PiconsRegular.package),
                 title: Text('No backups yet'),
                 subtitle: Text(
                   'Use Back up now, or keep automatic backups enabled.',
@@ -76,7 +76,7 @@ class BackupList extends StatelessWidget {
           return [
             for (final backup in items)
               ListTile(
-                leading: const Icon(PhosphorIconsRegular.queue),
+                leading: const Icon(PiconsRegular.queue),
                 title: Text(_formatDateTime(backup.createdAt)),
                 subtitle: Text(
                   '${backup.playlistCount} playlists · ${backup.trackCount} songs · ${formatBytes(backup.sizeBytes)}',

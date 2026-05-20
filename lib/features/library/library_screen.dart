@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:picons/picons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -103,7 +103,7 @@ class LibraryContent extends ConsumerWidget {
                 sliver: SliverList.list(
                   children: [
                     SectionTile(
-                      icon: PhosphorIconsRegular.heart,
+                      icon: PiconsRegular.heart,
                       iconColor: AppColors.error,
                       title: 'Liked Songs',
                       subtitle: liked == null
@@ -113,7 +113,7 @@ class LibraryContent extends ConsumerWidget {
                     ),
                     ...rest.map(
                       (playlist) => SectionTile(
-                        icon: PhosphorIconsRegular.queue,
+                        icon: PiconsRegular.queue,
                         title: playlist.name,
                         subtitle: _playlistSubtitle(playlist.childCount),
                         onTap: () => context.push('/playlist/${playlist.id}'),
