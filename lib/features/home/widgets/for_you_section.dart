@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:picons/picons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:picons/picons.dart';
 
+import 'package:altsound/core/layout/adaptive_breakpoints.dart';
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_radius.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/core/widgets/artwork_placeholder.dart';
+import 'package:altsound/core/widgets/horizontal_shelf_with_arrows.dart';
 import 'package:altsound/core/widgets/local_or_network_image.dart';
 import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
 import 'package:altsound/features/home/recommendations_provider.dart';
@@ -17,13 +19,33 @@ import 'package:altsound/features/player/instant_mix.dart';
 /// one day-rotating discovery seed from your top tracks. Hides itself entirely
 /// when there's no data — i.e. when the Playback Reporting plugin isn't
 /// installed and there's no cached snapshot from a previous online session.
-class ForYouSection extends ConsumerWidget {
+class ForYouSection extends ConsumerStatefulWidget {
   const ForYouSection({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ForYouSection> createState() => _ForYouSectionState();
+}
+
+class _ForYouSectionState extends ConsumerState<ForYouSection> {
+  late final ScrollController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = ScrollController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final recs = ref.watch(homeRecommendationsProvider).value;
     if (recs == null) return const SizedBox.shrink();
+    final desktop = isDesktopLayout(context);
 
     final repo = ref.read(jellyfinRepositoryProvider);
     final tiles = <Widget>[];
@@ -113,14 +135,19 @@ class ForYouSection extends ConsumerWidget {
             style: Theme.of(context).textTheme.headlineMedium,
           ),
         ),
-        SizedBox(
-          height: 248,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-            itemCount: tiles.length,
-            separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.sm),
-            itemBuilder: (_, i) => tiles[i],
+        HorizontalShelfWithArrows(
+          controller: _controller,
+          enabled: desktop,
+          child: SizedBox(
+            height: 248,
+            child: ListView.separated(
+              controller: _controller,
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              itemCount: tiles.length,
+              separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.sm),
+              itemBuilder: (_, i) => tiles[i],
+            ),
           ),
         ),
       ],
