@@ -93,10 +93,14 @@ class _DesktopRightPane extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (shell.currentIndex == 1) {
-      return shell;
-    }
-    return const HomeContent();
+    final showShell = shell.currentIndex == 1;
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Offstage(offstage: !showShell, child: shell),
+        if (!showShell) const HomeContent(),
+      ],
+    );
   }
 }
 

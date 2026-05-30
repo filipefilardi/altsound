@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:altsound/core/shortcuts/playback_shortcut_scope.dart';
 import 'package:altsound/core/theme/app_theme.dart';
 import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
 import 'package:altsound/data/jellyfin/scrobbler.dart';
@@ -130,10 +131,10 @@ class _AltsoundAppState extends ConsumerState<AltsoundApp> {
       theme: AppTheme.dark(),
       routerConfig: router,
       builder: (context, child) {
-        if (auth is AuthInitial) {
-          return const _SplashScreen();
-        }
-        return child ?? const SizedBox.shrink();
+        final content = auth is AuthInitial
+            ? const _SplashScreen()
+            : (child ?? const SizedBox.shrink());
+        return PlaybackShortcutScope(child: content);
       },
     );
   }
