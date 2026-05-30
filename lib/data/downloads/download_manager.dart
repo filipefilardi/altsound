@@ -197,21 +197,36 @@ class DownloadManager extends Notifier<DownloadsState> {
   }
 
   Future<void> enqueuePlaylist(PlaylistDetail playlist) async {
-    // Save playlist metadata for offline reconstruction before downloading.
-    final downloaded = DownloadedPlaylist(
-      id: playlist.id,
-      name: playlist.name,
-      imageTag: playlist.imageTag,
-      trackIds: playlist.tracks.map((t) => t.id).toList(),
-    );
-    state = state.copyWith(
-      playlists: {...state.playlists, playlist.id: downloaded},
-    );
-    await _persistPlaylists();
+    await cachePlaylistMetadata(playlist);
 
     for (final t in playlist.tracks) {
       await enqueueTrack(t);
     }
+  }
+
+  /// Persists playlist metadata so it can be reconstructed while offline,
+  /// including cases where songs were downloaded outside playlist downloads.
+  Future<void> cachePlaylistMetadata(PlaylistDetail playlist) async {
+    if (!supported) return;
+    final trackIds = playlist.tracks.map((t) => t.id).toList(growable: false);
+    final existing = state.playlists[playlist.id];
+    if (existing != null &&
+        existing.name == playlist.name &&
+        existing.imageTag == playlist.imageTag &&
+        listEquals(existing.trackIds, trackIds)) {
+      return;
+    }
+
+    final updated = DownloadedPlaylist(
+      id: playlist.id,
+      name: playlist.name,
+      imageTag: playlist.imageTag,
+      trackIds: trackIds,
+    );
+    state = state.copyWith(
+      playlists: {...state.playlists, playlist.id: updated},
+    );
+    await _persistPlaylists();
   }
 
   Future<void> renamePlaylist(String playlistId, String name) async {
