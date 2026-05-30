@@ -1243,8 +1243,16 @@ class JellyfinRepository {
   /// Build a Jellyfin stream URL for [trackId].
   ///
   /// [maxBitrate] caps transcoding bitrate (in bps). Pass `null` to request
-  /// the source file untouched (no transcoding).
-  String streamUrl(String trackId, {int? maxBitrate = 320000}) {
+  /// the source file untouched (no bitrate cap).
+  ///
+  /// When [compatibilityMode] is true, route through the universal audio
+  /// endpoint and request MP3 output, which improves playback compatibility on
+  /// Apple platforms and provides a reliable file extension for downloads.
+  String streamUrl(
+    String trackId, {
+    int? maxBitrate = 320000,
+    bool compatibilityMode = false,
+  }) {
     final s = _session;
     final params = <String, String>{
       'UserId': s.userId,
@@ -1252,16 +1260,26 @@ class JellyfinRepository {
       'DeviceId': 'altsound-${s.userId}',
       if (maxBitrate != null && maxBitrate > 0)
         'MaxStreamingBitrate': maxBitrate.toString(),
+    };
+    if (compatibilityMode) {
+      params.addAll(const {
+        'Container': 'mp3',
+        'TranscodingContainer': 'mp3',
+        'AudioCodec': 'mp3',
+        'TranscodingProtocol': 'http',
+      });
+    } else {
       // Keep stream progressive (non-HLS) so ExoPlayer/just_audio can parse it
       // through AudioSource.uri without playlist-specific handling.
-      'Static': 'true',
-    };
+      params['Static'] = 'true';
+    }
     final query = params.entries
         .map(
           (e) =>
               '${Uri.encodeQueryComponent(e.key)}=${Uri.encodeQueryComponent(e.value)}',
         )
         .join('&');
-    return '${s.serverUrl}/Audio/$trackId/stream?$query';
+    final endpoint = compatibilityMode ? 'universal' : 'stream';
+    return '${s.serverUrl}/Audio/$trackId/$endpoint?$query';
   }
 }
