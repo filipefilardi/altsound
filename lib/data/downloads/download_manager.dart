@@ -77,6 +77,10 @@ class DownloadManager extends Notifier<DownloadsState> {
   }
 
   bool get supported => !kIsWeb;
+  bool get _appleCompatibilityMode =>
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.iOS ||
+          defaultTargetPlatform == TargetPlatform.macOS);
 
   Future<void> _bootstrap() async {
     try {
@@ -110,6 +114,51 @@ class DownloadManager extends Notifier<DownloadsState> {
 
       state = state.copyWith(tracks: tracks, playlists: playlists);
     } catch (_) {}
+  }
+
+  String? _detectAudioExtension(File file) {
+    try {
+      final raf = file.openSync(mode: FileMode.read);
+      final bytes = raf.readSync(32);
+      raf.closeSync();
+      if (bytes.length < 4) return null;
+      bool startsWith(List<int> signature) {
+        if (bytes.length < signature.length) return false;
+        for (var i = 0; i < signature.length; i++) {
+          if (bytes[i] != signature[i]) return false;
+        }
+        return true;
+      }
+
+      if (startsWith(const [0x49, 0x44, 0x33])) return 'mp3'; // ID3
+      if (bytes[0] == 0xFF && (bytes[1] & 0xE0) == 0xE0) return 'mp3';
+      if (startsWith(const [0x66, 0x4C, 0x61, 0x43])) return 'flac';
+      if (startsWith(const [0x4F, 0x67, 0x67, 0x53])) return 'ogg';
+      if (startsWith(const [0x52, 0x49, 0x46, 0x46])) return 'wav';
+      if (startsWith(const [0x46, 0x4F, 0x52, 0x4D])) return 'aiff';
+      if (bytes.length >= 12 &&
+          bytes[4] == 0x66 &&
+          bytes[5] == 0x74 &&
+          bytes[6] == 0x79 &&
+          bytes[7] == 0x70) {
+        return 'm4a';
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  File _normalizeDownloadedPath(String trackId, File file) {
+    final detected = _detectAudioExtension(file);
+    if (detected == null) return file;
+    final target = File('${file.parent.path}/$trackId.$detected');
+    if (file.path == target.path) return file;
+    try {
+      if (target.existsSync()) target.deleteSync();
+      file.renameSync(target.path);
+      return target;
+    } catch (_) {
+      return file;
+    }
   }
 
   Future<void> _persistTracks() async {
@@ -148,21 +197,36 @@ class DownloadManager extends Notifier<DownloadsState> {
   }
 
   Future<void> enqueuePlaylist(PlaylistDetail playlist) async {
-    // Save playlist metadata for offline reconstruction before downloading.
-    final downloaded = DownloadedPlaylist(
-      id: playlist.id,
-      name: playlist.name,
-      imageTag: playlist.imageTag,
-      trackIds: playlist.tracks.map((t) => t.id).toList(),
-    );
-    state = state.copyWith(
-      playlists: {...state.playlists, playlist.id: downloaded},
-    );
-    await _persistPlaylists();
+    await cachePlaylistMetadata(playlist);
 
     for (final t in playlist.tracks) {
       await enqueueTrack(t);
     }
+  }
+
+  /// Persists playlist metadata so it can be reconstructed while offline,
+  /// including cases where songs were downloaded outside playlist downloads.
+  Future<void> cachePlaylistMetadata(PlaylistDetail playlist) async {
+    if (!supported) return;
+    final trackIds = playlist.tracks.map((t) => t.id).toList(growable: false);
+    final existing = state.playlists[playlist.id];
+    if (existing != null &&
+        existing.name == playlist.name &&
+        existing.imageTag == playlist.imageTag &&
+        listEquals(existing.trackIds, trackIds)) {
+      return;
+    }
+
+    final updated = DownloadedPlaylist(
+      id: playlist.id,
+      name: playlist.name,
+      imageTag: playlist.imageTag,
+      trackIds: trackIds,
+    );
+    state = state.copyWith(
+      playlists: {...state.playlists, playlist.id: updated},
+    );
+    await _persistPlaylists();
   }
 
   Future<void> renamePlaylist(String playlistId, String name) async {
@@ -247,10 +311,14 @@ class DownloadManager extends Notifier<DownloadsState> {
 
   Future<void> _downloadOne(Track track) async {
     final repo = ref.read(jellyfinRepositoryProvider);
-    final url = repo.streamUrl(track.id);
+    final url = repo.streamUrl(
+      track.id,
+      compatibilityMode: _appleCompatibilityMode,
+    );
     final dir = _dir;
     if (dir == null) return;
-    final dest = File('${dir.path}/${track.id}.audio');
+    final preferredExt = _appleCompatibilityMode ? 'mp3' : 'audio';
+    var dest = File('${dir.path}/${track.id}.$preferredExt');
 
     final progress = Map<String, double>.from(state.progress);
     progress[track.id] = 0;
@@ -270,6 +338,7 @@ class DownloadManager extends Notifier<DownloadsState> {
           state = state.copyWith(progress: next);
         },
       );
+      dest = _normalizeDownloadedPath(track.id, dest);
 
       final size = dest.existsSync() ? dest.lengthSync() : 0;
       final artworkPath = await _cacheArtwork(track);

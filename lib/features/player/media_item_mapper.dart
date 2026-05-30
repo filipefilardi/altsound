@@ -1,4 +1,5 @@
 import 'package:audio_service/audio_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:altsound/data/downloads/download_manager.dart';
@@ -26,6 +27,10 @@ MediaItem mediaItemForTrack({
                 size: 600,
               ));
   final quality = ref.read(playbackPreferencesProvider).streamingQuality;
+  final appleCompatibilityMode =
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.iOS ||
+          defaultTargetPlatform == TargetPlatform.macOS);
   final streamUrl = localPath != null
       ? Uri.file(localPath).toString()
       : repo.streamUrl(
@@ -33,6 +38,7 @@ MediaItem mediaItemForTrack({
           maxBitrate: quality == StreamingQuality.original
               ? null
               : quality.bitrate,
+          compatibilityMode: appleCompatibilityMode,
         );
   return MediaItem(
     id: track.id,

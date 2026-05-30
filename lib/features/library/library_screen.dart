@@ -6,8 +6,10 @@ import 'package:go_router/go_router.dart';
 import 'package:altsound/core/theme/app_colors.dart';
 import 'package:altsound/core/theme/app_spacing.dart';
 import 'package:altsound/core/widgets/app_snackbar.dart';
+import 'package:altsound/data/downloads/download_manager.dart';
 import 'package:altsound/data/jellyfin/jellyfin_repository.dart';
 import 'package:altsound/data/jellyfin/models/media_item.dart';
+import 'package:altsound/data/local/connectivity_provider.dart';
 import 'package:altsound/features/library/widgets/library_categories.dart';
 import 'package:altsound/features/library/widgets/library_header.dart';
 import 'package:altsound/features/library/widgets/library_loading_rows.dart';
@@ -29,6 +31,100 @@ class LibraryContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isOffline = ref.watch(isOfflineProvider);
+    final downloads = ref.watch(downloadManagerProvider);
+
+    if (isOffline) {
+      final offlinePlaylists =
+          downloads.playlists.values
+              .where(
+                (playlist) => playlist.trackIds.any(downloads.isDownloaded),
+              )
+              .toList()
+            ..sort(
+              (a, b) => a.name.trim().toLowerCase().compareTo(
+                b.name.trim().toLowerCase(),
+              ),
+            );
+
+      return RefreshIndicator(
+        onRefresh: () async {},
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.md,
+                AppSpacing.sm,
+              ),
+              sliver: const SliverToBoxAdapter(child: LibraryHeader()),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.sm,
+                AppSpacing.md,
+                AppSpacing.md,
+              ),
+              sliver: SliverToBoxAdapter(
+                child: LibraryCategories(
+                  onAlbums: () => context.push('/library/albums'),
+                  onArtists: () => context.push('/library/artists'),
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: PlaylistsHeader(
+                onCreatePlaylist: () => showAppSnackBar(
+                  context,
+                  'Connect to the internet to create playlists.',
+                ),
+              ),
+            ),
+            if (offlinePlaylists.isEmpty)
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    AppSpacing.md,
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                  ),
+                  child: Text(
+                    'No downloaded playlist songs yet.',
+                    style: TextStyle(color: AppColors.textSecondary),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              )
+            else
+              SliverPadding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+                sliver: SliverList.list(
+                  children: offlinePlaylists.map((playlist) {
+                    final downloadedCount = playlist.trackIds
+                        .where(downloads.isDownloaded)
+                        .length;
+                    final totalCount = playlist.trackIds.length;
+                    return SectionTile(
+                      icon: PiconsRegular.queue,
+                      title: playlist.name,
+                      subtitle: _offlinePlaylistSubtitle(
+                        downloadedCount,
+                        totalCount,
+                      ),
+                      onTap: () => context.push('/playlist/${playlist.id}'),
+                    );
+                  }).toList(),
+                ),
+              ),
+          ],
+        ),
+      );
+    }
+
     final likedSongsAsync = ref.watch(likedSongsPlaylistProvider);
     final playlistsAsync = ref.watch(playlistsProvider);
 
@@ -181,4 +277,12 @@ String _playlistSubtitle(int? count) {
   if (count == null) return 'Playlist';
   if (count == 1) return 'Playlist · 1 song';
   return 'Playlist · $count songs';
+}
+
+String _offlinePlaylistSubtitle(int downloadedCount, int totalCount) {
+  final downloadedText = downloadedCount == 1
+      ? '1 song downloaded'
+      : '$downloadedCount songs downloaded';
+  if (totalCount <= downloadedCount) return 'Playlist · $downloadedText';
+  return 'Playlist · $downloadedText of $totalCount';
 }
