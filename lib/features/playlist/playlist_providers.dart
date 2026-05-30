@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,9 +14,9 @@ final playlistProvider = FutureProvider.autoDispose
     .family<PlaylistDetail, String>((ref, playlistId) async {
       final keepAlive = ref.keepAlive();
       try {
-        final downloads = ref.watch(downloadManagerProvider);
-        final offlinePlaylist = _buildOfflinePlaylist(playlistId, downloads);
         if (ref.watch(isOfflineProvider)) {
+          final downloads = ref.watch(downloadManagerProvider);
+          final offlinePlaylist = _buildOfflinePlaylist(playlistId, downloads);
           if (offlinePlaylist != null) return offlinePlaylist;
           throw Exception('Playlist is not downloaded.');
         }
@@ -28,7 +29,10 @@ final playlistProvider = FutureProvider.autoDispose
               .cachePlaylistMetadata(playlist);
           return playlist;
         } catch (error) {
+          final downloads = ref.read(downloadManagerProvider);
+          final offlinePlaylist = _buildOfflinePlaylist(playlistId, downloads);
           if (offlinePlaylist != null && _isServerUnavailableError(error)) {
+            _scheduleRetry(ref);
             return offlinePlaylist;
           }
           rethrow;
@@ -49,14 +53,16 @@ final likedSongsPlaylistProvider = FutureProvider.autoDispose((ref) async {
 });
 
 final playlistsProvider = FutureProvider.autoDispose((ref) async {
-  final downloads = ref.watch(downloadManagerProvider);
   if (ref.watch(isOfflineProvider)) {
+    final downloads = ref.watch(downloadManagerProvider);
     return _offlinePlaylistsFromDownloads(downloads);
   }
   try {
     return await ref.read(jellyfinRepositoryProvider).playlists();
   } catch (error) {
     if (_isServerUnavailableError(error)) {
+      final downloads = ref.read(downloadManagerProvider);
+      _scheduleRetry(ref);
       return _offlinePlaylistsFromDownloads(downloads);
     }
     rethrow;
@@ -87,16 +93,19 @@ List<BrowseItem> _offlinePlaylistsFromDownloads(DownloadsState downloads) {
   final playlists =
       downloads.playlists.values
           .where((playlist) => playlist.trackIds.any(downloads.isDownloaded))
-          .map(
-            (playlist) => BrowseItem(
+          .map((playlist) {
+            final downloadedCount = playlist.trackIds
+                .where(downloads.isDownloaded)
+                .length;
+            return BrowseItem(
               id: playlist.id,
               name: playlist.name,
               kind: MediaKind.playlist,
               subtitle: 'Playlist',
               imageTag: playlist.imageTag,
-              childCount: playlist.trackIds.length,
-            ),
-          )
+              childCount: downloadedCount,
+            );
+          })
           .toList()
         ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
   return playlists;
@@ -113,4 +122,9 @@ bool _isServerUnavailableError(Object error) {
     return error.error is SocketException;
   }
   return error is SocketException;
+}
+
+void _scheduleRetry(Ref ref) {
+  final timer = Timer(const Duration(seconds: 3), ref.invalidateSelf);
+  ref.onDispose(timer.cancel);
 }

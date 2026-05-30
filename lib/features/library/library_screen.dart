@@ -107,14 +107,10 @@ class LibraryContent extends ConsumerWidget {
                     final downloadedCount = playlist.trackIds
                         .where(downloads.isDownloaded)
                         .length;
-                    final totalCount = playlist.trackIds.length;
                     return SectionTile(
                       icon: PiconsRegular.queue,
                       title: playlist.name,
-                      subtitle: _offlinePlaylistSubtitle(
-                        downloadedCount,
-                        totalCount,
-                      ),
+                      subtitle: _offlinePlaylistSubtitle(downloadedCount),
                       onTap: () => context.push('/playlist/${playlist.id}'),
                     );
                   }).toList(),
@@ -224,19 +220,49 @@ class LibraryContent extends ConsumerWidget {
   }
 
   Future<void> _openLikedSongs(BuildContext context, WidgetRef ref) async {
-    final playlist = await ref
-        .read(jellyfinRepositoryProvider)
-        .likedSongsPlaylist();
-    if (playlist == null) {
+    final likedFromProvider = ref.read(likedSongsPlaylistProvider).value;
+    if (likedFromProvider != null) {
+      if (!context.mounted) return;
+      context.push('/playlist/${likedFromProvider.id}');
+      return;
+    }
+
+    final downloads = ref.read(downloadManagerProvider);
+    String? cachedLikedId;
+    for (final playlist in downloads.playlists.values) {
+      if (playlist.name.toLowerCase().trim() != 'liked songs') continue;
+      if (playlist.trackIds.any(downloads.isDownloaded)) {
+        cachedLikedId = playlist.id;
+        break;
+      }
+    }
+    if (cachedLikedId != null) {
+      if (!context.mounted) return;
+      context.push('/playlist/$cachedLikedId');
+      return;
+    }
+
+    try {
+      final playlist = await ref
+          .read(jellyfinRepositoryProvider)
+          .likedSongsPlaylist();
+      if (playlist == null) {
+        if (!context.mounted) return;
+        showAppSnackBar(
+          context,
+          'Like any song to create your Liked Songs playlist.',
+        );
+        return;
+      }
+      if (!context.mounted) return;
+      context.push('/playlist/${playlist.id}');
+    } catch (_) {
       if (!context.mounted) return;
       showAppSnackBar(
         context,
-        'Like any song to create your Liked Songs playlist.',
+        'Could not open Liked Songs right now. If you downloaded songs from it, try again offline.',
       );
-      return;
     }
-    if (!context.mounted) return;
-    context.push('/playlist/${playlist.id}');
   }
 
   Future<void> _createPlaylist(BuildContext context, WidgetRef ref) async {
@@ -279,10 +305,9 @@ String _playlistSubtitle(int? count) {
   return 'Playlist · $count songs';
 }
 
-String _offlinePlaylistSubtitle(int downloadedCount, int totalCount) {
+String _offlinePlaylistSubtitle(int downloadedCount) {
   final downloadedText = downloadedCount == 1
       ? '1 song downloaded'
       : '$downloadedCount songs downloaded';
-  if (totalCount <= downloadedCount) return 'Playlist · $downloadedText';
-  return 'Playlist · $downloadedText of $totalCount';
+  return 'Playlist · $downloadedText';
 }
