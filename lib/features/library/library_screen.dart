@@ -107,14 +107,10 @@ class LibraryContent extends ConsumerWidget {
                     final downloadedCount = playlist.trackIds
                         .where(downloads.isDownloaded)
                         .length;
-                    final totalCount = playlist.trackIds.length;
                     return SectionTile(
                       icon: PiconsRegular.queue,
                       title: playlist.name,
-                      subtitle: _offlinePlaylistSubtitle(
-                        downloadedCount,
-                        totalCount,
-                      ),
+                      subtitle: _offlinePlaylistSubtitle(downloadedCount),
                       onTap: () => context.push('/playlist/${playlist.id}'),
                     );
                   }).toList(),
@@ -309,10 +305,9 @@ String _playlistSubtitle(int? count) {
   return 'Playlist · $count songs';
 }
 
-String _offlinePlaylistSubtitle(int downloadedCount, int totalCount) {
+String _offlinePlaylistSubtitle(int downloadedCount) {
   final downloadedText = downloadedCount == 1
       ? '1 song downloaded'
       : '$downloadedCount songs downloaded';
-  if (totalCount <= downloadedCount) return 'Playlist · $downloadedText';
-  return 'Playlist · $downloadedText of $totalCount';
+  return 'Playlist · $downloadedText';
 }

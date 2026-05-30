@@ -93,16 +93,19 @@ List<BrowseItem> _offlinePlaylistsFromDownloads(DownloadsState downloads) {
   final playlists =
       downloads.playlists.values
           .where((playlist) => playlist.trackIds.any(downloads.isDownloaded))
-          .map(
-            (playlist) => BrowseItem(
+          .map((playlist) {
+            final downloadedCount = playlist.trackIds
+                .where(downloads.isDownloaded)
+                .length;
+            return BrowseItem(
               id: playlist.id,
               name: playlist.name,
               kind: MediaKind.playlist,
               subtitle: 'Playlist',
               imageTag: playlist.imageTag,
-              childCount: playlist.trackIds.length,
-            ),
-          )
+              childCount: downloadedCount,
+            );
+          })
           .toList()
         ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
   return playlists;
