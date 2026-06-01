@@ -26,6 +26,8 @@ class PlaybackShortcutScope extends ConsumerWidget {
 
     return Focus(
       autofocus: true,
+      canRequestFocus: false,
+      skipTraversal: true,
       onKeyEvent: (_, event) => _handlePlaybackKeyboardEvent(ref, event),
       child: child,
     );
@@ -89,13 +91,15 @@ class PlaybackShortcutScope extends ConsumerWidget {
       return KeyEventResult.handled;
     }
     if (key == LogicalKeyboardKey.arrowLeft) {
-      if (hasTrack)
+      if (hasTrack) {
         unawaited(_seekRelativeFromKeyboard(ref, -_keyboardSeekStep));
+      }
       return KeyEventResult.handled;
     }
     if (key == LogicalKeyboardKey.arrowRight) {
-      if (hasTrack)
+      if (hasTrack) {
         unawaited(_seekRelativeFromKeyboard(ref, _keyboardSeekStep));
+      }
       return KeyEventResult.handled;
     }
     if (key == LogicalKeyboardKey.arrowUp) {
@@ -154,8 +158,22 @@ class PlaybackShortcutScope extends ConsumerWidget {
   }
 
   bool _hasTextInputFocus() {
-    final focusedContext = FocusManager.instance.primaryFocus?.context;
+    final focusNode = FocusManager.instance.primaryFocus;
+    final focusedContext = focusNode?.context;
     if (focusedContext == null) return false;
-    return focusedContext.widget is EditableText;
+    if (focusedContext.widget is EditableText) return true;
+
+    // Keep this resilient to Flutter focus-attachment changes by checking both
+    // widget and state ancestry from the focused context.
+    if (focusedContext.findAncestorWidgetOfExactType<EditableText>() != null) {
+      return true;
+    }
+    if (focusedContext.findAncestorStateOfType<EditableTextState>() != null) {
+      return true;
+    }
+
+    final label = focusNode?.debugLabel;
+    if (label != null && label.contains('EditableText')) return true;
+    return false;
   }
 }
