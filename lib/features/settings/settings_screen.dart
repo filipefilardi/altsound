@@ -37,8 +37,10 @@ class SettingsScreen extends ConsumerWidget {
           const LibraryGroup(),
           const SizedBox(height: AppSpacing.lg),
           const StorageGroup(),
-          const SizedBox(height: AppSpacing.lg),
-          const SignOutTile(),
+          if (session != null) ...[
+            const SizedBox(height: AppSpacing.lg),
+            const SignOutTile(),
+          ],
           const SizedBox(height: AppSpacing.lg),
           const VersionFooter(),
         ],

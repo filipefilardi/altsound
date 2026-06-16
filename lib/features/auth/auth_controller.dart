@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:altsound/core/utils/dio_error_message.dart';
 import 'package:altsound/data/jellyfin/auth_repository.dart';
 import 'package:altsound/data/jellyfin/jellyfin_api.dart';
 import 'package:altsound/data/jellyfin/models/jellyfin_session.dart';
@@ -24,8 +25,9 @@ class AuthAuthenticated extends AuthState {
 }
 
 class AuthUnauthenticated extends AuthState {
-  const AuthUnauthenticated({this.error});
+  const AuthUnauthenticated({this.error, this.serverUrl});
   final String? error;
+  final String? serverUrl;
 }
 
 final authControllerProvider = NotifierProvider<AuthController, AuthState>(
@@ -59,11 +61,17 @@ class AuthController extends Notifier<AuthState> {
           .login(serverUrl: serverUrl, username: username, password: password);
       state = AuthAuthenticated(session);
     } on JellyfinAuthException catch (e) {
-      state = AuthUnauthenticated(error: e.message);
+      state = AuthUnauthenticated(error: e.message, serverUrl: serverUrl);
     } on DioException catch (e) {
-      state = AuthUnauthenticated(error: _dioMessage(e));
+      state = AuthUnauthenticated(
+        error: userFacingDioMessage(e),
+        serverUrl: serverUrl,
+      );
     } catch (e) {
-      state = AuthUnauthenticated(error: 'Unexpected error: $e');
+      state = AuthUnauthenticated(
+        error: 'Unexpected error: $e',
+        serverUrl: serverUrl,
+      );
     }
   }
 
@@ -73,14 +81,13 @@ class AuthController extends Notifier<AuthState> {
     state = const AuthUnauthenticated();
   }
 
-  String _dioMessage(DioException e) {
-    if (e.response?.statusCode == 401) {
-      return 'Invalid username or password.';
-    }
-    if (e.type == DioExceptionType.connectionTimeout ||
-        e.type == DioExceptionType.connectionError) {
-      return 'Could not reach server. Check the URL and your network.';
-    }
-    return e.message ?? 'Network error.';
+  Future<void> switchUserOnSameServer() async {
+    final previous = state;
+    final serverUrl = previous is AuthAuthenticated
+        ? previous.session.serverUrl
+        : null;
+    await ref.read(authRepositoryProvider).logout();
+    await ref.read(lastPlayedProvider.notifier).clear();
+    state = AuthUnauthenticated(serverUrl: serverUrl);
   }
 }
