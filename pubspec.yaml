@@ -45,7 +45,7 @@ dependencies:
   audio_service: ^0.18.18
   palette_generator: ^0.3.3+7
   rxdart: ^0.28.0
-  path_provider: ^2.1.5
+  path_provider: ^2.1.6
   connectivity_plus: ^7.1.1
   google_fonts: ^8.1.0
   package_info_plus: ^10.1.0
